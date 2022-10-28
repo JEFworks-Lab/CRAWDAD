@@ -1,0 +1,424 @@
+---
+title: "circle_simulation_compute_trends"
+author: "Brendan F. Miller"
+date: "10/27/2022"
+output: html_document
+---
+
+```{r}
+
+## load in the functions for this pipeline
+source(file = "../R/functions.Rmd")
+
+```
+
+# Simulation
+
+## make simulation
+
+Let's make a single circle, but can make several different simulation where we change the size of the circle ring and the inner core. Can assess how this may affect the trends of colocalization of different cell types.
+
+```{r}
+
+## initialize circle params
+
+locs <- list(
+  c(0.5, 0.5)
+  )
+
+cts <- list(
+  list(outer = "B", inner = c("C"))
+  )
+
+probs <- list(
+  list(outer = c(1), inner = c(1))
+  )
+
+## background params
+s <- 10000
+cb <- c("A")
+pb <- c(1)
+
+# note that the simulation starts on 0-1 scale but is scaled to 0-3100 in function simulate_circles
+# can treat these values like microns
+
+## outer ring approx 0.01 or 3100um = 31 micron width
+## inner approx 868 microns across (3100*0.28)
+rads <- replicate(4, list(outer = 0.15, inner = 0.14), simplify=FALSE)
+pos_30 <- simulate_circles(simulate_background(size = s, cts = cb, prob = pb),
+                        locs, radii = rads, cts, probs)
+pos_30$id <- 30
+
+## outer ring approx 0.03 or 3100um = 93 micron width
+## inner approx 744 microns across (3100*0.24)
+rads <- replicate(4, list(outer = 0.15, inner = 0.12), simplify=FALSE)
+pos_90 <- simulate_circles(simulate_background(size = s, cts = cb, prob = pb),
+                        locs, radii = rads, cts, probs)
+pos_90$id <- 90
+
+## outer ring approx 0.05 or 3100um = 155 micron width
+## inner approx 620 microns across (3100*0.20)
+rads <- replicate(4, list(outer = 0.15, inner = 0.10), simplify=FALSE)
+pos_150 <- simulate_circles(simulate_background(size = s, cts = cb, prob = pb),
+                        locs, radii = rads, cts, probs)
+pos_150$id <- 150
+
+## outer ring approx 0.10 or 3100um = 310 micron width
+## inner approx 310 microns across (3100*0.10)
+rads <- replicate(4, list(outer = 0.15, inner = 0.05), simplify=FALSE)
+pos_300 <- simulate_circles(simulate_background(size = s, cts = cb, prob = pb),
+                        locs, radii = rads, cts, probs)
+pos_300$id <- 300
+
+## outer ring approx 0.13 or 3100um = 403 micron width
+## inner approx 124 microns across (3100*0.04)
+rads <- replicate(4, list(outer = 0.15, inner = 0.02), simplify=FALSE)
+pos_400 <- simulate_circles(simulate_background(size = s, cts = cb, prob = pb),
+                        locs, radii = rads, cts, probs)
+pos_400$id <- 400
+
+
+pos_1circle_sizes <- dplyr::bind_rows(list(
+  pos_30,
+  pos_90,
+  pos_150,
+  pos_300,
+  pos_400
+))
+
+pos_1circle_sizes$id <- factor(pos_1circle_sizes$id, ordered = TRUE, levels = c("30", "90", "150", "300", "400"))
+
+```
+
+## visualize with gganimate (for fun)
+
+```{r}
+
+anim <- ggplot2::ggplot(data = pos_1circle_sizes) +
+  ggplot2::geom_point(ggplot2::aes(x = x, y = y, color = type)) +
+  ggplot2::scale_color_discrete() +
+  
+  ## gganimate
+  gganimate::transition_manual(
+    id,
+    cumulative = FALSE
+  ) +
+  gganimate::enter_fade() +
+  gganimate::exit_fade() +
+  # ggplot2::labs(title = "id: {closest_state}") +
+  
+  ggplot2::coord_equal()
+
+gganimate::animate(anim, renderer = gganimate::gifski_renderer())
+# gganimate::anim_save("test.gif")
+
+```
+
+## find trends
+
+```{r}
+
+distances <- c(30, 50, 100, 200, 300) # each distance to define neighbors when computing trends
+resolutions <- c(50, 100, 200, 300, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000) # different shuffling resolutions to try
+prms <- 1 # number of permutations for shuffling; I found that there isn't much variance so 1 is ok for now
+sd <- 1 # the seed for shuffling
+
+circle_pos <- pos_1circle_sizes
+
+ncs <- 7 # number of cores for parallelization. My machine has 8 total so I use 7
+## things that get parallelized right now:
+## 1. when making the shuffled labels, can process grids in parallel to speed up making the shuffled data
+## 2. When evaluating for a given reference cell type, can compute for the different resolutions in parallel
+## I used to do the reference cell types in parallel, but I found that a bottle neck was waiting for a 
+## given cell type with a lot of cells to finish because I was doing each resolution one at a time
+## So I felt that parallelizing the resolutions would help speed up the evaluation for a given cell type
+## and thus move through each cell type faster.
+
+## for each distance, compute trends.
+## Let's compute the trends for each of the different simulated cicle sizes
+## Can combine all the data together at the end into a single dataframe
+pos_1circle_results <- lapply(distances, function(d){
+  
+  ## can save the shuffled dataset to use later to save a bit of time.
+  ## note that the shuffled data is done specifically for whatever set of resolutions
+  ## were indicated initially.
+  ## I don't think there is a current way in the function to check if the correct
+  ## resolutions are being used for a given shuffled data object
+  ## so important to make sure that the right one is being use for now
+  
+  shuffledData <- paste0("../data/pos_1circle_results.circsize30.shuffledData.res50-3000.rds")
+  if(file.exists(shuffledData)){
+    
+    pos <- circle_pos[circle_pos$id == "30",]
+    results_circsize30 <- findTrendsv2(pos = pos[,c("x", "y")],
+                               celltypes = pos$type,
+                               resolutions,
+                               dist = d,
+                               perms = prms,
+                               ncores = ncs,
+                               verbose = TRUE,
+                               loadShuffleFile = shuffledData,
+                               seed = sd)
+  } else {
+    pos <- circle_pos[circle_pos$id == "30",]
+    results_circsize30 <- findTrendsv2(pos = pos[,c("x", "y")],
+                               celltypes = pos$type,
+                               resolutions,
+                               dist = d,
+                               perms = prms,
+                               ncores = ncs,
+                               verbose = TRUE,
+                               saveShuffleFile = shuffledData,
+                               seed = sd)
+  }
+    
+  shuffledData <- paste0("../data/pos_1circle_results.circsize90.shuffledData.res50-3000.rds")
+  if(file.exists(shuffledData)){
+    
+    pos <- circle_pos[circle_pos$id == "90",]
+    results_circsize90 <- findTrendsv2(pos = pos[,c("x", "y")],
+                               celltypes = pos$type,
+                               resolutions,
+                               dist = d,
+                               perms = prms,
+                               ncores = ncs,
+                               verbose = TRUE,
+                               loadShuffleFile = shuffledData,
+                               seed = sd)
+  } else {
+    pos <- circle_pos[circle_pos$id == "90",]
+    results_circsiz90 <- findTrendsv2(pos = pos[,c("x", "y")],
+                               celltypes = pos$type,
+                               resolutions,
+                               dist = d,
+                               perms = prms,
+                               ncores = ncs,
+                               verbose = TRUE,
+                               loadShuffleFile = shuffledData,
+                               seed = sd)
+  }
+    
+  shuffledData <- paste0("../data/pos_1circle_results.circsize150.shuffledData.res50-3000.rds")
+  if(file.exists(shuffledData)){
+    
+    pos <- circle_pos[circle_pos$id == "150",]
+    results_circsize150 <- findTrendsv2(pos = pos[,c("x", "y")],
+                               celltypes = pos$type,
+                               resolutions,
+                               dist = d,
+                               perms = prms,
+                               ncores = ncs,
+                               verbose = TRUE,
+                               loadShuffleFile = shuffledData,
+                               seed = sd)
+  } else {
+    pos <- circle_pos[circle_pos$id == "150",]
+    results_circsiz150 <- findTrendsv2(pos = pos[,c("x", "y")],
+                               celltypes = pos$type,
+                               resolutions,
+                               dist = d,
+                               perms = prms,
+                               ncores = ncs,
+                               verbose = TRUE,
+                               loadShuffleFile = shuffledData,
+                               seed = sd)
+  }
+    
+  shuffledData <- paste0("../data/pos_1circle_results.circsize300.shuffledData.res50-3000.rds")
+  if(file.exists(shuffledData)){
+    
+    pos <- circle_pos[circle_pos$id == "300",]
+    results_circsize300 <- findTrendsv2(pos = pos[,c("x", "y")],
+                               celltypes = pos$type,
+                               resolutions,
+                               dist = d,
+                               perms = prms,
+                               ncores = ncs,
+                               verbose = TRUE,
+                               loadShuffleFile = shuffledData,
+                               seed = sd)
+  } else {
+    pos <- circle_pos[circle_pos$id == "300",]
+    results_circsiz300 <- findTrendsv2(pos = pos[,c("x", "y")],
+                               celltypes = pos$type,
+                               resolutions,
+                               dist = d,
+                               perms = prms,
+                               ncores = ncs,
+                               verbose = TRUE,
+                               loadShuffleFile = shuffledData,
+                               seed = sd)
+  }
+    
+  shuffledData <- paste0("../data/pos_1circle_results.circsize400.shuffledData.res50-3000.rds")
+  if(file.exists(shuffledData)){
+    
+    pos <- circle_pos[circle_pos$id == "400",]
+    results_circsize400 <- findTrendsv2(pos = pos[,c("x", "y")],
+                               celltypes = pos$type,
+                               resolutions,
+                               dist = d,
+                               perms = prms,
+                               ncores = ncs,
+                               verbose = TRUE,
+                               loadShuffleFile = shuffledData,
+                               seed = sd)
+  } else {
+    pos <- circle_pos[circle_pos$id == "400",]
+    results_circsiz400 <- findTrendsv2(pos = pos[,c("x", "y")],
+                               celltypes = pos$type,
+                               resolutions,
+                               dist = d,
+                               perms = prms,
+                               ncores = ncs,
+                               verbose = TRUE,
+                               loadShuffleFile = shuffledData,
+                               seed = sd)
+  }
+
+  ## for a given distance tested:
+  ## each results is a list of dataframes of Z scores for neighbor cells types vs each ref cell type
+  ## melt each list into a dataframe, and give it an id corresponding to the circle size simulation where trends were evaluated
+  ## melt this higher order dataframe list of dataframes into a single dataframe.
+  ## so end up with a dataframe of ref-neigh cell type Z scores for each circle size, all for a given distance tested
+  
+  circsize_results <- dplyr::bind_rows(
+    list(meltResultsList(resultsList = results_circsize30, id = "30"),
+         meltResultsList(resultsList = results_circsize90, id = "90"),
+         meltResultsList(resultsList = results_circsize150, id = "150"),
+         meltResultsList(resultsList = results_circsize300, id = "300"),
+         meltResultsList(resultsList = results_circsize400, id = "400")
+        )
+    )
+  
+  circsize_results$id <- factor(x = as.character(circsize_results$id), levels = c("30", "90", "150", "300", "400"), ordered = TRUE)
+  
+  ## this full dataframe for a given dist returned and is added to another list...
+  return(circsize_results)
+  
+  # plotTrends(results = circsize_results, figPath = figpath,
+  #            width = 8, height = 8)
+  
+})
+
+## the final list is a list of those combined dataframes for each distance
+names(pos_1circle_results) <- distances
+
+## melt the list of combined dataframes and add a new column indicating the list name, aka the distance param that was used for each one.
+pos_1circle_results_melt <- purrr::map_df(pos_1circle_results, ~as.data.frame(.x), .id="dist")
+colnames(pos_1circle_results_melt) <- c("dist", "resolution", "neighbor", "Z", "reference", "ring_size")
+
+head(pos_1circle_results_melt)
+dim(pos_1circle_results_melt)
+
+```
+
+## visualize
+
+trend plots are basically a set of panels, where each panel is a reference vs neighbor cell type.
+Each trend is the Z significance score (y-axis) vs resolution (x-axis)
+For a given panel, there can be multiple trend lines, each corresponding to an additional parameter.
+For example, for a given circle size simulation, we can plot a trend line for each distance tested
+In this case, we will need to generate a separate trend plot for each circle size simulation
+
+```{r}
+
+figpath <- "../plots/"
+
+## can generate a trend plot for each distance tested, and 
+distances <- as.character(distances)
+circles <- c("30", "90", "150", "300", "400")
+
+for(c in circles){
+# for(d in distances){
+  
+  figPath <- paste0(figpath, "sim_circles_size", c, "_", "distances.pdf")
+  results <- pos_1circle_results_melt[ pos_1circle_results_melt$ring_size == c,]
+  
+  plotTrends(results = results, idcol = "dist", figPath = figPath,
+            width = 12, height = 12)
+  
+}
+
+```
+
+# Real data
+
+start with the classic spleen dataset that we first started with looking at CD4 memory T cells, Podoplanin for blood vessels, and B cell follicles
+
+```{r}
+
+## get cell coordinates, and cell type labels
+pkhl <- read.csv2(file = "../data/CODEX/HBM389.PKHL.936.meta.csv.gz", sep = ",", row.names = 1)
+
+```
+
+## pairwise analysis
+
+```{r}
+
+distances <- c(30, 50, 100, 200)
+resolutions <- c(50, 100, 200, 300, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000)
+# resolutions <- c(3000)
+prms <- 1
+sd <- 1
+
+ncs <- 7
+pkhl_pairwise_results <- lapply(distances, function(d){
+  
+  pos <- pkhl
+  
+  shuffledData <- paste0("../data/pkhl_shuffled_res_50-3000.rds")
+  if(file.exists(shuffledData)){
+    
+    results <- findTrendsv2(pos = pos[,c("x", "y")],
+                             celltypes = pos$com_nn50_VolnormExpr_data_annots,
+                             resolutions,
+                             dist = d,
+                             perms = prms,
+                             ncores = ncs,
+                             verbose = TRUE,
+                             loadShuffleFile = shuffledData,
+                             seed = sd)
+  } else {
+    results <- findTrendsv2(pos = pos[,c("x", "y")],
+                             celltypes = pos$com_nn50_VolnormExpr_data_annots,
+                             resolutions,
+                             dist = d,
+                             perms = prms,
+                             ncores = ncs,
+                             verbose = TRUE,
+                             saveShuffleFilePath = shuffledData,
+                             seed = sd)
+  }
+  # print(results)
+  return(results)
+  
+})
+
+names(pkhl_pairwise_results) <- distances
+pkhl_pairwise_results_meltedDf <- reshape2::melt(pkhl_pairwise_results)
+colnames(pkhl_pairwise_results_meltedDf) <- c("resolution", "neighbor", "Z", "reference", "dist")
+
+saveRDS(object = pkhl_pairwise_results_meltedDf, file = "../data/pkhl.pairwise.trends.rds")
+
+```
+
+```{r}
+
+# figpath <- "/home/brendan/projects/HuBMAP/sim_circles/plots/results_all_circles.pdf"
+figpath <- "../plots/"
+
+plotTrends(results = pkhl_pairwise_results_meltedDf, idcol = "dist", figPath = paste0(figpath, "pkhl.pairwise.dist30-200.pdf"),
+            width = 24, height = 24)
+
+```
+
+# Trend significant differences
+
+
+
+
+
+
+
