@@ -1,11 +1,6 @@
-<<<<<<< HEAD
 *~
 .Rproj.user
 *DS_Store
 *.Rproj
-=======
-*~
-.Rproj.user
-*DS_Store
-*.Rproj
->>>>>>> fd21c41 (brendan added simulation and real data vignettes for finding trends. Also markdown to start listing future directions and background)
+.Rhistory
+.RDataTmp*
