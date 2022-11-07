@@ -9,9 +9,12 @@ outstanding questions:
 
 why the zigzagging pattern at more localized resolutions?
 
-is there a relationship between the transition/inflection point of when a trend passeds the x-axis and goes from pos/neg vis versa, and the size or shape of the pattern it represents?
+is there a relationship between the transition/inflection point of when a trend passeds the x-axis and goes from pos/neg vis versa, and the size or shape of the pattern it represents? Might depend on not just the distance, but also the local vs global proportion of a given neighbor cell type. And also how many structures are there (probably also related back to global vs local proportions. Although if just a subset of A there, but most of A not in a structure, then also might not see it. So would need to select a subset of A first to see it otherwise you'd miss it)
 
-is there a finite number of trend "shapes" (trend clusters). Do these correspond to specific types of co-localization patterns?
+is there a finite number of trend "shapes" (trend clusters). Do these correspond to specific types of co-localization patterns? not so mportant. really just want to sse if tehre are differences between samples for example.important to disentagnle from proprotional differences
+
+test vs proportions: have same cell type proportions, but organized in different ways. scRNA seq see no diference, but trend show differences
+use simulation - two samples to compare
 
 
 
@@ -39,3 +42,6 @@ joint meeting presentation:
 - any significant differences?
 
 - then next steps and outstanding questions. Something I am not considering?
+
+
+show just enough to have the audience help on what i wan them to help with

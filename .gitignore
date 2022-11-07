@@ -4,3 +4,6 @@
 *.Rproj
 .Rhistory
 .RDataTmp*
+plots/joint_meeting_figs/
+*.RData
+
