@@ -600,6 +600,43 @@ dat <- dat[dat$neighbor %in% cts_subset,]
 plotTrends(results = dat, idcol = "sample", figPath = paste0(figpath, "spleens.all.triplet.podosubs_vs_cd4_neigh.knnApproach.pdf"),
           width = 18, height = 5)
 
+
+cts_subset <- c("CD4 Memory T cells")
+
+dat <- dat_spleen_subsets
+dat <- dat[grepl(pattern = "Podoplanin_near_", x = dat_spleen_subsets$reference),]
+dat <- dat[dat$neighbor %in% cts_subset & dat$sample == "PKHL",]
+dat <- dat[dat$neighbor %in% cts_subset,]
+
+plotTrends(results = dat, idcol = "sample", figPath = paste0(figpath, "spleens.pkhl.triplet.podosubs_vs_cd4_neigh.knnApproach.pdf"),
+          width = 18, height = 5)
+
+```
+
+```{r}
+
+cts_subset <- c("Fol B cells")
+
+dat <- dat_spleen_subsets
+dat <- dat[grepl(pattern = "Podoplanin_near_", x = dat_spleen_subsets$reference),]
+# dat <- dat[dat$neighbor %in% cts_subset & dat$sample == "PKHL",]
+dat <- dat[dat$neighbor %in% cts_subset,]
+
+plotTrends(results = dat, idcol = "sample", figPath = paste0(figpath, "spleens.all.triplet.podosubs_vs_folB_neigh.knnApproach.pdf"),
+          width = 18, height = 5)
+
+
+
+cts_subset <- c("Fol B cells")
+
+dat <- dat_spleen_subsets
+dat <- dat[grepl(pattern = "Podoplanin_near_", x = dat_spleen_subsets$reference),]
+dat <- dat[dat$neighbor %in% cts_subset & dat$sample == "PKHL",]
+dat <- dat[dat$neighbor %in% cts_subset,]
+
+plotTrends(results = dat, idcol = "sample", figPath = paste0(figpath, "spleens.pkhl.triplet.podosubs_vs_folB_neigh.knnApproach.pdf"),
+          width = 18, height = 5)
+
 ```
 
 ```{r}
@@ -615,9 +652,44 @@ plotTrends(results = dat, idcol = "sample", figPath = paste0(figpath, "spleens.p
 
 ```
 
+```{r}
 
+cts_subset <- c("Fol B cells")
 
+dat <- dat_spleen_subsets
+dat <- dat[grepl(pattern = "CD4 Memory T cells_near_", x = dat_spleen_subsets$reference),]
+dat <- dat[dat$neighbor %in% cts_subset & dat$sample == "PKHL",]
 
+plotTrends(results = dat, idcol = "sample", figPath = paste0(figpath, "spleens.pkhl.triplet.cd4subs_vs_folB_neigh.knnApproach.pdf"),
+          width = 18, height = 5)
+
+```
+
+```{r}
+
+cts_subset <- c("Podoplanin")
+
+dat <- dat_spleen_subsets
+dat <- dat[grepl(pattern = "Fol B cells_near_", x = dat_spleen_subsets$reference),]
+dat <- dat[dat$neighbor %in% cts_subset & dat$sample == "PKHL",]
+
+plotTrends(results = dat, idcol = "sample", figPath = paste0(figpath, "spleens.pkhl.triplet.folBsubs_vs_podo_neigh.knnApproach.pdf"),
+          width = 18, height = 5)
+
+```
+
+```{r}
+
+cts_subset <- c("CD4 Memory T cells")
+
+dat <- dat_spleen_subsets
+dat <- dat[grepl(pattern = "Fol B cells_near_", x = dat_spleen_subsets$reference),]
+dat <- dat[dat$neighbor %in% cts_subset & dat$sample == "PKHL",]
+
+plotTrends(results = dat, idcol = "sample", figPath = paste0(figpath, "spleens.pkhl.triplet.folBsubs_vs_cd4_neigh.knnApproach.pdf"),
+          width = 18, height = 5)
+
+```
 
 
 
