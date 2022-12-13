@@ -691,6 +691,462 @@ plotTrends(results = dat, idcol = "sample", figPath = paste0(figpath, "spleens.p
 
 ```
 
+# -------------------------------------
+
+# triplet simulation
+
+goal is to show that only a subset cell type A is close to cell type B, but if looking at all cell type A, it is separated
+
+```{r}
+
+## initialize circle params
+
+## one circle; but set up for two rings
+## so have two circles with same center
+## make first circle the largest
+## then place the second smaller circle in the center
+
+
+locs <- list(
+  c(0.5, 0.5),
+  c(0.5, 0.5)
+  )
+
+cts <- list(
+  list(outer = c("C"), inner = c("C")),
+  list(outer = c("A"), inner = c("B"))
+  )
+
+probs <- list(
+  list(outer = c(1), inner = c(1)),
+  list(outer = c(1), inner = c(1))
+  )
+
+replacement <- list(
+  list(outer = TRUE, inner = TRUE),
+  list(outer = TRUE, inner = TRUE)
+  )
+
+rads <- list(
+  list(outer = c(0.14), inner = c(0.10)),
+  list(outer = c(0.10), inner = c(0.08))
+)
+
+## background params
+s <- 10000
+cb <- c("A", "B", "C")
+pb <- c(0.36, 0.30, 0.34)
+
+pos_circSubset <- simulate_circles(pos = simulate_background(size = s, cts = cb, prob = pb, scale = 1),
+                        locs = locs, radii = rads, cts = cts, probs = probs, replace = replacement)
+
+
+
+# # note that the simulation starts on 0-1 scale but is scaled to 0-3100 in function simulate_circles
+# # can treat these values like microns
+# 
+# ## outer ring approx 0.01 or 3100um = 31 micron width
+# ## inner approx 868 microns across (3100*0.28)
+# rads <- replicate(4, list(outer = 0.15, inner = 0.14), simplify=FALSE)
+# pos_30 <- simulate_circles(simulate_background(size = s, cts = cb, prob = pb),
+#                         locs, radii = rads, cts, probs, replace)
+# pos_30$id <- 30
+# 
+# ## outer ring approx 0.03 or 3100um = 93 micron width
+# ## inner approx 744 microns across (3100*0.24)
+# rads <- replicate(4, list(outer = 0.15, inner = 0.12), simplify=FALSE)
+# pos_90 <- simulate_circles(simulate_background(size = s, cts = cb, prob = pb),
+#                         locs, radii = rads, cts, probs, replace)
+# pos_90$id <- 90
+# 
+# ## outer ring approx 0.05 or 3100um = 155 micron width
+# ## inner approx 620 microns across (3100*0.20)
+# rads <- replicate(4, list(outer = 0.15, inner = 0.10), simplify=FALSE)
+# pos_150 <- simulate_circles(simulate_background(size = s, cts = cb, prob = pb),
+#                         locs, radii = rads, cts, probs, replace)
+# pos_150$id <- 150
+# 
+# ## outer ring approx 0.10 or 3100um = 310 micron width
+# ## inner approx 310 microns across (3100*0.10)
+# rads <- replicate(4, list(outer = 0.15, inner = 0.05), simplify=FALSE)
+# pos_300 <- simulate_circles(simulate_background(size = s, cts = cb, prob = pb),
+#                         locs, radii = rads, cts, probs, replace)
+# pos_300$id <- 300
+# 
+# ## outer ring approx 0.13 or 3100um = 403 micron width
+# ## inner approx 124 microns across (3100*0.04)
+# rads <- replicate(4, list(outer = 0.15, inner = 0.02), simplify=FALSE)
+# pos_400 <- simulate_circles(simulate_background(size = s, cts = cb, prob = pb),
+#                         locs, radii = rads, cts, probs, replace)
+# pos_400$id <- 400
+# 
+# 
+# pos_1circle_sizes <- dplyr::bind_rows(list(
+#   pos_30,
+#   pos_90,
+#   pos_150,
+#   pos_300,
+#   pos_400
+# ))
+# 
+# pos_1circle_sizes$id <- factor(pos_1circle_sizes$id, ordered = TRUE, levels = c("30", "90", "150", "300", "400"))
+
+pos_circSubset$x <- pos_circSubset$x * 3100
+pos_circSubset$y <- pos_circSubset$y * 3100
+
+ggplot2::ggplot(data = pos_circSubset) +
+  ggplot2::geom_point(ggplot2::aes(x = x, y = y, color = type), size = 0.1) +
+  ggplot2::scale_color_discrete() +
+  ggplot2::coord_equal()
+ggplot2::ggsave(filename ="sim_circSubset.v2.pdf", path = figpath, device = "pdf", dpi = 600, width = 4, height = 3, units = "in")
+
+ggplot2::ggplot(data = pos_bg) +
+  ggplot2::geom_point(ggplot2::aes(x = x, y = y, color = type), size = 0.1) +
+  ggplot2::scale_color_discrete() +
+  ggplot2::coord_equal()
+
+```
+
+what are the global proporions of A, B, and C?
+
+```{r}
+
+table(pos_circSubset$type) / 10000
+
+```
+
+pretty similar. I think this is good
+
+
+get subsets, and visualize A near B, which is the subset I want to highlight being near C, whereas all As are not near C
+
+
+get subsets:
+
+```{r}
+
+dataDir <- "/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/multiscale_celltype_colocalization_analysis/data/temp/sims/"
+
+```
+
+### pairwise code
+
+```{r}
+
+## --------------------------------------
+## load arguments from the command line
+
+# ## path to the metadata table of cell coordinates and celltype names
+# meta <- read.csv2(file = args[1], row.names = 1)
+# 
+# ## name of column with cell type annotations to use
+# ## for example, "celltypes", or "celltypes_folBcombined"
+# meta <- meta[,c("x", "y", as.character(args[2]))]
+
+meta <- pos_circSubset
+
+## full path to the shuffled data rds
+shuffledDataPath <- paste0(dataDir, "shuffledDataSets/sim_circSubset_shuffled_res_50-3000_v2.rds")
+
+subsetType <- "pairwise"
+
+# if(subsetType == "near"){
+#   subThresh <- 0.05
+# } else if(subsetType == "away"){
+#   subThresh <- 0.5
+# } else (
+#   stop("subsetType must be either 'near' or 'away'")
+# )
+
+# subdist <- 300 ## distance to define subsets
+
+## full path to the subset dataset list rds
+# subsetDataPath <- paste0(dataDir, "subsetDataSets/sim_circSubset_near_subdist300.rds")
+
+## full path and name of the output rds file to save (which is the list format output of the function `findTrendsv2`)
+outfile <- paste0(dataDir, "results/pairwise/sim_circSubset.pairwise.near.dist200.results.v2.rds")
+
+ncs <- 7 ## number of cores
+
+## --------------------------------------
+## run the function
+
+# distances <- c(30, 50, 100, 200)
+distances <- c(200)
+resolutions <- c(50, 100, 200, 300, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000)
+# resolutions <- c(3000)
+prms <- 1 ## number of permutations
+sd <- 1 ## seed
+
+
+
+## if subset data exists, set up parameters to load it in, otherwise set them up to save it once made
+# if(file.exists(subsetDataPath)){
+#   loadSubset <- subsetDataPath
+#   saveSubset <- NA
+# } else {
+#   loadSubset <- NA
+#   saveSubset <- subsetDataPath
+# }
+
+pairwise_results <- lapply(distances, function(d){
+  
+  # shuffledData <- paste0("/home/brendan/projects/HuBMAP/data/datasets/spleen/pkhl_shuffled_res_50-3000.rds")
+  if(file.exists(shuffledDataPath)){
+    
+    results <- findTrendsv2(pos = meta[,c("x", "y")],
+                             celltypes = meta[,3],
+                             resolutions,
+                             dist = d,
+                             # sub.dist = subdist,
+                             sub.type = subsetType,
+                             # sub.thresh = subThresh,
+                             perms = prms,
+                             ncores = ncs,
+                             verbose = TRUE,
+                             loadShuffleFile = shuffledDataPath,
+                             # loadSubsetFile = loadSubset,
+                             # saveSubsetFile = saveSubset,
+                             seed = sd)
+    # gc()
+  } else {
+    results <- findTrendsv2(pos = meta[,c("x", "y")],
+                             celltypes = meta[,3],
+                             resolutions,
+                             dist = d,
+                             # sub.dist = subdist,
+                             sub.type = subsetType,
+                             # sub.thresh = subThresh,
+                             perms = prms,
+                             ncores = ncs,
+                             verbose = TRUE,
+                             saveShuffleFilePath = shuffledDataPath,
+                             # loadSubsetFile = loadSubset,
+                             # saveSubsetFile = saveSubset,
+                             seed = sd)
+    # gc()
+  }
+  # print(results)
+  return(results)
+  
+})
+
+names(pairwise_results) <- distances
+
+saveRDS(object = pairwise_results, file = outfile)
+
+```
+
+```{r}
+
+circ_pairwise_results_dist200 <- meltResultsList(resultsList = pairwise_results, id = NA)
+colnames(circ_pairwise_results_dist200) <- c("resolution", "neighbor", "Z", "reference", "dist", "subsetDist")
+
+```
+
+```{r}
+
+plotTrends(results = circ_pairwise_results_dist200, idcol = "dist", figPath = paste0(figpath, "sim_circSubset_pairwise_dist200.v2.pdf"),
+          width = 6, height = 5)
+
+```
+
+### triplet code
+
+```{r}
+
+## --------------------------------------
+## load arguments from the command line
+
+# ## path to the metadata table of cell coordinates and celltype names
+# meta <- read.csv2(file = args[1], row.names = 1)
+# 
+# ## name of column with cell type annotations to use
+# ## for example, "celltypes", or "celltypes_folBcombined"
+# meta <- meta[,c("x", "y", as.character(args[2]))]
+
+meta <- pos_circSubset
+
+## full path to the shuffled data rds
+shuffledDataPath <- paste0(dataDir, "shuffledDataSets/sim_circSubset_shuffled_res_50-3000_v2.rds")
+
+subsetType <- "near"
+
+if(subsetType == "near"){
+  subThresh <- 0.05
+} else if(subsetType == "away"){
+  subThresh <- 0.5
+} else (
+  stop("subsetType must be either 'near' or 'away'")
+)
+
+subdist <- 300 ## distance to define subsets
+
+## full path to the subset dataset list rds
+subsetDataPath <- paste0(dataDir, "subsetDataSets/sim_circSubset_near_subdist300_v2.rds")
+
+## full path and name of the output rds file to save (which is the list format output of the function `findTrendsv2`)
+outfile <- paste0(dataDir, "results/triplet/sim_circSubset.triplet.near.dist150.subdist300.results.v2.rds")
+
+ncs <- 7 ## number of cores
+
+## --------------------------------------
+## run the function
+
+# distances <- c(30, 50, 100, 200)
+distances <- c(150)
+resolutions <- c(50, 100, 200, 300, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000)
+# resolutions <- c(3000)
+prms <- 1 ## number of permutations
+sd <- 1 ## seed
+
+
+
+## if subset data exists, set up parameters to load it in, otherwise set them up to save it once made
+if(file.exists(subsetDataPath)){
+  loadSubset <- subsetDataPath
+  saveSubset <- NA
+} else {
+  loadSubset <- NA
+  saveSubset <- subsetDataPath
+}
+
+triplet_results <- lapply(distances, function(d){
+  
+  # shuffledData <- paste0("/home/brendan/projects/HuBMAP/data/datasets/spleen/pkhl_shuffled_res_50-3000.rds")
+  if(file.exists(shuffledDataPath)){
+    
+    results <- findTrendsv2(pos = meta[,c("x", "y")],
+                             celltypes = meta[,3],
+                             resolutions,
+                             dist = d,
+                             sub.dist = subdist,
+                             sub.type = subsetType,
+                             sub.thresh = subThresh,
+                             perms = prms,
+                             ncores = ncs,
+                             verbose = TRUE,
+                             loadShuffleFile = shuffledDataPath,
+                             loadSubsetFile = loadSubset,
+                             saveSubsetFile = saveSubset,
+                             seed = sd)
+    # gc()
+  } else {
+    results <- findTrendsv2(pos = meta[,c("x", "y")],
+                             celltypes = meta[,3],
+                             resolutions,
+                             dist = d,
+                             sub.dist = subdist,
+                             sub.type = subsetType,
+                             sub.thresh = subThresh,
+                             perms = prms,
+                             ncores = ncs,
+                             verbose = TRUE,
+                             saveShuffleFilePath = shuffledDataPath,
+                             loadSubsetFile = loadSubset,
+                             saveSubsetFile = saveSubset,
+                             seed = sd)
+    # gc()
+  }
+  # print(results)
+  return(results)
+  
+})
+
+names(triplet_results) <- distances
+
+saveRDS(object = triplet_results, file = outfile)
+
+```
+
+visualize:
+
+```{r}
+
+# circ_Subsets_subDist200 <- readRDS(subsetDataPath)
+circ_Subsets_subDist300 <- readRDS(subsetDataPath)
+
+```
+
+```{r}
+
+id <- "circ_subSet"
+pos <- pos_circSubset[,c("x", "y")]
+com <- as.factor(pos_circSubset$type)
+names(com) <- rownames(pos)
+
+
+# ----------------------------------------
+# Podoplanin subsets
+annots_temp <- getSubsetComs(com = com,
+                             pos = pos,
+                             subset_list = circ_Subsets_subDist300,
+                             neighIDs = c("A"),
+                             subsetIDs = c("A_near_B"))
+plt <- vizAllClusters(object = pos,
+               clusters = annots_temp,
+               title = id,
+               axisAdj = 1, s = 4, a = 0.5) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
+  # ggplot2::theme(legend.position="none") +
+  ggplot2::labs(x = "x",
+                y = "y")
+plt
+
+ggplot2::ggsave(filename ="sim_circSubset.v2.AnearB.pdf",
+                path = figpath, device = "pdf",
+                plot = plt,
+                dpi = 600, width = 4, height = 3, units = "in")
+
+```
+
+```{r}
+
+circ_Subsets_results_dist150_subDist300 <- meltResultsList(resultsList = triplet_results, id = 300)
+colnames(circ_Subsets_results_dist150_subDist300) <- c("resolution", "neighbor", "Z", "reference", "dist", "subsetDist")
+
+```
+
+```{r}
+
+plotTrends(results = circ_Subsets_results_dist150_subDist300, idcol = "dist", figPath = paste0(figpath, "sim_circSubset_dist150_subDist300.v2.pdf"),
+          width = 18, height = 5)
+
+```
+
+
+
+```{r}
+
+outfile <- paste0(dataDir, "results/triplet/sim_circSubset.triplet.near.dist200.subdist300.results.v2.rds")
+dat <- readRDS(outfile)
+
+dat <- meltResultsList(resultsList = dat, id = 300)
+colnames(dat) <- c("resolution", "neighbor", "Z", "reference", "dist", "subsetDist")
+
+dat <- dat[dat$resolution %in% c(50,100,200,600,700,800,1000,3000),]
+
+dat <- dat[grepl(pattern = "A_near_", x = dat$reference),]
+
+plotTrends(results = dat, idcol = "dist", figPath = paste0(figpath, "sim_circSubset_dist200_subDist300.v2.A_subsets.pdf"),
+          width = 6, height = 5)
+
+```
+
+```{r}
+
+outfile <- paste0(dataDir, "results/pairwise/sim_circSubset.pairwise.near.dist200.results.v2.rds")
+dat <- readRDS(outfile)
+
+dat <- meltResultsList(resultsList = dat, id = NA)
+colnames(dat) <- c("resolution", "neighbor", "Z", "reference", "dist", "subsetDist")
+
+dat <- dat[dat$resolution %in% c(50,100,200,600,700,800,1000,3000),]
+
+plotTrends(results = dat, idcol = "dist", figPath = paste0(figpath, "sim_circSubset_pairwise_dist200.v2.pdf"),
+          width = 6, height = 5)
+
+```
 
 
 

@@ -60,30 +60,46 @@ simulate_background <- function(size = 10000, cts = c("A"), prob = c(1), seed = 
 #' @param radii list of 2-d lists, where each inner list has variables "inner" and "outer" that refer to the
 #' radius of the outer ring and the inner cores of each circle. An inner list for each circle in locs
 #' @param cts same format as radii, but "inner" and "outer" are vectors of cell types present in core and ring
-#' @param probs same format as radii, but "inner" and "outer" are vectors of cell types proportions 
+#' @param probs same format as radii, but "inner" and "outer" are vectors of cell types proportions
+#' @param replace same format as radii; Boolean indicating if cell labels should be sampled and changed in either the inner or outer regions.
+#'                typically should be list( list(outer = TRUE, inner = TRUE), etc..), but allows for creation of a ring only if list( list(outer = TRUE, inner = FALSE), etc..)
 #' 
-simulate_circles <- function(pos, locs, radii, cts, probs){
+simulate_circles <- function(pos, locs, radii, cts, probs, replace, seed = 1){
   
   p <- pos
+  
+  set.seed(seed)
   
   for(i in 1:length(locs)){
     
     a <- locs[[i]][1]
     b <- locs[[i]][2]
     
+    message("circle ", i)
+    message("coordinates = ", a, " ", b)
+    
     ## outer section of circle, mainly for forming the outside ring
     ro <- radii[[i]]$outer
     co <- cts[[i]]$outer
     po <- probs[[i]]$outer
     c1o <- rownames(p[((p$x-a)^2 + (p$y - b)^2 < ro^2),])
-    p[c1o,]$type <- sample(co, size = length(c1o), replace = TRUE, prob = po)
+    # print(c1o)
+    
+    if(replace[[i]]$outer){
+      message("replacement of outer")
+      p[c1o,]$type <- sample(co, size = length(c1o), replace = TRUE, prob = po)
+    }
     
     ## inner section of the circle
     ri <- radii[[i]]$inner
     ci <- cts[[i]]$inner
     pi <- probs[[i]]$inner
     c1i <- rownames(p[((p$x-a)^2 + (p$y - b)^2 < ri^2),])
-    p[c1i,]$type <- sample(ci, size = length(c1i), replace = TRUE, prob = pi)
+    
+    if(replace[[i]]$inner){
+      message("replacement of inner")
+      p[c1i,]$type <- sample(ci, size = length(c1i), replace = TRUE, prob = pi)
+    }
     
   }
   
@@ -955,10 +971,10 @@ plotTrends <- function(results, idcol = "id", figPath = "results.pdf", width = 8
     pdf(figPath, width=width, height=height)
     # par(mfrow=c(length(refs), length(neighs)),
     #     mar=rep(4,4))
-    # par(mfrow=c(length(neighs), length(refs)),
-    #     mar=rep(4,4))
-    par(mfrow=c(2, 6),
+    par(mfrow=c(length(neighs), length(refs)),
         mar=rep(4,4))
+    # par(mfrow=c(2, 6),
+    #     mar=rep(4,4))
     
     ## for each reference cell type...
     sapply(refs, function(ct1) {
