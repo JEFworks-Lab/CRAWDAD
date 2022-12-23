@@ -1,0 +1,2100 @@
+---
+title: "sp functions real datas"
+output: html_document
+date: '2022-10-25'
+---
+
+# =====================
+# pkhl
+
+```{r}
+
+# pkhl <- readRDS(file = "/home/brendan/projects/HuBMAP/data/datasets/spleen/HBM389.PKHL.936.RDS")
+pkhl <- read.csv2(file = "/home/brendan/projects/HuBMAP/data/datasets/spleen/HBM389.PKHL.936.meta.csv.gz", sep = ",", row.names = 1)
+
+```
+
+## pairwise
+
+24 cores:
+50, 100, were like 15 minutes
+200 was like 45 minutes
+
+```{r}
+
+distances <- c(30, 50, 100, 200)
+resolutions <- c(50, 100, 200, 300, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000)
+# resolutions <- c(3000)
+prms <- 1
+sd <- 1
+
+ncs <- 24
+pkhl_pairwise_results <- lapply(distances, function(d){
+  
+  pos <- pkhl
+  
+  shuffledData <- paste0("/home/brendan/projects/HuBMAP/data/datasets/spleen/pkhl_shuffled_res_50-3000.rds")
+  if(file.exists(shuffledData)){
+    
+    results <- findTrendsv2(pos = pos[,c("x", "y")],
+                             celltypes = pos$com_nn50_VolnormExpr_data_annots,
+                             resolutions,
+                             dist = d,
+                             perms = prms,
+                             ncores = ncs,
+                             verbose = TRUE,
+                             loadShuffleFile = shuffledData,
+                             seed = sd)
+  } else {
+    results <- findTrendsv2(pos = pos[,c("x", "y")],
+                             celltypes = pos$com_nn50_VolnormExpr_data_annots,
+                             resolutions,
+                             dist = d,
+                             perms = prms,
+                             ncores = ncs,
+                             verbose = TRUE,
+                             saveShuffleFilePath = shuffledData,
+                             seed = sd)
+  }
+  # print(results)
+  return(results)
+  
+})
+
+names(pkhl_pairwise_results) <- distances
+
+saveRDS(object = pkhl_pairwise_results, file = "/home/brendan/projects/HuBMAP/vignettes/20221025-pkhl.pairwise.trends.rds")
+
+gc(reset = TRUE)
+
+```
+
+```{r}
+
+pkhl_pairwise_results_meltedDf <- reshape2::melt(pkhl_pairwise_results)
+colnames(pkhl_pairwise_results_meltedDf) <- c("resolution", "neighbor", "Z", "reference", "dist")
+
+```
+
+```{r}
+
+pkhl_pairwise_results <- readRDS(file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/data/sp_functions/spleen/20221025-pkhl.pairwise.trends.rds")
+
+```
+
+
+```{r}
+
+# figpath <- "/home/brendan/projects/HuBMAP/sim_circles/plots/results_all_circles.pdf"
+# figpath <- "/home/brendan/projects/HuBMAP/vignettes/plots/pkhl/"
+
+plotTrends(results = pkhl_pairwise_results_meltedDf, idcol = "dist", figPath = paste0(figpath, "pkhl.pairwise.dist30-200.pdf"),
+            width = 24, height = 24)
+
+```
+
+### plot
+
+```{r}
+
+# figpath <- "/home/brendan/projects/HuBMAP/sim_circles/plots/results_all_circles.pdf"
+# figpath <- "../plots/"
+
+rezs <- c(300, 500, 900, 1200, 1500, 3000)
+
+dat <- pkhl_pairwise_results_meltedDf[pkhl_pairwise_results_meltedDf$resolution %in% rezs & pkhl_pairwise_results_meltedDf$dist == "100",]
+plotTrends(results = dat, idcol = "dist", figPath = paste0(figpath, "pkhl.pairwise.dist100.selectedRezs.pdf"),
+            width = 32, height = 32) # 13*13 subsets = rows, then x inches for each row
+
+```
+
+## triplets
+
+dist of 50 took about 104 minutes
+
+rstudio seems to crash if I hit dist of 200 here. I it crashed in pairwise if I did 300. memory issues?
+even 100 crashes now but 50 makes it through. try just 100 only?
+
+reduced to just 1500, and 3000 resolutions and only 1 disance. seemd to work this time...143 minutes for 100 and the 2 resolutions, although all resolutions are computed in parallel for each cell type combination. 13X13 = 169 of them per distance.
+
+lets try to get parts of each resolution done separately and then combine them all back together at them end. slower, but seems to be the only way for now because it keeps crashing
+
+```{r}
+
+distances <- c(100)
+# resolutions <- c(50, 100, 200, 300, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000)
+resolutions <- c(50, 100, 200)
+prms <- 1
+sd <- 1
+
+ncs <- 14
+pkhl_triplet_results <- lapply(distances, function(d){
+  
+  pos <- pkhl
+  
+  shuffledData <- paste0("/home/brendan/projects/HuBMAP/data/datasets/spleen/pkhl_shuffled_res_50-200.rds")
+  if(file.exists(shuffledData)){
+    
+    results <- findTrendsv2(pos = pos[,c("x", "y")],
+                             celltypes = pos$com_nn50_VolnormExpr_data_annots,
+                             resolutions,
+                             dist = d,
+                             subsetdist = 50,
+                             perms = prms,
+                             ncores = ncs,
+                             verbose = TRUE,
+                             loadShuffleFile = shuffledData,
+                             seed = sd)
+  } else {
+    results <- findTrendsv2(pos = pos[,c("x", "y")],
+                             celltypes = pos$com_nn50_VolnormExpr_data_annots,
+                             resolutions,
+                             dist = d,
+                             subsetdist = 50,
+                             perms = prms,
+                             ncores = ncs,
+                             verbose = TRUE,
+                             saveShuffleFilePath = shuffledData,
+                             seed = sd)
+  }
+  # print(results)
+  return(results)
+  
+})
+
+names(pkhl_triplet_results) <- distances
+
+saveRDS(object = pkhl_triplet_results, file = "/home/brendan/projects/HuBMAP/vignettes/20221025-pkhl.triplet.trends.subdist50.dist100.res50-200.rds")
+
+gc(reset = TRUE)
+
+```
+
+```{r}
+
+distances <- c(100)
+# resolutions <- c(50, 100, 200, 300, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000)
+resolutions <- c(300, 500, 600)
+prms <- 1
+sd <- 1
+
+ncs <- 14
+pkhl_triplet_results <- lapply(distances, function(d){
+  
+  pos <- pkhl
+  
+  shuffledData <- paste0("/home/brendan/projects/HuBMAP/data/datasets/spleen/pkhl_shuffled_res_300-600.rds")
+  if(file.exists(shuffledData)){
+    
+    results <- findTrendsv2(pos = pos[,c("x", "y")],
+                             celltypes = pos$com_nn50_VolnormExpr_data_annots,
+                             resolutions,
+                             dist = d,
+                             subsetdist = 50,
+                             perms = prms,
+                             ncores = ncs,
+                             verbose = TRUE,
+                             loadShuffleFile = shuffledData,
+                             seed = sd)
+  } else {
+    results <- findTrendsv2(pos = pos[,c("x", "y")],
+                             celltypes = pos$com_nn50_VolnormExpr_data_annots,
+                             resolutions,
+                             dist = d,
+                             subsetdist = 50,
+                             perms = prms,
+                             ncores = ncs,
+                             verbose = TRUE,
+                             saveShuffleFilePath = shuffledData,
+                             seed = sd)
+  }
+  # print(results)
+  return(results)
+  
+})
+
+names(pkhl_triplet_results) <- distances
+
+saveRDS(object = pkhl_triplet_results, file = "/home/brendan/projects/HuBMAP/vignettes/20221025-pkhl.triplet.trends.subdist50.dist100.res300-600.rds")
+
+gc(reset = TRUE)
+
+```
+
+```{r}
+
+distances <- c(100)
+# resolutions <- c(50, 100, 200, 300, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000)
+resolutions <- c(700, 800, 900)
+prms <- 1
+sd <- 1
+
+ncs <- 14
+pkhl_triplet_results <- lapply(distances, function(d){
+  
+  pos <- pkhl
+  
+  shuffledData <- paste0("/home/brendan/projects/HuBMAP/data/datasets/spleen/pkhl_shuffled_res_700-900.rds")
+  if(file.exists(shuffledData)){
+    
+    results <- findTrendsv2(pos = pos[,c("x", "y")],
+                             celltypes = pos$com_nn50_VolnormExpr_data_annots,
+                             resolutions,
+                             dist = d,
+                             subsetdist = 50,
+                             perms = prms,
+                             ncores = ncs,
+                             verbose = TRUE,
+                             loadShuffleFile = shuffledData,
+                             seed = sd)
+  } else {
+    results <- findTrendsv2(pos = pos[,c("x", "y")],
+                             celltypes = pos$com_nn50_VolnormExpr_data_annots,
+                             resolutions,
+                             dist = d,
+                             subsetdist = 50,
+                             perms = prms,
+                             ncores = ncs,
+                             verbose = TRUE,
+                             saveShuffleFilePath = shuffledData,
+                             seed = sd)
+  }
+  # print(results)
+  return(results)
+  
+})
+
+names(pkhl_triplet_results) <- distances
+
+saveRDS(object = pkhl_triplet_results, file = "/home/brendan/projects/HuBMAP/vignettes/20221025-pkhl.triplet.trends.subdist50.dist100.res700-900.rds")
+
+gc(reset = TRUE)
+
+```
+
+```{r}
+
+distances <- c(100)
+# resolutions <- c(50, 100, 200, 300, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000)
+resolutions <- c(1000, 1200)
+prms <- 1
+sd <- 1
+
+ncs <- 14
+pkhl_triplet_results <- lapply(distances, function(d){
+  
+  pos <- pkhl
+  
+  shuffledData <- paste0("/home/brendan/projects/HuBMAP/data/datasets/spleen/pkhl_shuffled_res_1000-1200.rds")
+  if(file.exists(shuffledData)){
+    
+    results <- findTrendsv2(pos = pos[,c("x", "y")],
+                             celltypes = pos$com_nn50_VolnormExpr_data_annots,
+                             resolutions,
+                             dist = d,
+                             subsetdist = 50,
+                             perms = prms,
+                             ncores = ncs,
+                             verbose = TRUE,
+                             loadShuffleFile = shuffledData,
+                             seed = sd)
+  } else {
+    results <- findTrendsv2(pos = pos[,c("x", "y")],
+                             celltypes = pos$com_nn50_VolnormExpr_data_annots,
+                             resolutions,
+                             dist = d,
+                             subsetdist = 50,
+                             perms = prms,
+                             ncores = ncs,
+                             verbose = TRUE,
+                             saveShuffleFilePath = shuffledData,
+                             seed = sd)
+  }
+  # print(results)
+  return(results)
+  
+})
+
+names(pkhl_triplet_results) <- distances
+
+saveRDS(object = pkhl_triplet_results, file = "/home/brendan/projects/HuBMAP/vignettes/20221025-pkhl.triplet.trends.subdist50.dist100.res1000-1200.rds")
+
+gc(reset = TRUE)
+
+```
+
+### load and analyze triplet data
+
+```{r}
+
+pkhlTriplets.50_200 <- readRDS(file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/data/sp_functions/spleen/20221025-pkhl.triplet.trends.subdist50.dist100.res50-200.rds")
+pkhlTriplets.50_200 <- reshape2::melt(pkhlTriplets.50_200)
+colnames(pkhlTriplets.50_200) <- c("resolution", "neighbor", "Z", "reference", "dist")
+
+pkhlTriplets.300_600 <- readRDS(file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/data/sp_functions/spleen/20221025-pkhl.triplet.trends.subdist50.dist100.res300-600.rds")
+pkhlTriplets.300_600 <- reshape2::melt(pkhlTriplets.300_600)
+colnames(pkhlTriplets.300_600) <- c("resolution", "neighbor", "Z", "reference", "dist")
+
+pkhlTriplets.700_900 <- readRDS(file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/data/sp_functions/spleen/20221025-pkhl.triplet.trends.subdist50.dist100.res700-900.rds")
+pkhlTriplets.700_900 <- reshape2::melt(pkhlTriplets.700_900)
+colnames(pkhlTriplets.700_900) <- c("resolution", "neighbor", "Z", "reference", "dist")
+
+pkhlTriplets.1000_1200 <- readRDS(file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/data/sp_functions/spleen/20221025-pkhl.triplet.trends.subdist50.dist100.res1000-1200.rds")
+pkhlTriplets.1000_1200 <- reshape2::melt(pkhlTriplets.1000_1200)
+colnames(pkhlTriplets.1000_1200) <- c("resolution", "neighbor", "Z", "reference", "dist")
+
+pkhlTriplets.1500_3000 <- readRDS(file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/data/sp_functions/spleen/20221025-pkhl.triplet.trends.subdist50.dist100.res1500.3000.rds")
+pkhlTriplets.1500_3000 <- reshape2::melt(pkhlTriplets.1500_3000)
+colnames(pkhlTriplets.1500_3000) <- c("resolution", "neighbor", "Z", "reference", "dist")
+
+```
+
+```{r}
+
+pkhlTriplets <- dplyr::bind_rows(list(
+  pkhlTriplets.50_200,
+  pkhlTriplets.300_600,
+  pkhlTriplets.700_900,
+  pkhlTriplets.1000_1200,
+  pkhlTriplets.1500_3000
+))
+
+```
+
+```{r}
+
+# figpath <- "/home/brendan/projects/HuBMAP/sim_circles/plots/results_all_circles.pdf"
+# figpath <- "../plots/"
+
+rezs <- c(300, 500, 900, 1200, 1500, 3000)
+
+dat <- pkhlTriplets[pkhlTriplets$resolution %in% rezs,]
+plotTrends(results = dat, idcol = "dist", figPath = paste0(figpath, "pkhl.triplets.dist100.selectedRezs.pdf"),
+            width = 40, height = 400) # 13*13 subsets = rows, then x inches for each row
+
+```
+
+```{r}
+
+rezs <- c(300, 500, 900, 1200, 1500, 3000)
+
+dat <- pkhlTriplets[pkhlTriplets$resolution %in% rezs,]
+
+ref <- c(
+         "CD4 Memory T cells_near_Blood endothelial",
+         "CD4 Memory T cells_near_Podoplanin",
+         "CD4 Memory T cells_near_Fol B cells, ctr",
+         "Podoplanin_near_Blood endothelial",
+         "Podoplanin_near_Fol B cells, ctr",
+         "Podoplanin_near_CD4 Memory T cells",
+         "Blood endothelial_near_CD4 Memory T cells",
+         "Blood endothelial_near_Fol B cells, ctr",
+         "Blood endothelial_near_Podoplanin",
+         "Fol B cells, ctr_near_CD4 Memory T cells",
+         "Fol B cells_near_Podoplanin",
+         "Fol B cells_near_Blood endothelial"
+         )
+
+dat <- dat[dat$reference %in% ref,]
+plotTrends(results = dat, idcol = "dist", figPath = paste0(figpath, "pkhl.triplets.dist100.selectedRefs.selectedRezs.pdf"),
+            width = 48, height = 24)
+
+```
+
+```{r}
+
+rezs <- c(300, 500, 900, 1200, 1500, 3000)
+
+dat <- pkhlTriplets[pkhlTriplets$resolution %in% rezs,]
+dat <- dat[grepl(pattern = "Podoplanin_near_", x = dat$reference) & dat$neighbor == "CD4 Memory T cells",]
+plotTrends(results = dat, idcol = "dist", figPath = paste0(figpath, "pkhl.triplets.dist100.podoplaninSubsets_vs_CD4.selectedRezs.pdf"),
+            width = 4, height = 48)
+
+```
+
+# =====================
+# xxcd
+
+```{r}
+
+figpath <- "/home/brendan/projects/HuBMAP/vignettes/plots/xxcd/"
+
+# xxcd <- readRDS(file = "/home/brendan/projects/HuBMAP/data/datasets/spleen/HBM772.XXCD.697.RDS")
+xxcd <- read.csv2(file = "/home/brendan/projects/HuBMAP/data/datasets/spleen/HBM772.XXCD.697.meta.csv.gz", sep = ",", row.names = 1)
+
+```
+
+## pairwise
+
+```{r}
+
+distances <- c(50, 100, 200)
+resolutions <- c(50, 100, 200, 300, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000)
+# resolutions <- c(3000)
+prms <- 1
+sd <- 1
+
+ncs <- 13
+xxcd_pairwise_results <- lapply(distances, function(d){
+  
+  pos <- xxcd
+  
+  shuffledData <- paste0("/home/brendan/projects/HuBMAP/data/datasets/spleen/xxcd_shuffled_res_50-3000.rds")
+  if(file.exists(shuffledData)){
+    
+    results <- findTrendsv2(pos = pos[,c("x", "y")],
+                             celltypes = pos$com_nn50_VolnormExpr_data_annots_byPKHL,
+                             resolutions,
+                             dist = d,
+                             perms = prms,
+                             ncores = ncs,
+                             verbose = TRUE,
+                             loadShuffleFile = shuffledData,
+                             seed = sd)
+  } else {
+    results <- findTrendsv2(pos = pos[,c("x", "y")],
+                             celltypes = pos$com_nn50_VolnormExpr_data_annots_byPKHL,
+                             resolutions,
+                             dist = d,
+                             perms = prms,
+                             ncores = ncs,
+                             verbose = TRUE,
+                             saveShuffleFilePath = shuffledData,
+                             seed = sd)
+  }
+  # print(results)
+  return(results)
+  
+})
+
+names(xxcd_pairwise_results) <- distances
+
+saveRDS(object = xxcd_pairwise_results, file = "/home/brendan/projects/HuBMAP/vignettes/20221108-xxcd.pairwise.trends.rds")
+
+gc(reset = TRUE)
+
+```
+
+```{r}
+
+xxcd_pairwise_results_meltedDf <- reshape2::melt(xxcd_pairwise_results)
+colnames(xxcd_pairwise_results_meltedDf) <- c("resolution", "neighbor", "Z", "reference", "dist")
+
+```
+
+```{r}
+
+# figpath <- "/home/brendan/projects/HuBMAP/sim_circles/plots/results_all_circles.pdf"
+# figpath <- "/home/brendan/projects/HuBMAP/vignettes/plots/xxcd/"
+
+plotTrends(results = xxcd_pairwise_results_meltedDf, idcol = "dist", figPath = paste0(figpath, "xxcd.pairwise.dist50-200.pdf"),
+            width = 24, height = 24)
+
+```
+
+## triplet
+
+```{r}
+
+distances <- c(100)
+# resolutions <- c(50, 100, 200, 300, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000)
+resolutions <- c(50, 100, 200)
+prms <- 1
+sd <- 1
+
+ncs <- 12
+xxcd_triplet_results <- lapply(distances, function(d){
+  
+  pos <- xxcd
+  
+  shuffledData <- paste0("/home/brendan/projects/HuBMAP/data/datasets/spleen/xxcd_shuffled_res_50-200.rds")
+  if(file.exists(shuffledData)){
+    
+    results <- findTrendsv2(pos = pos[,c("x", "y")],
+                             celltypes = pos$com_nn50_VolnormExpr_data_annots_byPKHL,
+                             resolutions,
+                             dist = d,
+                             subsetdist = 50,
+                             perms = prms,
+                             ncores = ncs,
+                             verbose = TRUE,
+                             loadShuffleFile = shuffledData,
+                             seed = sd)
+  } else {
+    results <- findTrendsv2(pos = pos[,c("x", "y")],
+                             celltypes = pos$com_nn50_VolnormExpr_data_annots_byPKHL,
+                             resolutions,
+                             dist = d,
+                             subsetdist = 50,
+                             perms = prms,
+                             ncores = ncs,
+                             verbose = TRUE,
+                             saveShuffleFilePath = shuffledData,
+                             seed = sd)
+  }
+  # print(results)
+  return(results)
+  
+})
+
+names(xxcd_triplet_results) <- distances
+
+saveRDS(object = xxcd_triplet_results, file = "/home/brendan/projects/HuBMAP/vignettes/20221108-xxcd.triplet.trends.subdist50.dist100.res50-200.rds")
+
+gc(reset = TRUE)
+
+```
+
+```{r}
+
+distances <- c(100)
+# resolutions <- c(50, 100, 200, 300, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000)
+resolutions <- c(300, 500, 600)
+prms <- 1
+sd <- 1
+
+ncs <- 12
+xxcd_triplet_results <- lapply(distances, function(d){
+  
+  pos <- xxcd
+  
+  shuffledData <- paste0("/home/brendan/projects/HuBMAP/data/datasets/spleen/xxcd_shuffled_res_300-600.rds")
+  if(file.exists(shuffledData)){
+    
+    results <- findTrendsv2(pos = pos[,c("x", "y")],
+                             celltypes = pos$com_nn50_VolnormExpr_data_annots_byPKHL,
+                             resolutions,
+                             dist = d,
+                             subsetdist = 50,
+                             perms = prms,
+                             ncores = ncs,
+                             verbose = TRUE,
+                             loadShuffleFile = shuffledData,
+                             seed = sd)
+  } else {
+    results <- findTrendsv2(pos = pos[,c("x", "y")],
+                             celltypes = pos$com_nn50_VolnormExpr_data_annots_byPKHL,
+                             resolutions,
+                             dist = d,
+                             subsetdist = 50,
+                             perms = prms,
+                             ncores = ncs,
+                             verbose = TRUE,
+                             saveShuffleFilePath = shuffledData,
+                             seed = sd)
+  }
+  # print(results)
+  return(results)
+  
+})
+
+names(xxcd_triplet_results) <- distances
+
+saveRDS(object = xxcd_triplet_results, file = "/home/brendan/projects/HuBMAP/vignettes/20221108-xxcd.triplet.trends.subdist50.dist100.res300-600.rds")
+
+gc(reset = TRUE)
+
+```
+
+```{r}
+
+distances <- c(100)
+# resolutions <- c(50, 100, 200, 300, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000)
+resolutions <- c(700, 800, 900)
+prms <- 1
+sd <- 1
+
+ncs <- 12
+xxcd_triplet_results <- lapply(distances, function(d){
+  
+  pos <- xxcd
+  
+  shuffledData <- paste0("/home/brendan/projects/HuBMAP/data/datasets/spleen/xxcd_shuffled_res_700-900.rds")
+  if(file.exists(shuffledData)){
+    
+    results <- findTrendsv2(pos = pos[,c("x", "y")],
+                             celltypes = pos$com_nn50_VolnormExpr_data_annots_byPKHL,
+                             resolutions,
+                             dist = d,
+                             subsetdist = 50,
+                             perms = prms,
+                             ncores = ncs,
+                             verbose = TRUE,
+                             loadShuffleFile = shuffledData,
+                             seed = sd)
+  } else {
+    results <- findTrendsv2(pos = pos[,c("x", "y")],
+                             celltypes = pos$com_nn50_VolnormExpr_data_annots_byPKHL,
+                             resolutions,
+                             dist = d,
+                             subsetdist = 50,
+                             perms = prms,
+                             ncores = ncs,
+                             verbose = TRUE,
+                             saveShuffleFilePath = shuffledData,
+                             seed = sd)
+  }
+  # print(results)
+  return(results)
+  
+})
+
+names(xxcd_triplet_results) <- distances
+
+saveRDS(object = xxcd_triplet_results, file = "/home/brendan/projects/HuBMAP/vignettes/20221108-xxcd.triplet.trends.subdist50.dist100.res700-900.rds")
+
+gc(reset = TRUE)
+
+```
+
+```{r}
+
+distances <- c(100)
+# resolutions <- c(50, 100, 200, 300, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000)
+resolutions <- c(1000, 1200)
+prms <- 1
+sd <- 1
+
+ncs <- 12
+xxcd_triplet_results <- lapply(distances, function(d){
+  
+  pos <- xxcd
+  
+  shuffledData <- paste0("/home/brendan/projects/HuBMAP/data/datasets/spleen/xxcd_shuffled_res_1000-1200.rds")
+  if(file.exists(shuffledData)){
+    
+    results <- findTrendsv2(pos = pos[,c("x", "y")],
+                             celltypes = pos$com_nn50_VolnormExpr_data_annots_byPKHL,
+                             resolutions,
+                             dist = d,
+                             subsetdist = 50,
+                             perms = prms,
+                             ncores = ncs,
+                             verbose = TRUE,
+                             loadShuffleFile = shuffledData,
+                             seed = sd)
+  } else {
+    results <- findTrendsv2(pos = pos[,c("x", "y")],
+                             celltypes = pos$com_nn50_VolnormExpr_data_annots_byPKHL,
+                             resolutions,
+                             dist = d,
+                             subsetdist = 50,
+                             perms = prms,
+                             ncores = ncs,
+                             verbose = TRUE,
+                             saveShuffleFilePath = shuffledData,
+                             seed = sd)
+  }
+  # print(results)
+  return(results)
+  
+})
+
+names(xxcd_triplet_results) <- distances
+
+saveRDS(object = xxcd_triplet_results, file = "/home/brendan/projects/HuBMAP/vignettes/20221108-xxcd.triplet.trends.subdist50.dist100.res1000-1200.rds")
+
+gc(reset = TRUE)
+
+```
+
+```{r}
+
+distances <- c(100)
+# resolutions <- c(50, 100, 200, 300, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000)
+resolutions <- c(1500, 3000)
+prms <- 1
+sd <- 1
+
+ncs <- 12
+xxcd_triplet_results <- lapply(distances, function(d){
+  
+  pos <- xxcd
+  
+  shuffledData <- paste0("/home/brendan/projects/HuBMAP/data/datasets/spleen/xxcd_shuffled_res_1500-3000.rds")
+  if(file.exists(shuffledData)){
+    
+    results <- findTrendsv2(pos = pos[,c("x", "y")],
+                             celltypes = pos$com_nn50_VolnormExpr_data_annots_byPKHL,
+                             resolutions,
+                             dist = d,
+                             subsetdist = 50,
+                             perms = prms,
+                             ncores = ncs,
+                             verbose = TRUE,
+                             loadShuffleFile = shuffledData,
+                             seed = sd)
+  } else {
+    results <- findTrendsv2(pos = pos[,c("x", "y")],
+                             celltypes = pos$com_nn50_VolnormExpr_data_annots_byPKHL,
+                             resolutions,
+                             dist = d,
+                             subsetdist = 50,
+                             perms = prms,
+                             ncores = ncs,
+                             verbose = TRUE,
+                             saveShuffleFilePath = shuffledData,
+                             seed = sd)
+  }
+  # print(results)
+  return(results)
+  
+})
+
+names(xxcd_triplet_results) <- distances
+
+saveRDS(object = xxcd_triplet_results, file = "/home/brendan/projects/HuBMAP/vignettes/20221108-xxcd.triplet.trends.subdist50.dist100.res1500-3000.rds")
+
+gc(reset = TRUE)
+
+```
+
+# =====================
+# ngpl
+
+```{r}
+
+figpath <- "/home/brendan/projects/HuBMAP/vignettes/plots/ngpl/"
+
+# xxcd <- readRDS(file = "/home/brendan/projects/HuBMAP/data/datasets/spleen/HBM772.XXCD.697.RDS")
+ngpl <- read.csv2(file = "/home/brendan/projects/HuBMAP/data/datasets/spleen/HBM568.NGPL.345.meta.csv.gz", sep = ",", row.names = 1)
+
+```
+
+## pairwise
+
+```{r}
+
+distances <- c(50, 100, 200)
+resolutions <- c(50, 100, 200, 300, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000)
+# resolutions <- c(3000)
+prms <- 1
+sd <- 1
+
+ncs <- 13
+ngpl_pairwise_results <- lapply(distances, function(d){
+  
+  pos <- ngpl
+  
+  shuffledData <- paste0("/home/brendan/projects/HuBMAP/data/datasets/spleen/ngpl_shuffled_res_50-3000.rds")
+  if(file.exists(shuffledData)){
+    
+    results <- findTrendsv2(pos = pos[,c("x", "y")],
+                             celltypes = pos$com_nn50_VolnormExpr_data_annots_byKSFBharmonized,
+                             resolutions,
+                             dist = d,
+                             perms = prms,
+                             ncores = ncs,
+                             verbose = TRUE,
+                             loadShuffleFile = shuffledData,
+                             seed = sd)
+  } else {
+    results <- findTrendsv2(pos = pos[,c("x", "y")],
+                             celltypes = pos$com_nn50_VolnormExpr_data_annots_byKSFBharmonized,
+                             resolutions,
+                             dist = d,
+                             perms = prms,
+                             ncores = ncs,
+                             verbose = TRUE,
+                             saveShuffleFilePath = shuffledData,
+                             seed = sd)
+  }
+  # print(results)
+  return(results)
+  
+})
+
+names(ngpl_pairwise_results) <- distances
+
+saveRDS(object = ngpl_pairwise_results, file = "/home/brendan/projects/HuBMAP/vignettes/20221108-ngpl.pairwise.trends.rds")
+
+gc(reset = TRUE)
+
+```
+
+```{r}
+
+ngpl_pairwise_results_meltedDf <- reshape2::melt(ngpl_pairwise_results)
+colnames(ngpl_pairwise_results_meltedDf) <- c("resolution", "neighbor", "Z", "reference", "dist")
+
+```
+
+```{r}
+
+# figpath <- "/home/brendan/projects/HuBMAP/sim_circles/plots/results_all_circles.pdf"
+# figpath <- "/home/brendan/projects/HuBMAP/vignettes/plots/pkhl/"
+
+plotTrends(results = ngpl_pairwise_results_meltedDf, idcol = "dist", figPath = paste0(figpath, "ngpl.pairwise.dist50-200.pdf"),
+            width = 24, height = 24)
+
+```
+
+## triplet
+
+```{r}
+
+distances <- c(100)
+# resolutions <- c(50, 100, 200, 300, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000)
+resolutions <- c(50, 100, 200, 300, 500, 600)
+prms <- 1
+sd <- 1
+
+ncs <- 12
+ngpl_triplet_results <- lapply(distances, function(d){
+  
+  pos <- ngpl
+  
+  shuffledData <- paste0("/home/brendan/projects/HuBMAP/data/datasets/spleen/ngpl_shuffled_res_50-600.rds")
+  if(file.exists(shuffledData)){
+    
+    results <- findTrendsv2(pos = pos[,c("x", "y")],
+                             celltypes = pos$com_nn50_VolnormExpr_data_annots_byKSFBharmonized,
+                             resolutions,
+                             dist = d,
+                             subsetdist = 50,
+                             perms = prms,
+                             ncores = ncs,
+                             verbose = TRUE,
+                             loadShuffleFile = shuffledData,
+                             seed = sd)
+  } else {
+    results <- findTrendsv2(pos = pos[,c("x", "y")],
+                             celltypes = pos$com_nn50_VolnormExpr_data_annots_byKSFBharmonized,
+                             resolutions,
+                             dist = d,
+                             subsetdist = 50,
+                             perms = prms,
+                             ncores = ncs,
+                             verbose = TRUE,
+                             saveShuffleFilePath = shuffledData,
+                             seed = sd)
+  }
+  # print(results)
+  return(results)
+  
+})
+
+names(ngpl_triplet_results) <- distances
+
+saveRDS(object = ngpl_triplet_results, file = "/home/brendan/projects/HuBMAP/vignettes/20221108-ngpl.triplet.trends.subdist50.dist100.res50-600.rds")
+
+gc(reset = TRUE)
+
+```
+
+```{r}
+
+# distances <- c(100)
+# # resolutions <- c(50, 100, 200, 300, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000)
+# resolutions <- c(300, 500, 600)
+# prms <- 1
+# sd <- 1
+# 
+# ncs <- 12
+# ngpl_triplet_results <- lapply(distances, function(d){
+#   
+#   pos <- ngpl
+#   
+#   shuffledData <- paste0("/home/brendan/projects/HuBMAP/data/datasets/spleen/ngpl_shuffled_res_300-600.rds")
+#   if(file.exists(shuffledData)){
+#     
+#     results <- findTrendsv2(pos = pos[,c("x", "y")],
+#                              celltypes = pos$com_nn50_VolnormExpr_data_annots_byKSFBharmonized,
+#                              resolutions,
+#                              dist = d,
+#                              subsetdist = 50,
+#                              perms = prms,
+#                              ncores = ncs,
+#                              verbose = TRUE,
+#                              loadShuffleFile = shuffledData,
+#                              seed = sd)
+#   } else {
+#     results <- findTrendsv2(pos = pos[,c("x", "y")],
+#                              celltypes = pos$com_nn50_VolnormExpr_data_annots_byKSFBharmonized,
+#                              resolutions,
+#                              dist = d,
+#                              subsetdist = 50,
+#                              perms = prms,
+#                              ncores = ncs,
+#                              verbose = TRUE,
+#                              saveShuffleFilePath = shuffledData,
+#                              seed = sd)
+#   }
+#   # print(results)
+#   return(results)
+#   
+# })
+# 
+# names(ngpl_triplet_results) <- distances
+# 
+# saveRDS(object = ngpl_triplet_results, file = "/home/brendan/projects/HuBMAP/vignettes/20221108-ngpl.triplet.trends.subdist50.dist100.res300-600.rds")
+# 
+# gc(reset = TRUE)
+
+```
+
+```{r}
+
+distances <- c(100)
+# resolutions <- c(50, 100, 200, 300, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000)
+resolutions <- c(700, 800, 900, 1000, 1200, 1500, 3000)
+prms <- 1
+sd <- 1
+
+ncs <- 12
+ngpl_triplet_results <- lapply(distances, function(d){
+  
+  pos <- ngpl
+  
+  shuffledData <- paste0("/home/brendan/projects/HuBMAP/data/datasets/spleen/ngpl_shuffled_res_700-3000.rds")
+  if(file.exists(shuffledData)){
+    
+    results <- findTrendsv2(pos = pos[,c("x", "y")],
+                             celltypes = pos$com_nn50_VolnormExpr_data_annots_byKSFBharmonized,
+                             resolutions,
+                             dist = d,
+                             subsetdist = 50,
+                             perms = prms,
+                             ncores = ncs,
+                             verbose = TRUE,
+                             loadShuffleFile = shuffledData,
+                             seed = sd)
+  } else {
+    results <- findTrendsv2(pos = pos[,c("x", "y")],
+                             celltypes = pos$com_nn50_VolnormExpr_data_annots_byKSFBharmonized,
+                             resolutions,
+                             dist = d,
+                             subsetdist = 50,
+                             perms = prms,
+                             ncores = ncs,
+                             verbose = TRUE,
+                             saveShuffleFilePath = shuffledData,
+                             seed = sd)
+  }
+  # print(results)
+  return(results)
+  
+})
+
+names(ngpl_triplet_results) <- distances
+
+saveRDS(object = ngpl_triplet_results, file = "/home/brendan/projects/HuBMAP/vignettes/20221108-ngpl.triplet.trends.subdist50.dist100.res700-3000.rds")
+
+gc(reset = TRUE)
+
+```
+
+```{r}
+
+# distances <- c(100)
+# # resolutions <- c(50, 100, 200, 300, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000)
+# resolutions <- c(1000, 1200)
+# prms <- 1
+# sd <- 1
+# 
+# ncs <- 12
+# ngpl_triplet_results <- lapply(distances, function(d){
+#   
+#   pos <- ngpl
+#   
+#   shuffledData <- paste0("/home/brendan/projects/HuBMAP/data/datasets/spleen/ngpl_shuffled_res_1000-1200.rds")
+#   if(file.exists(shuffledData)){
+#     
+#     results <- findTrendsv2(pos = pos[,c("x", "y")],
+#                              celltypes = pos$com_nn50_VolnormExpr_data_annots_byKSFBharmonized,
+#                              resolutions,
+#                              dist = d,
+#                              subsetdist = 50,
+#                              perms = prms,
+#                              ncores = ncs,
+#                              verbose = TRUE,
+#                              loadShuffleFile = shuffledData,
+#                              seed = sd)
+#   } else {
+#     results <- findTrendsv2(pos = pos[,c("x", "y")],
+#                              celltypes = pos$com_nn50_VolnormExpr_data_annots_byKSFBharmonized,
+#                              resolutions,
+#                              dist = d,
+#                              subsetdist = 50,
+#                              perms = prms,
+#                              ncores = ncs,
+#                              verbose = TRUE,
+#                              saveShuffleFilePath = shuffledData,
+#                              seed = sd)
+#   }
+#   # print(results)
+#   return(results)
+#   
+# })
+# 
+# names(ngpl_triplet_results) <- distances
+# 
+# saveRDS(object = ngpl_triplet_results, file = "/home/brendan/projects/HuBMAP/vignettes/20221108-ngpl.triplet.trends.subdist50.dist100.res1000-1200.rds")
+# 
+# gc(reset = TRUE)
+
+```
+
+```{r}
+
+# distances <- c(100)
+# # resolutions <- c(50, 100, 200, 300, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000)
+# resolutions <- c(1500, 3000)
+# prms <- 1
+# sd <- 1
+# 
+# ncs <- 12
+# ngpl_triplet_results <- lapply(distances, function(d){
+#   
+#   pos <- ngpl
+#   
+#   shuffledData <- paste0("/home/brendan/projects/HuBMAP/data/datasets/spleen/ngpl_shuffled_res_1500-3000.rds")
+#   if(file.exists(shuffledData)){
+#     
+#     results <- findTrendsv2(pos = pos[,c("x", "y")],
+#                              celltypes = pos$com_nn50_VolnormExpr_data_annots_byKSFBharmonized,
+#                              resolutions,
+#                              dist = d,
+#                              subsetdist = 50,
+#                              perms = prms,
+#                              ncores = ncs,
+#                              verbose = TRUE,
+#                              loadShuffleFile = shuffledData,
+#                              seed = sd)
+#   } else {
+#     results <- findTrendsv2(pos = pos[,c("x", "y")],
+#                              celltypes = pos$com_nn50_VolnormExpr_data_annots_byKSFBharmonized,
+#                              resolutions,
+#                              dist = d,
+#                              subsetdist = 50,
+#                              perms = prms,
+#                              ncores = ncs,
+#                              verbose = TRUE,
+#                              saveShuffleFilePath = shuffledData,
+#                              seed = sd)
+#   }
+#   # print(results)
+#   return(results)
+#   
+# })
+# 
+# names(ngpl_triplet_results) <- distances
+# 
+# saveRDS(object = ngpl_triplet_results, file = "/home/brendan/projects/HuBMAP/vignettes/20221108-ngpl.triplet.trends.subdist50.dist100.res1500-3000.rds")
+# 
+# gc(reset = TRUE)
+
+```
+
+# =====================
+# ksfb
+
+```{r}
+
+figpath <- "/home/brendan/projects/HuBMAP/vignettes/plots/ksfb/"
+
+# xxcd <- readRDS(file = "/home/brendan/projects/HuBMAP/data/datasets/spleen/HBM772.XXCD.697.RDS")
+ksfb <- read.csv2(file = "/home/brendan/projects/HuBMAP/data/datasets/spleen/HBM556.KSFB.592.meta.csv.gz", sep = ",", row.names = 1)
+
+```
+
+## pairwise
+
+```{r}
+
+distances <- c(50, 100, 200)
+resolutions <- c(50, 100, 200, 300, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000)
+# resolutions <- c(3000)
+prms <- 1
+sd <- 1
+
+ncs <- 13
+ksfb_pairwise_results <- lapply(distances, function(d){
+  
+  pos <- ksfb
+  
+  shuffledData <- paste0("/home/brendan/projects/HuBMAP/data/datasets/spleen/ksfb_shuffled_res_50-3000.rds")
+  if(file.exists(shuffledData)){
+    
+    results <- findTrendsv2(pos = pos[,c("x", "y")],
+                             celltypes = pos$com_nn50_VolnormExpr_data_annots_byPKHL,
+                             resolutions,
+                             dist = d,
+                             perms = prms,
+                             ncores = ncs,
+                             verbose = TRUE,
+                             loadShuffleFile = shuffledData,
+                             seed = sd)
+  } else {
+    results <- findTrendsv2(pos = pos[,c("x", "y")],
+                             celltypes = pos$com_nn50_VolnormExpr_data_annots_byPKHL,
+                             resolutions,
+                             dist = d,
+                             perms = prms,
+                             ncores = ncs,
+                             verbose = TRUE,
+                             saveShuffleFilePath = shuffledData,
+                             seed = sd)
+  }
+  # print(results)
+  return(results)
+  
+})
+
+names(ksfb_pairwise_results) <- distances
+
+saveRDS(object = ksfb_pairwise_results, file = "/home/brendan/projects/HuBMAP/vignettes/20221108-ksfb.pairwise.trends.rds")
+
+gc(reset = TRUE)
+
+```
+
+```{r}
+
+ksfb_pairwise_results_meltedDf <- reshape2::melt(ksfb_pairwise_results)
+colnames(ksfb_pairwise_results_meltedDf) <- c("resolution", "neighbor", "Z", "reference", "dist")
+
+```
+
+```{r}
+
+# figpath <- "/home/brendan/projects/HuBMAP/sim_circles/plots/results_all_circles.pdf"
+# figpath <- "/home/brendan/projects/HuBMAP/vignettes/plots/pkhl/"
+
+plotTrends(results = ksfb_pairwise_results_meltedDf, idcol = "dist", figPath = paste0(figpath, "ksfb.pairwise.dist50-200.pdf"),
+            width = 24, height = 24)
+
+```
+
+## triplet
+
+```{r}
+
+distances <- c(100)
+# resolutions <- c(50, 100, 200, 300, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000)
+resolutions <- c(50, 100, 200, 300, 500, 600)
+prms <- 1
+sd <- 1
+
+ncs <- 12
+ksfb_triplet_results <- lapply(distances, function(d){
+  
+  pos <- ksfb
+  
+  shuffledData <- paste0("/home/brendan/projects/HuBMAP/data/datasets/spleen/ksfb_shuffled_res_50-600.rds")
+  if(file.exists(shuffledData)){
+    
+    results <- findTrendsv2(pos = pos[,c("x", "y")],
+                             celltypes = pos$com_nn50_VolnormExpr_data_annots_byPKHL,
+                             resolutions,
+                             dist = d,
+                             subsetdist = 50,
+                             perms = prms,
+                             ncores = ncs,
+                             verbose = TRUE,
+                             loadShuffleFile = shuffledData,
+                             seed = sd)
+  } else {
+    results <- findTrendsv2(pos = pos[,c("x", "y")],
+                             celltypes = pos$com_nn50_VolnormExpr_data_annots_byPKHL,
+                             resolutions,
+                             dist = d,
+                             subsetdist = 50,
+                             perms = prms,
+                             ncores = ncs,
+                             verbose = TRUE,
+                             saveShuffleFilePath = shuffledData,
+                             seed = sd)
+  }
+  # print(results)
+  return(results)
+  
+})
+
+names(ksfb_triplet_results) <- distances
+
+saveRDS(object = ksfb_triplet_results, file = "/home/brendan/projects/HuBMAP/vignettes/20221108-ksfb.triplet.trends.subdist50.dist100.res50-600.rds")
+
+gc(reset = TRUE)
+
+```
+
+```{r}
+
+# distances <- c(100)
+# # resolutions <- c(50, 100, 200, 300, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000)
+# resolutions <- c(300, 500, 600)
+# prms <- 1
+# sd <- 1
+# 
+# ncs <- 12
+# ksfb_triplet_results <- lapply(distances, function(d){
+#   
+#   pos <- ksfb
+#   
+#   shuffledData <- paste0("/home/brendan/projects/HuBMAP/data/datasets/spleen/ksfb_shuffled_res_300-600.rds")
+#   if(file.exists(shuffledData)){
+#     
+#     results <- findTrendsv2(pos = pos[,c("x", "y")],
+#                              celltypes = pos$com_nn50_VolnormExpr_data_annots_byPKHL,
+#                              resolutions,
+#                              dist = d,
+#                              subsetdist = 50,
+#                              perms = prms,
+#                              ncores = ncs,
+#                              verbose = TRUE,
+#                              loadShuffleFile = shuffledData,
+#                              seed = sd)
+#   } else {
+#     results <- findTrendsv2(pos = pos[,c("x", "y")],
+#                              celltypes = pos$com_nn50_VolnormExpr_data_annots_byPKHL,
+#                              resolutions,
+#                              dist = d,
+#                              subsetdist = 50,
+#                              perms = prms,
+#                              ncores = ncs,
+#                              verbose = TRUE,
+#                              saveShuffleFilePath = shuffledData,
+#                              seed = sd)
+#   }
+#   # print(results)
+#   return(results)
+#   
+# })
+# 
+# names(ksfb_triplet_results) <- distances
+# 
+# saveRDS(object = ksfb_triplet_results, file = "/home/brendan/projects/HuBMAP/vignettes/20221108-ksfb.triplet.trends.subdist50.dist100.res300-600.rds")
+# 
+# gc(reset = TRUE)
+
+```
+
+```{r}
+
+distances <- c(100)
+# resolutions <- c(50, 100, 200, 300, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000)
+resolutions <- c(700, 800, 900, 1000, 1200, 1500, 3000)
+prms <- 1
+sd <- 1
+
+ncs <- 12
+ksfb_triplet_results <- lapply(distances, function(d){
+  
+  pos <- ksfb
+  
+  shuffledData <- paste0("/home/brendan/projects/HuBMAP/data/datasets/spleen/ksfb_shuffled_res_700-3000.rds")
+  if(file.exists(shuffledData)){
+    
+    results <- findTrendsv2(pos = pos[,c("x", "y")],
+                             celltypes = pos$com_nn50_VolnormExpr_data_annots_byPKHL,
+                             resolutions,
+                             dist = d,
+                             subsetdist = 50,
+                             perms = prms,
+                             ncores = ncs,
+                             verbose = TRUE,
+                             loadShuffleFile = shuffledData,
+                             seed = sd)
+  } else {
+    results <- findTrendsv2(pos = pos[,c("x", "y")],
+                             celltypes = pos$com_nn50_VolnormExpr_data_annots_byPKHL,
+                             resolutions,
+                             dist = d,
+                             subsetdist = 50,
+                             perms = prms,
+                             ncores = ncs,
+                             verbose = TRUE,
+                             saveShuffleFilePath = shuffledData,
+                             seed = sd)
+  }
+  # print(results)
+  return(results)
+  
+})
+
+names(ksfb_triplet_results) <- distances
+
+saveRDS(object = ksfb_triplet_results, file = "/home/brendan/projects/HuBMAP/vignettes/20221108-ksfb.triplet.trends.subdist50.dist100.res700-3000.rds")
+
+gc(reset = TRUE)
+
+```
+
+```{r}
+
+# distances <- c(100)
+# # resolutions <- c(50, 100, 200, 300, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000)
+# resolutions <- c(1000, 1200)
+# prms <- 1
+# sd <- 1
+# 
+# ncs <- 12
+# ksfb_triplet_results <- lapply(distances, function(d){
+#   
+#   pos <- ksfb
+#   
+#   shuffledData <- paste0("/home/brendan/projects/HuBMAP/data/datasets/spleen/ksfb_shuffled_res_1000-1200.rds")
+#   if(file.exists(shuffledData)){
+#     
+#     results <- findTrendsv2(pos = pos[,c("x", "y")],
+#                              celltypes = pos$com_nn50_VolnormExpr_data_annots_byPKHL,
+#                              resolutions,
+#                              dist = d,
+#                              subsetdist = 50,
+#                              perms = prms,
+#                              ncores = ncs,
+#                              verbose = TRUE,
+#                              loadShuffleFile = shuffledData,
+#                              seed = sd)
+#   } else {
+#     results <- findTrendsv2(pos = pos[,c("x", "y")],
+#                              celltypes = pos$com_nn50_VolnormExpr_data_annots_byPKHL,
+#                              resolutions,
+#                              dist = d,
+#                              subsetdist = 50,
+#                              perms = prms,
+#                              ncores = ncs,
+#                              verbose = TRUE,
+#                              saveShuffleFilePath = shuffledData,
+#                              seed = sd)
+#   }
+#   # print(results)
+#   return(results)
+#   
+# })
+# 
+# names(ksfb_triplet_results) <- distances
+# 
+# saveRDS(object = ksfb_triplet_results, file = "/home/brendan/projects/HuBMAP/vignettes/20221108-ksfb.triplet.trends.subdist50.dist100.res1000-1200.rds")
+# 
+# gc(reset = TRUE)
+
+```
+
+```{r}
+
+# distances <- c(100)
+# # resolutions <- c(50, 100, 200, 300, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000)
+# resolutions <- c(1500, 3000)
+# prms <- 1
+# sd <- 1
+# 
+# ncs <- 12
+# ksfb_triplet_results <- lapply(distances, function(d){
+#   
+#   pos <- ksfb
+#   
+#   shuffledData <- paste0("/home/brendan/projects/HuBMAP/data/datasets/spleen/ksfb_shuffled_res_1500-3000.rds")
+#   if(file.exists(shuffledData)){
+#     
+#     results <- findTrendsv2(pos = pos[,c("x", "y")],
+#                              celltypes = pos$com_nn50_VolnormExpr_data_annots_byPKHL,
+#                              resolutions,
+#                              dist = d,
+#                              subsetdist = 50,
+#                              perms = prms,
+#                              ncores = ncs,
+#                              verbose = TRUE,
+#                              loadShuffleFile = shuffledData,
+#                              seed = sd)
+#   } else {
+#     results <- findTrendsv2(pos = pos[,c("x", "y")],
+#                              celltypes = pos$com_nn50_VolnormExpr_data_annots_byPKHL,
+#                              resolutions,
+#                              dist = d,
+#                              subsetdist = 50,
+#                              perms = prms,
+#                              ncores = ncs,
+#                              verbose = TRUE,
+#                              saveShuffleFilePath = shuffledData,
+#                              seed = sd)
+#   }
+#   # print(results)
+#   return(results)
+#   
+# })
+# 
+# names(ksfb_triplet_results) <- distances
+# 
+# saveRDS(object = ksfb_triplet_results, file = "/home/brendan/projects/HuBMAP/vignettes/20221108-ksfb.triplet.trends.subdist50.dist100.res1500-3000.rds")
+# 
+# gc(reset = TRUE)
+
+```
+
+# =====================
+# pbvn
+
+```{r}
+
+figpath <- "/home/brendan/projects/HuBMAP/vignettes/plots/pbvn/"
+
+# xxcd <- readRDS(file = "/home/brendan/projects/HuBMAP/data/datasets/spleen/HBM772.XXCD.697.RDS")
+pbvn <- read.csv2(file = "/home/brendan/projects/HuBMAP/data/datasets/spleen/HBM825.PBVN.284.meta.csv.gz", sep = ",", row.names = 1)
+
+```
+
+## pairwise
+
+```{r}
+
+distances <- c(50, 100, 200)
+resolutions <- c(50, 100, 200, 300, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000)
+# resolutions <- c(3000)
+prms <- 1
+sd <- 1
+
+ncs <- 13
+pbvn_pairwise_results <- lapply(distances, function(d){
+  
+  pos <- pbvn
+  
+  shuffledData <- paste0("/home/brendan/projects/HuBMAP/data/datasets/spleen/pbvn_shuffled_res_50-3000.rds")
+  if(file.exists(shuffledData)){
+    
+    results <- findTrendsv2(pos = pos[,c("x", "y")],
+                             celltypes = pos$com_nn50_VolnormExpr_data_annots_byPKHL,
+                             resolutions,
+                             dist = d,
+                             perms = prms,
+                             ncores = ncs,
+                             verbose = TRUE,
+                             loadShuffleFile = shuffledData,
+                             seed = sd)
+  } else {
+    results <- findTrendsv2(pos = pos[,c("x", "y")],
+                             celltypes = pos$com_nn50_VolnormExpr_data_annots_byPKHL,
+                             resolutions,
+                             dist = d,
+                             perms = prms,
+                             ncores = ncs,
+                             verbose = TRUE,
+                             saveShuffleFilePath = shuffledData,
+                             seed = sd)
+  }
+  # print(results)
+  return(results)
+  
+})
+
+names(pbvn_pairwise_results) <- distances
+
+saveRDS(object = pbvn_pairwise_results, file = "/home/brendan/projects/HuBMAP/vignettes/20221108-pbvn.pairwise.trends.rds")
+
+gc(reset = TRUE)
+
+```
+
+```{r}
+
+pbvn_pairwise_results_meltedDf <- reshape2::melt(pbvn_pairwise_results)
+colnames(pbvn_pairwise_results_meltedDf) <- c("resolution", "neighbor", "Z", "reference", "dist")
+
+```
+
+```{r}
+
+# figpath <- "/home/brendan/projects/HuBMAP/sim_circles/plots/results_all_circles.pdf"
+# figpath <- "/home/brendan/projects/HuBMAP/vignettes/plots/pkhl/"
+
+plotTrends(results = pbvn_pairwise_results_meltedDf, idcol = "dist", figPath = paste0(figpath, "pbvn.pairwise.dist50-200.pdf"),
+            width = 24, height = 24)
+
+```
+
+## triplet
+
+```{r}
+
+distances <- c(100)
+# resolutions <- c(50, 100, 200, 300, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000)
+resolutions <- c(50, 100, 200, 300, 500, 600)
+prms <- 1
+sd <- 1
+
+ncs <- 12
+pbvn_triplet_results <- lapply(distances, function(d){
+  
+  pos <- pbvn
+  
+  shuffledData <- paste0("/home/brendan/projects/HuBMAP/data/datasets/spleen/pbvn_shuffled_res_50-600.rds")
+  if(file.exists(shuffledData)){
+    
+    results <- findTrendsv2(pos = pos[,c("x", "y")],
+                             celltypes = pos$com_nn50_VolnormExpr_data_annots_byPKHL,
+                             resolutions,
+                             dist = d,
+                             subsetdist = 50,
+                             perms = prms,
+                             ncores = ncs,
+                             verbose = TRUE,
+                             loadShuffleFile = shuffledData,
+                             seed = sd)
+  } else {
+    results <- findTrendsv2(pos = pos[,c("x", "y")],
+                             celltypes = pos$com_nn50_VolnormExpr_data_annots_byPKHL,
+                             resolutions,
+                             dist = d,
+                             subsetdist = 50,
+                             perms = prms,
+                             ncores = ncs,
+                             verbose = TRUE,
+                             saveShuffleFilePath = shuffledData,
+                             seed = sd)
+  }
+  # print(results)
+  return(results)
+  
+})
+
+names(pbvn_triplet_results) <- distances
+
+saveRDS(object = pbvn_triplet_results, file = "/home/brendan/projects/HuBMAP/vignettes/20221108-pbvn.triplet.trends.subdist50.dist100.res50-600.rds")
+
+gc(reset = TRUE)
+
+```
+
+```{r}
+
+# distances <- c(100)
+# # resolutions <- c(50, 100, 200, 300, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000)
+# resolutions <- c(300, 500, 600)
+# prms <- 1
+# sd <- 1
+# 
+# ncs <- 12
+# pbvn_triplet_results <- lapply(distances, function(d){
+#   
+#   pos <- pbvn
+#   
+#   shuffledData <- paste0("/home/brendan/projects/HuBMAP/data/datasets/spleen/pbvn_shuffled_res_300-600.rds")
+#   if(file.exists(shuffledData)){
+#     
+#     results <- findTrendsv2(pos = pos[,c("x", "y")],
+#                              celltypes = pos$com_nn50_VolnormExpr_data_annots_byPKHL,
+#                              resolutions,
+#                              dist = d,
+#                              subsetdist = 50,
+#                              perms = prms,
+#                              ncores = ncs,
+#                              verbose = TRUE,
+#                              loadShuffleFile = shuffledData,
+#                              seed = sd)
+#   } else {
+#     results <- findTrendsv2(pos = pos[,c("x", "y")],
+#                              celltypes = pos$com_nn50_VolnormExpr_data_annots_byPKHL,
+#                              resolutions,
+#                              dist = d,
+#                              subsetdist = 50,
+#                              perms = prms,
+#                              ncores = ncs,
+#                              verbose = TRUE,
+#                              saveShuffleFilePath = shuffledData,
+#                              seed = sd)
+#   }
+#   # print(results)
+#   return(results)
+#   
+# })
+# 
+# names(pbvn_triplet_results) <- distances
+# 
+# saveRDS(object = pbvn_triplet_results, file = "/home/brendan/projects/HuBMAP/vignettes/20221108-pbvn.triplet.trends.subdist50.dist100.res300-600.rds")
+# 
+# gc(reset = TRUE)
+
+```
+
+```{r}
+
+distances <- c(100)
+# resolutions <- c(50, 100, 200, 300, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000)
+resolutions <- c(700, 800, 900, 1000, 1200, 1500, 3000)
+prms <- 1
+sd <- 1
+
+ncs <- 12
+pbvn_triplet_results <- lapply(distances, function(d){
+  
+  pos <- pbvn
+  
+  shuffledData <- paste0("/home/brendan/projects/HuBMAP/data/datasets/spleen/pbvn_shuffled_res_700-3000.rds")
+  if(file.exists(shuffledData)){
+    
+    results <- findTrendsv2(pos = pos[,c("x", "y")],
+                             celltypes = pos$com_nn50_VolnormExpr_data_annots_byPKHL,
+                             resolutions,
+                             dist = d,
+                             subsetdist = 50,
+                             perms = prms,
+                             ncores = ncs,
+                             verbose = TRUE,
+                             loadShuffleFile = shuffledData,
+                             seed = sd)
+  } else {
+    results <- findTrendsv2(pos = pos[,c("x", "y")],
+                             celltypes = pos$com_nn50_VolnormExpr_data_annots_byPKHL,
+                             resolutions,
+                             dist = d,
+                             subsetdist = 50,
+                             perms = prms,
+                             ncores = ncs,
+                             verbose = TRUE,
+                             saveShuffleFilePath = shuffledData,
+                             seed = sd)
+  }
+  # print(results)
+  return(results)
+  
+})
+
+names(pbvn_triplet_results) <- distances
+
+saveRDS(object = pbvn_triplet_results, file = "/home/brendan/projects/HuBMAP/vignettes/20221108-pbvn.triplet.trends.subdist50.dist100.res700-3000.rds")
+
+gc(reset = TRUE)
+
+```
+
+```{r}
+
+# distances <- c(100)
+# # resolutions <- c(50, 100, 200, 300, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000)
+# resolutions <- c(1000, 1200)
+# prms <- 1
+# sd <- 1
+# 
+# ncs <- 12
+# pbvn_triplet_results <- lapply(distances, function(d){
+#   
+#   pos <- pbvn
+#   
+#   shuffledData <- paste0("/home/brendan/projects/HuBMAP/data/datasets/spleen/pbvn_shuffled_res_1000-1200.rds")
+#   if(file.exists(shuffledData)){
+#     
+#     results <- findTrendsv2(pos = pos[,c("x", "y")],
+#                              celltypes = pos$com_nn50_VolnormExpr_data_annots_byPKHL,
+#                              resolutions,
+#                              dist = d,
+#                              subsetdist = 50,
+#                              perms = prms,
+#                              ncores = ncs,
+#                              verbose = TRUE,
+#                              loadShuffleFile = shuffledData,
+#                              seed = sd)
+#   } else {
+#     results <- findTrendsv2(pos = pos[,c("x", "y")],
+#                              celltypes = pos$com_nn50_VolnormExpr_data_annots_byPKHL,
+#                              resolutions,
+#                              dist = d,
+#                              subsetdist = 50,
+#                              perms = prms,
+#                              ncores = ncs,
+#                              verbose = TRUE,
+#                              saveShuffleFilePath = shuffledData,
+#                              seed = sd)
+#   }
+#   # print(results)
+#   return(results)
+#   
+# })
+# 
+# names(pbvn_triplet_results) <- distances
+# 
+# saveRDS(object = pbvn_triplet_results, file = "/home/brendan/projects/HuBMAP/vignettes/20221108-pbvn.triplet.trends.subdist50.dist100.res1000-1200.rds")
+# 
+# gc(reset = TRUE)
+
+```
+
+```{r}
+
+# distances <- c(100)
+# # resolutions <- c(50, 100, 200, 300, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000)
+# resolutions <- c(1500, 3000)
+# prms <- 1
+# sd <- 1
+# 
+# ncs <- 12
+# pbvn_triplet_results <- lapply(distances, function(d){
+#   
+#   pos <- pbvn
+#   
+#   shuffledData <- paste0("/home/brendan/projects/HuBMAP/data/datasets/spleen/pbvn_shuffled_res_1500-3000.rds")
+#   if(file.exists(shuffledData)){
+#     
+#     results <- findTrendsv2(pos = pos[,c("x", "y")],
+#                              celltypes = pos$com_nn50_VolnormExpr_data_annots_byPKHL,
+#                              resolutions,
+#                              dist = d,
+#                              subsetdist = 50,
+#                              perms = prms,
+#                              ncores = ncs,
+#                              verbose = TRUE,
+#                              loadShuffleFile = shuffledData,
+#                              seed = sd)
+#   } else {
+#     results <- findTrendsv2(pos = pos[,c("x", "y")],
+#                              celltypes = pos$com_nn50_VolnormExpr_data_annots_byPKHL,
+#                              resolutions,
+#                              dist = d,
+#                              subsetdist = 50,
+#                              perms = prms,
+#                              ncores = ncs,
+#                              verbose = TRUE,
+#                              saveShuffleFilePath = shuffledData,
+#                              seed = sd)
+#   }
+#   # print(results)
+#   return(results)
+#   
+# })
+# 
+# names(pbvn_triplet_results) <- distances
+# 
+# saveRDS(object = pbvn_triplet_results, file = "/home/brendan/projects/HuBMAP/vignettes/20221108-pbvn.triplet.trends.subdist50.dist100.res1500-3000.rds")
+# 
+# gc(reset = TRUE)
+
+```
+
+# =====================
+# fsld
+
+```{r}
+
+figpath <- "/home/brendan/projects/HuBMAP/vignettes/plots/fsld/"
+
+# xxcd <- readRDS(file = "/home/brendan/projects/HuBMAP/data/datasets/spleen/HBM772.XXCD.697.RDS")
+fsld <- read.csv2(file = "/home/brendan/projects/HuBMAP/data/datasets/spleen/HBM342.FSLD.938.meta.csv.gz", sep = ",", row.names = 1)
+
+```
+
+## pairwise
+
+```{r}
+
+distances <- c(50, 100, 200)
+resolutions <- c(50, 100, 200, 300, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000)
+# resolutions <- c(3000)
+prms <- 1
+sd <- 1
+
+ncs <- 13
+fsld_pairwise_results <- lapply(distances, function(d){
+  
+  pos <- fsld
+  
+  shuffledData <- paste0("/home/brendan/projects/HuBMAP/data/datasets/spleen/fsld_shuffled_res_50-3000.rds")
+  if(file.exists(shuffledData)){
+    
+    results <- findTrendsv2(pos = pos[,c("x", "y")],
+                             celltypes = pos$com_nn50_VolnormExpr_data_annots_byPBVNharmonized,
+                             resolutions,
+                             dist = d,
+                             perms = prms,
+                             ncores = ncs,
+                             verbose = TRUE,
+                             loadShuffleFile = shuffledData,
+                             seed = sd)
+  } else {
+    results <- findTrendsv2(pos = pos[,c("x", "y")],
+                             celltypes = pos$com_nn50_VolnormExpr_data_annots_byPBVNharmonized,
+                             resolutions,
+                             dist = d,
+                             perms = prms,
+                             ncores = ncs,
+                             verbose = TRUE,
+                             saveShuffleFilePath = shuffledData,
+                             seed = sd)
+  }
+  # print(results)
+  return(results)
+  
+})
+
+names(fsld_pairwise_results) <- distances
+
+saveRDS(object = fsld_pairwise_results, file = "/home/brendan/projects/HuBMAP/vignettes/20221108-fsld.pairwise.trends.rds")
+
+gc(reset = TRUE)
+
+```
+
+```{r}
+
+fsld_pairwise_results_meltedDf <- reshape2::melt(fsld_pairwise_results)
+colnames(fsld_pairwise_results_meltedDf) <- c("resolution", "neighbor", "Z", "reference", "dist")
+
+```
+
+```{r}
+
+# figpath <- "/home/brendan/projects/HuBMAP/sim_circles/plots/results_all_circles.pdf"
+# figpath <- "/home/brendan/projects/HuBMAP/vignettes/plots/pkhl/"
+
+plotTrends(results = fsld_pairwise_results_meltedDf, idcol = "dist", figPath = paste0(figpath, "fsld.pairwise.dist50-200.pdf"),
+            width = 24, height = 24)
+
+```
+
+## triplet
+
+```{r}
+
+distances <- c(100)
+# resolutions <- c(50, 100, 200, 300, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000)
+resolutions <- c(50, 100, 200, 300, 500, 600)
+prms <- 1
+sd <- 1
+
+ncs <- 12
+fsld_triplet_results <- lapply(distances, function(d){
+  
+  pos <- fsld
+  
+  shuffledData <- paste0("/home/brendan/projects/HuBMAP/data/datasets/spleen/fsld_shuffled_res_50-600.rds")
+  if(file.exists(shuffledData)){
+    
+    results <- findTrendsv2(pos = pos[,c("x", "y")],
+                             celltypes = pos$com_nn50_VolnormExpr_data_annots_byPBVNharmonized,
+                             resolutions,
+                             dist = d,
+                             subsetdist = 50,
+                             perms = prms,
+                             ncores = ncs,
+                             verbose = TRUE,
+                             loadShuffleFile = shuffledData,
+                             seed = sd)
+  } else {
+    results <- findTrendsv2(pos = pos[,c("x", "y")],
+                             celltypes = pos$com_nn50_VolnormExpr_data_annots_byPBVNharmonized,
+                             resolutions,
+                             dist = d,
+                             subsetdist = 50,
+                             perms = prms,
+                             ncores = ncs,
+                             verbose = TRUE,
+                             saveShuffleFilePath = shuffledData,
+                             seed = sd)
+  }
+  # print(results)
+  return(results)
+  
+})
+
+names(fsld_triplet_results) <- distances
+
+saveRDS(object = fsld_triplet_results, file = "/home/brendan/projects/HuBMAP/vignettes/20221108-fsld.triplet.trends.subdist50.dist100.res50-600.rds")
+
+gc(reset = TRUE)
+
+```
+
+```{r}
+
+# distances <- c(100)
+# # resolutions <- c(50, 100, 200, 300, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000)
+# resolutions <- c(300, 500, 600)
+# prms <- 1
+# sd <- 1
+# 
+# ncs <- 12
+# fsld_triplet_results <- lapply(distances, function(d){
+#   
+#   pos <- fsld
+#   
+#   shuffledData <- paste0("/home/brendan/projects/HuBMAP/data/datasets/spleen/fsld_shuffled_res_300-600.rds")
+#   if(file.exists(shuffledData)){
+#     
+#     results <- findTrendsv2(pos = pos[,c("x", "y")],
+#                              celltypes = pos$com_nn50_VolnormExpr_data_annots_byPBVNharmonized,
+#                              resolutions,
+#                              dist = d,
+#                              subsetdist = 50,
+#                              perms = prms,
+#                              ncores = ncs,
+#                              verbose = TRUE,
+#                              loadShuffleFile = shuffledData,
+#                              seed = sd)
+#   } else {
+#     results <- findTrendsv2(pos = pos[,c("x", "y")],
+#                              celltypes = pos$com_nn50_VolnormExpr_data_annots_byPBVNharmonized,
+#                              resolutions,
+#                              dist = d,
+#                              subsetdist = 50,
+#                              perms = prms,
+#                              ncores = ncs,
+#                              verbose = TRUE,
+#                              saveShuffleFilePath = shuffledData,
+#                              seed = sd)
+#   }
+#   # print(results)
+#   return(results)
+#   
+# })
+# 
+# names(fsld_triplet_results) <- distances
+# 
+# saveRDS(object = fsld_triplet_results, file = "/home/brendan/projects/HuBMAP/vignettes/20221108-fsld.triplet.trends.subdist50.dist100.res300-600.rds")
+# 
+# gc(reset = TRUE)
+
+```
+
+```{r}
+
+distances <- c(100)
+# resolutions <- c(50, 100, 200, 300, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000)
+resolutions <- c(700, 800, 900, 1000, 1200, 1500, 3000)
+prms <- 1
+sd <- 1
+
+ncs <- 12
+fsld_triplet_results <- lapply(distances, function(d){
+  
+  pos <- fsld
+  
+  shuffledData <- paste0("/home/brendan/projects/HuBMAP/data/datasets/spleen/fsld_shuffled_res_700-3000.rds")
+  if(file.exists(shuffledData)){
+    
+    results <- findTrendsv2(pos = pos[,c("x", "y")],
+                             celltypes = pos$com_nn50_VolnormExpr_data_annots_byPBVNharmonized,
+                             resolutions,
+                             dist = d,
+                             subsetdist = 50,
+                             perms = prms,
+                             ncores = ncs,
+                             verbose = TRUE,
+                             loadShuffleFile = shuffledData,
+                             seed = sd)
+  } else {
+    results <- findTrendsv2(pos = pos[,c("x", "y")],
+                             celltypes = pos$com_nn50_VolnormExpr_data_annots_byPBVNharmonized,
+                             resolutions,
+                             dist = d,
+                             subsetdist = 50,
+                             perms = prms,
+                             ncores = ncs,
+                             verbose = TRUE,
+                             saveShuffleFilePath = shuffledData,
+                             seed = sd)
+  }
+  # print(results)
+  return(results)
+  
+})
+
+names(fsld_triplet_results) <- distances
+
+saveRDS(object = fsld_triplet_results, file = "/home/brendan/projects/HuBMAP/vignettes/20221108-fsld.triplet.trends.subdist50.dist100.res700-3000.rds")
+
+gc(reset = TRUE)
+
+```
+
+```{r}
+
+# distances <- c(100)
+# # resolutions <- c(50, 100, 200, 300, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000)
+# resolutions <- c(1000, 1200)
+# prms <- 1
+# sd <- 1
+# 
+# ncs <- 12
+# fsld_triplet_results <- lapply(distances, function(d){
+#   
+#   pos <- fsld
+#   
+#   shuffledData <- paste0("/home/brendan/projects/HuBMAP/data/datasets/spleen/fsld_shuffled_res_1000-1200.rds")
+#   if(file.exists(shuffledData)){
+#     
+#     results <- findTrendsv2(pos = pos[,c("x", "y")],
+#                              celltypes = pos$com_nn50_VolnormExpr_data_annots_byPBVNharmonized,
+#                              resolutions,
+#                              dist = d,
+#                              subsetdist = 50,
+#                              perms = prms,
+#                              ncores = ncs,
+#                              verbose = TRUE,
+#                              loadShuffleFile = shuffledData,
+#                              seed = sd)
+#   } else {
+#     results <- findTrendsv2(pos = pos[,c("x", "y")],
+#                              celltypes = pos$com_nn50_VolnormExpr_data_annots_byPBVNharmonized,
+#                              resolutions,
+#                              dist = d,
+#                              subsetdist = 50,
+#                              perms = prms,
+#                              ncores = ncs,
+#                              verbose = TRUE,
+#                              saveShuffleFilePath = shuffledData,
+#                              seed = sd)
+#   }
+#   # print(results)
+#   return(results)
+#   
+# })
+# 
+# names(fsld_triplet_results) <- distances
+# 
+# saveRDS(object = fsld_triplet_results, file = "/home/brendan/projects/HuBMAP/vignettes/20221108-fsld.triplet.trends.subdist50.dist100.res1000-1200.rds")
+# 
+# gc(reset = TRUE)
+
+```
+
+```{r}
+
+# distances <- c(100)
+# # resolutions <- c(50, 100, 200, 300, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000)
+# resolutions <- c(1500, 3000)
+# prms <- 1
+# sd <- 1
+# 
+# ncs <- 12
+# fsld_triplet_results <- lapply(distances, function(d){
+#   
+#   pos <- fsld
+#   
+#   shuffledData <- paste0("/home/brendan/projects/HuBMAP/data/datasets/spleen/fsld_shuffled_res_1500-3000.rds")
+#   if(file.exists(shuffledData)){
+#     
+#     results <- findTrendsv2(pos = pos[,c("x", "y")],
+#                              celltypes = pos$com_nn50_VolnormExpr_data_annots_byPBVNharmonized,
+#                              resolutions,
+#                              dist = d,
+#                              subsetdist = 50,
+#                              perms = prms,
+#                              ncores = ncs,
+#                              verbose = TRUE,
+#                              loadShuffleFile = shuffledData,
+#                              seed = sd)
+#   } else {
+#     results <- findTrendsv2(pos = pos[,c("x", "y")],
+#                              celltypes = pos$com_nn50_VolnormExpr_data_annots_byPBVNharmonized,
+#                              resolutions,
+#                              dist = d,
+#                              subsetdist = 50,
+#                              perms = prms,
+#                              ncores = ncs,
+#                              verbose = TRUE,
+#                              saveShuffleFilePath = shuffledData,
+#                              seed = sd)
+#   }
+#   # print(results)
+#   return(results)
+#   
+# })
+# 
+# names(fsld_triplet_results) <- distances
+# 
+# saveRDS(object = fsld_triplet_results, file = "/home/brendan/projects/HuBMAP/vignettes/20221108-fsld.triplet.trends.subdist50.dist100.res1500-3000.rds")
+# 
+# gc(reset = TRUE)
+
+```
+
+

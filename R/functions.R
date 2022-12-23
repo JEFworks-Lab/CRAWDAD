@@ -1,25 +1,20 @@
----
-title: "Untitled"
-author: "Brendan F. Miller"
-date: "9/30/2022"
-output: html_document
----
+
+# note that the idea here is we create a "buffer" around each cell point. These become polygon geometries.
+# Then look for how many points of a given cell type are within the geometries of another given cell type
+# 
+# A consideration is that taking these intersections results in multiple counting of points that are within geometries.
+# For instance, point B is in the geometry of cell 1 and cell 2 of cell type A. So the int (intersection) inherently has more points in it.
+# 
+# To get the proportions, count of the number of each cell type that was intersected in the geometries of the reference cell type
+# To normalize, or account for multiple counting, divide by total number of intersections. Hopefully this can help account for the multiple counting
+# 
+# Are there cases where this multiple counting can give erroneous results?
 
 
-note that the idea here is we create a "buffer" around each cell point. These become polygon geometries.
-Then look for how many points of a given cell type are within the geometries of another given cell type
-
-A consideration is that taking these intersections results in multiple counting of points that are within geometries.
-For instance, point B is in the geometry of cell 1 and cell 2 of cell type A. So the int (intersection) inherently has more points in it.
-
-To get the proportions, count of the number of each cell type that was intersected in the geometries of the reference cell type
-To normalize, or account for multiple counting, divide by total number of intersections. Hopefully this can help account for the multiple counting
-
-Are there cases where this multiple counting can give erroneous results?
-
+# --------------------------------------------------------------------------
+# --------------------------------------------------------------------------
 # functions for generating simulations
-
-```{r}
+# --------------------------------------------------------------------------
 
 #' Create a uniform background of points, where each point is a given cell type
 #' 
@@ -45,9 +40,7 @@ simulate_background <- function(size = 10000, cts = c("A"), prob = c(1), seed = 
   return(p)
 }
 
-```
 
-```{r}
 
 #' Create cell type circle patterns in the background of cells
 #'
@@ -111,11 +104,11 @@ simulate_circles <- function(pos, locs, radii, cts, probs, replace, seed = 1){
   
 }
 
-```
 
+# --------------------------------------------------------------------------
+# --------------------------------------------------------------------------
 # functions for finding trends
-
-```{r}
+# --------------------------------------------------------------------------
 
 #' Shuffle the celltype labels at different shuffling resolutions
 #'
@@ -218,9 +211,7 @@ makeShuffledCells <- function(cells, resolutions, perms = 1, ncores = 1, seed = 
   return(randomcellslist)
 }
 
-```
 
-```{r}
 
 #' find subsets of cells
 #' @description find the subset cells of a reference cell type defined by being either significantly "near" or "away" with respect to a given neighbor cell type.
@@ -337,9 +328,7 @@ getSubsets <- function(cells,
   
 }
 
-```
 
-```{r}
 
 #' compute significant different between real and randomly shuffled cell neighbor proportions
 #'
@@ -401,11 +390,7 @@ evaluateSignificance <- function(cells, randomcellslist, trueNeighCells, cellBuf
   return(results)
 }
 
-```
 
-use this one, more developed:
-
-```{r}
 
 #' Compute trends of cell type colocalization for each cell type combination across specified resolutions
 #'
@@ -638,249 +623,13 @@ findTrendsv2 <- function(pos,
   
 }
 
-```
 
-ignore this one:
 
-```{r}
-
-#' Compute trends of cell type colocalization for each cell type combination across specified resolutions
-#'
-#' @description Trends are based on significant differences in cell type proportions between the real and randomly shuffled datasets.
-#' Cell type proportions are with respect to the different cell types that are neighboring the cells of a given reference cell type within a certain defined distance.
-#' This is done at difference resolutions, where a resolution is whether the cell type labels are shuffled locally or globally.
-#' Trends are essentially built from significance values. The significance test basically asks if two cell types are localized or separated by assessing if the proportion of the neighboring cell type is significantly greater, or less than, random chance.
-#'
-#' @param pos matrix of x and y coordinates of each cell
-#' @param resolutions numeric vector of the different resolutions to shuffle at and subsequently compute significance at
-#' @param dist numeric distance to define neighbor cells with respect to each reference cell (default 30)
-#' @param subsetdist if subsetting, numeric distance to define subset of reference cells within distance to another cell type (default NaN)
-#' @param ncores number of cores for parellelization (default 1)
-#' @param plots Boolean to return plots (default TRUE)
-#' @param verbose Boolean for verbosity (default TRUE)
-#' @param seed set the seed for shuffling (default = 0)
-#'
-#' @return A list that contains a dataframe for each reference cell type, where the dataframe contains the significance values for each neighbor cell type at each resolution
-#' 
-#' @examples 
-#' 
-#' export
-findTrends <- function(pos, celltypes, resolutions, dist = 30, subsetdist = NaN, ncores = 1, plot = FALSE, verbose = TRUE, seed = 0){
-  
-  if(verbose){
-    start_time <- Sys.time()
-  }
-  
-  ## load the real data
-  # ============================================================
-  if(verbose){
-    message("creating `sp::SpatialPointsDataFrame`")
-  }
-  
-  cells <- sp::SpatialPointsDataFrame(
-    coords = as.data.frame(pos),
-    data=data.frame(
-      celltypes=celltypes
-      #name=rownames(pos)
-  ))
-  cells <- sf::st_as_sf(cells)
-  
-  # make asumption that cell type attribute is constant throughout the geometries of each cell
-  ## it removed the warning that keep popping up, which says this assumption is made anyways
-  sf::st_agr(cells) <- "constant"
-  
-  if(verbose){
-    message("Generate randomly permuted background at each resolution")
-  }
-  
-  # visualize real data
-  if(plot){
-    plot.new()
-  #   par(mfrow=c(1,1), mar=rep(1,4))
-  #   plot(cells, pch=".", main = "original dataset")
-  #   # dev.off()
-  }
-  
-  ## Generate randomly permuted background at each resolution
-  # ============================================================
-  randomcellslist <- lapply(resolutions, function(r) {
-    
-    grid = sf::st_make_grid(cells, cellsize = r)
-    
-    if(verbose){
-      message(r, " micron resolution")
-      message(length(grid), " tiles to shuffle...")
-    }
-    
-    ## shuffle within grid once
-    randcelltype <- unlist(BiocParallel::bplapply(1:length(grid), function(i) {
-      ## sometimes can be on boundary, so just pick first one
-      int <- sf::st_intersection(cells, grid[[i]])
-      set.seed(seed)
-      # randomly grab cell labels for cell in the grid
-      shuffled_cells <- sample(int$celltypes)
-      # assign the cell ids to the randomly sampled cell labels
-      names(shuffled_cells) <- rownames(int)
-      shuffled_cells
-    }, BPPARAM=BiocParallel::SnowParam(workers=ncores)))
-    # reorder so cells are "1", "2", etc. and not in the order based on grids
-    randcelltype <- randcelltype[as.character(sort(as.numeric(names(randcelltype))))]
-    
-    # generate the "cells" SpatialPointsDataframe for the shuffled labels
-    randomcells <- cells
-    randomcells$celltypes <- randcelltype
-    
-    # visualize shuffled cells
-    if(plot){
-      par(mfrow=c(1,1), mar=rep(2,4))
-      # plot(grid)
-      plot(randomcells, pch=".", add=TRUE, main = paste0(r, " resolution shuffled"))
-      # dev.off()
-    }
-    
-    sf::st_agr(randomcells) <- "constant"
-    
-    return(randomcells)
-  })
-  names(randomcellslist) <- resolutions
-  
-  if(verbose){
-    message("Evaluating significance for each cell type")
-    message("using neighbor distance of ", dist)
-  }
-  
-  ## Evaluate significance (pairwise)
-  # ============================================================
-  if(is.na(subsetdist)){
-    
-    if(verbose){
-      message("Calculating for pairwise combinations")
-    }
-    
-    d <- dist
-    results.all <- BiocParallel::bplapply(levels(celltypes), function(ct) {
-      
-      if(verbose){
-        message(ct)
-      }
-      
-      # get polygon geometries of reference cells of "celltype" up to defined distance "dist"
-      buffer1 <- sf::st_buffer(cells[cells$celltypes == ct,], d) # assessing neighbors within 30 um of each cell for example; think of this like the K for knn
-      # the neighbor cells that are within "dist" of the ref cells
-      buffer1cells <- sf::st_intersection(cells, buffer1$geometry)
-      
-      # compare the real neighbor cell results above to the random shuffles at each resolution
-      results <- sapply(randomcellslist, function(randomcells){
-        buffer1randomcells <- sf::st_intersection(randomcells, buffer1$geometry)
-  
-        ## evaluate significance https://online.stat.psu.edu/stat415/lesson/9/9.4
-        y1 <- table(buffer1cells$celltypes)
-        y2 <- table(buffer1randomcells$celltypes)
-        n1 <- length(buffer1cells$celltypes)
-        n2 <- length(buffer1randomcells$celltypes)
-        p1 <- y1/n1
-        p2 <- y2/n2
-        p <- (y1+y2)/(n1+n2)
-        Z <- (p1-p2)/sqrt(p*(1-p)*(1/n1+1/n2))
-        return(Z)
-      })
-      return(t(results))
-    }, BPPARAM=BiocParallel::SnowParam(workers=ncores)) # im getting an error is this is higher, at least for the 3 ct sims with circles...
-    names(results.all) <- levels(celltypes)
-  
-   ## Evaluate significance (triplet subsetting)
-  # ============================================================
-  } else if (isTRUE(as.double(subsetdist) > 0)){
-    
-    if(verbose){
-      message("Calculating for reference subsets defined by subset distance of ", subsetdist)
-    }
-    
-    ## the subset combinations
-    combos <- expand.grid(rep(list(1:length(levels(celltypes))),2))
-    colnames(combos) <- c("ref", "neighbors")
-    
-    combo_ids <- unlist(lapply(rownames(combos), function(i){
-      cells.ref.ix <- levels(celltypes)[as.numeric(combos[i,1])]
-      cells.neighbors.ix <- levels(celltypes)[as.numeric(combos[i,2])]
-      id <- paste0(cells.ref.ix, "_near_", cells.neighbors.ix)}))
-    
-    d <- dist
-    sd <- subsetdist
-    results.all <- BiocParallel::bplapply(1:nrow(combos), function(i) {
-      
-      ## get reference subset that is within `subsetdist` of another given cell type
-      ct1 <- levels(celltypes)[combos[i,1]]
-      ct2 <- levels(celltypes)[combos[i,2]]
-      
-      if(verbose){
-        message(ct1, " cells within ", subsetdist, " microns of ", ct2, " cells")
-      }
-      
-      ## get area around the cells for which the subset is defined by
-      bufferct2 <- sf::st_buffer(cells[cells$celltypes == ct2,], sd)
-      ## look for ref cells within this area of ct2
-      subsetnearbufferct2 <- sf::st_intersection(cells[cells$celltypes == ct1,], bufferct2$geometry)
-      
-      ## now for this subset, test for association with all cell-types, using the defined `dist`
-      buffersubsetcells <- sf::st_buffer(subsetnearbufferct2, d)
-      cellsnearsubset <- sf::st_intersection(cells, buffersubsetcells$geometry)
-      
-      # compare the real neighbor cell results above to the random shuffles at each resolution
-      results <- sapply(randomcellslist, function(randomcells){
-        buffer1randomcells <- sf::st_intersection(randomcells, buffersubsetcells$geometry)
-  
-        ## evaluate significance https://online.stat.psu.edu/stat415/lesson/9/9.4
-        y1 <- table(cellsnearsubset$celltypes)
-        y2 <- table(buffer1randomcells$celltypes)
-        n1 <- length(cellsnearsubset$celltypes)
-        n2 <- length(buffer1randomcells$celltypes)
-        p1 <- y1/n1
-        p2 <- y2/n2
-        p <- (y1+y2)/(n1+n2)
-        Z <- (p1-p2)/sqrt(p*(1-p)*(1/n1+1/n2))
-        return(Z)
-      })
-      return(t(results))
-    }, BPPARAM=BiocParallel::SnowParam(workers=ncores)) # im getting an error is this is higher, at least for the 3 ct sims with circles...
-    names(results.all) <- combo_ids
-        
-  } else {
-    stop("`subsetdist` needs to be either NaN for pairwise comparisons or a positive distance.")
-  }
-  
-  if(verbose){
-    total_t <- round(difftime(Sys.time(), start_time, units="mins"), 2)
-    message(sprintf("Time was %s mins", total_t))
-  }
-  
-  # if(plot){
-  #   pdf(trendPlotName, width=8, height=8)
-  #   par(mfrow=c(length(levels(celltypes)),length(levels(celltypes))), mar=rep(2,4))
-  #   sapply(levels(celltypes), function(ct1) {
-  #     # print(ct1)
-  #     results.norm <- results.all[[ct1]]
-  #     results.norm[is.nan(results.norm)] <- NA
-  #     results.norm[is.infinite(results.norm)] <- NA
-  #     sapply(colnames(results.norm), function(ct2) {
-  #       rg <- max(abs(results.norm[, ct2]))
-  #       plot(resolutions, results.norm[,ct2], type="l", main=paste0(ct1,'\n', ct2), ylim=c(-rg, rg))
-  #       abline(h = -2, col='red')
-  #       abline(h = 2, col='red')
-  #     })
-  #   })
-  #   dev.off()
-  # }
-  
-  return(results.all)
-  
-}
-
-```
-
+# --------------------------------------------------------------------------
+# --------------------------------------------------------------------------
 # functions for processing output
+# --------------------------------------------------------------------------
 
-```{r}
 
 #' Melt the output list of findTrendsv2 into a dataframe
 #' 
@@ -905,11 +654,12 @@ meltResultsList <- function(resultsList, id = NA){
   
 }
 
-```
 
+# --------------------------------------------------------------------------
+# --------------------------------------------------------------------------
 # functions for visualization
+# --------------------------------------------------------------------------
 
-```{r}
 
 #' @param idcol if results are a data.frame, this is the column that contains the additional feature to plot multiple trend lines with
 #' by default it is 'id', which would be the name given to the column describing each list after melting together into a single dataframe
@@ -1023,75 +773,10 @@ plotTrends <- function(results, idcol = "id", figPath = "results.pdf", width = 8
   
 }
 
-```
 
 
-ignore this, the plotTrends function above has been developed more
-
-```{r}
-
-plotTrends2 <- function(results, figPath = "results.pdf", width = 8, height = 8, ...){
-  
-  refs <- unique(results[,"reference"])
-  neighs <- unique(results[,"neighbor"])
-  ids <- levels(results[,"id"])
-  
-  cl <- rainbow(length(ids))
-  
-  pdf(figPath, width=width, height=height)
-  par(mfrow=c(length(refs), length(neighs)),
-      mar=rep(4,4))
-  
-  ## for each reference cell type...
-  sapply(refs, function(ct1) {
-    # print(ct1)
-    results.norm <- results[results[,"reference"] == ct1,]
-    results.norm[is.nan(results.norm[,"Z"]), "Z"] <- NA
-    results.norm[is.infinite(results.norm[,"Z"]), "Z"] <- NA
-    
-    ## for each neighbor cell type...
-    sapply(neighs, function(ct2) {
-      results.norm.neigh <- results.norm[results.norm[,"neighbor"] == ct2,]
-      
-      yl <- max(abs(results.norm.neigh[, "Z"]), na.rm = TRUE)
-      xl <- max(as.numeric(results.norm.neigh[,"resolution"]))
-      
-      ## instantiate a plot
-      plot(0, 0, type = "n",
-           main=paste0(ct1,' ref \n', ct2, " neighbors"),
-           ylim=c(-yl, yl),
-           xlim=c(0, xl),
-           xlab="resolution", ylab="Z")
-      
-      ## for each id param, draw a line on plot instance
-      for(i in 1:length(ids)){
-        id <- ids[i]
-        results.norm.neigh.id <- results.norm.neigh[results.norm.neigh[,"id"] == id,]
-        
-        lines(as.numeric(results.norm.neigh.id[,"resolution"]), results.norm.neigh.id[,"Z"],
-              type="l", lwd=2, col=cl[i], ...)
-      }
-      
-      ## threshold lines
-      abline(h = -2, col='red')
-      abline(h = 2, col='red')
-      
-      legend("topleft", legend = ids, col=cl, pch=20, cex=0.5, title = "ids")
-      
-    })
-  })
-  
-  dev.off()
-  
-}
-
-```
-
-
-originally set up to visualize trends and color by different trend "clusters", ie similar trends.
-Still useful but used as much anymore
-
-```{r}
+# originally set up to visualize trends and color by different trend "clusters", ie similar trends.
+# Still useful but used as much anymore
 
 ## dat = the data.frame of pvals, trend cluster assignments, etc for each pairwise combo. i.e. PKHL
 ## could subset this to get specific interactions
@@ -1144,11 +829,13 @@ vizTrends <- function(dat, clusters, yaxis = "zscore",
   
 }
 
-```
 
-for selecting specific cells for plotting
 
-```{r}
+# --------------------------------------------------------------------------
+# --------------------------------------------------------------------------
+# for selecting specific cells for plotting
+# --------------------------------------------------------------------------
+
 
 getSubsetComs <- function(com, pos, subset_list, subsetIDs, neighIDs){
   
@@ -1181,9 +868,9 @@ getSubsetComs <- function(com, pos, subset_list, subsetIDs, neighIDs){
   return(annots_temp)
 }
 
-```
 
-```{r}
+
+
 
 transparentCol <- function(color, percent = 50, name = NULL) {
   ## Get RGB values for named color
@@ -1199,10 +886,7 @@ transparentCol <- function(color, percent = 50, name = NULL) {
   invisible(t.col)
 }
 
-```
 
-
-```{r}
 
 #' Visualize all clusters on the tissue
 #' 
@@ -1334,53 +1018,53 @@ vizAllClusters <- function(object, clusters, ofInterest = NULL,
   
 }
 
-```
+
 
 
 # functions for trend comparison
 
-example of "combined_zscores" table for this:
+# example of "combined_zscores" table for this:
+# 
+# B cells, red pulp vs B cells, red pulp_PKHL  -32.9456660
+# B cells, red pulp vs Blood endothelial_PKHL    4.8866288
+# B cells, red pulp vs CD4 Memory T cells_PKHL   0.6267365
+# B cells, red pulp vs CD8 Memory T cells_PKHL   4.1552767
+# B cells, red pulp vs Fol B cells_PKHL         -2.0511525
+#                                                    100
+# B cells, red pulp vs B cells, red pulp_PKHL   3.468262
+# B cells, red pulp vs Blood endothelial_PKHL   6.924598
+# B cells, red pulp vs CD4 Memory T cells_PKHL -1.125058
+# B cells, red pulp vs CD8 Memory T cells_PKHL  4.598821
+# B cells, red pulp vs Fol B cells_PKHL        -4.088960
+#                                                     200
+# B cells, red pulp vs B cells, red pulp_PKHL   20.382331
+# B cells, red pulp vs Blood endothelial_PKHL    9.124191
+# B cells, red pulp vs CD4 Memory T cells_PKHL  -3.457314
+# B cells, red pulp vs CD8 Memory T cells_PKHL   6.346583
+# B cells, red pulp vs Fol B cells_PKHL        -10.077066
+#                                                     500
+# B cells, red pulp vs B cells, red pulp_PKHL   25.644537
+# B cells, red pulp vs Blood endothelial_PKHL   11.662020
+# B cells, red pulp vs CD4 Memory T cells_PKHL  -5.480311
+# B cells, red pulp vs CD8 Memory T cells_PKHL   8.860998
+# B cells, red pulp vs Fol B cells_PKHL        -13.289820
+#                                                    1000
+# B cells, red pulp vs B cells, red pulp_PKHL   27.903186
+# B cells, red pulp vs Blood endothelial_PKHL   11.578624
+# B cells, red pulp vs CD4 Memory T cells_PKHL  -6.209824
+# B cells, red pulp vs CD8 Memory T cells_PKHL  11.656498
+# B cells, red pulp vs Fol B cells_PKHL        -14.505072
+#                                                    3000
+# B cells, red pulp vs B cells, red pulp_PKHL   29.711240
+# B cells, red pulp vs Blood endothelial_PKHL   13.033478
+# B cells, red pulp vs CD4 Memory T cells_PKHL  -6.217479
+# B cells, red pulp vs CD8 Memory T cells_PKHL  11.693157
+# B cells, red pulp vs Fol B cells_PKHL        -15.903972
+# 
+# where each row is a cell type combination with a tag for a given sample
+# and each column is the zscore of this for a given resolution
 
-B cells, red pulp vs B cells, red pulp_PKHL  -32.9456660
-B cells, red pulp vs Blood endothelial_PKHL    4.8866288
-B cells, red pulp vs CD4 Memory T cells_PKHL   0.6267365
-B cells, red pulp vs CD8 Memory T cells_PKHL   4.1552767
-B cells, red pulp vs Fol B cells_PKHL         -2.0511525
-                                                   100
-B cells, red pulp vs B cells, red pulp_PKHL   3.468262
-B cells, red pulp vs Blood endothelial_PKHL   6.924598
-B cells, red pulp vs CD4 Memory T cells_PKHL -1.125058
-B cells, red pulp vs CD8 Memory T cells_PKHL  4.598821
-B cells, red pulp vs Fol B cells_PKHL        -4.088960
-                                                    200
-B cells, red pulp vs B cells, red pulp_PKHL   20.382331
-B cells, red pulp vs Blood endothelial_PKHL    9.124191
-B cells, red pulp vs CD4 Memory T cells_PKHL  -3.457314
-B cells, red pulp vs CD8 Memory T cells_PKHL   6.346583
-B cells, red pulp vs Fol B cells_PKHL        -10.077066
-                                                    500
-B cells, red pulp vs B cells, red pulp_PKHL   25.644537
-B cells, red pulp vs Blood endothelial_PKHL   11.662020
-B cells, red pulp vs CD4 Memory T cells_PKHL  -5.480311
-B cells, red pulp vs CD8 Memory T cells_PKHL   8.860998
-B cells, red pulp vs Fol B cells_PKHL        -13.289820
-                                                   1000
-B cells, red pulp vs B cells, red pulp_PKHL   27.903186
-B cells, red pulp vs Blood endothelial_PKHL   11.578624
-B cells, red pulp vs CD4 Memory T cells_PKHL  -6.209824
-B cells, red pulp vs CD8 Memory T cells_PKHL  11.656498
-B cells, red pulp vs Fol B cells_PKHL        -14.505072
-                                                   3000
-B cells, red pulp vs B cells, red pulp_PKHL   29.711240
-B cells, red pulp vs Blood endothelial_PKHL   13.033478
-B cells, red pulp vs CD4 Memory T cells_PKHL  -6.217479
-B cells, red pulp vs CD8 Memory T cells_PKHL  11.693157
-B cells, red pulp vs Fol B cells_PKHL        -15.903972
 
-where each row is a cell type combination with a tag for a given sample
-and each column is the zscore of this for a given resolution
-
-```{r}
 
 #' Test if intra sample vs inter samples trends are significantly different
 #' 
@@ -1557,8 +1241,4 @@ diffTrendTesting <- function(samples, refID, neighID, zscores, heatmap = TRUE, d
   return(inter.tests)
   
 }
-
-```
-
-
 
