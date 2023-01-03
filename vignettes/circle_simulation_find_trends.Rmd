@@ -187,14 +187,14 @@ pos_1circle_results <- lapply(distances, function(d){
                                seed = sd)
   } else {
     pos <- circle_pos[circle_pos$id == "90",]
-    results_circsiz90 <- findTrendsv2(pos = pos[,c("x", "y")],
+    results_circsize90 <- findTrendsv2(pos = pos[,c("x", "y")],
                                celltypes = pos$type,
                                resolutions,
                                dist = d,
                                perms = prms,
                                ncores = ncs,
                                verbose = TRUE,
-                               loadShuffleFile = shuffledData,
+                               saveShuffleFile = shuffledData,
                                seed = sd)
   }
     
@@ -213,14 +213,14 @@ pos_1circle_results <- lapply(distances, function(d){
                                seed = sd)
   } else {
     pos <- circle_pos[circle_pos$id == "150",]
-    results_circsiz150 <- findTrendsv2(pos = pos[,c("x", "y")],
+    results_circsize150 <- findTrendsv2(pos = pos[,c("x", "y")],
                                celltypes = pos$type,
                                resolutions,
                                dist = d,
                                perms = prms,
                                ncores = ncs,
                                verbose = TRUE,
-                               loadShuffleFile = shuffledData,
+                               saveShuffleFile = shuffledData,
                                seed = sd)
   }
     
@@ -239,14 +239,14 @@ pos_1circle_results <- lapply(distances, function(d){
                                seed = sd)
   } else {
     pos <- circle_pos[circle_pos$id == "300",]
-    results_circsiz300 <- findTrendsv2(pos = pos[,c("x", "y")],
+    results_circsize300 <- findTrendsv2(pos = pos[,c("x", "y")],
                                celltypes = pos$type,
                                resolutions,
                                dist = d,
                                perms = prms,
                                ncores = ncs,
                                verbose = TRUE,
-                               loadShuffleFile = shuffledData,
+                               saveShuffleFile = shuffledData,
                                seed = sd)
   }
     
@@ -265,14 +265,14 @@ pos_1circle_results <- lapply(distances, function(d){
                                seed = sd)
   } else {
     pos <- circle_pos[circle_pos$id == "400",]
-    results_circsiz400 <- findTrendsv2(pos = pos[,c("x", "y")],
+    results_circsize400 <- findTrendsv2(pos = pos[,c("x", "y")],
                                celltypes = pos$type,
                                resolutions,
                                dist = d,
                                perms = prms,
                                ncores = ncs,
                                verbose = TRUE,
-                               loadShuffleFile = shuffledData,
+                               saveShuffleFile = shuffledData,
                                seed = sd)
   }
 
