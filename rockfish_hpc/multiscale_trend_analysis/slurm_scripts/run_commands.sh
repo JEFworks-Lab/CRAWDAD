@@ -115,3 +115,56 @@
 
 # sbatch ./run_triplet.sh FSLD celltypes_folBcombined fsld.folBcombined.shuffled_res50-3000.rds near 200 fsld.folBcombined.subsets.near.subdist200.rds fsld.triplet.near.binom.subdist200.dist200.folBcombined.results.rds
 
+
+# ----------------------------------------------------
+## slide seq cerebellum data
+# ----------------------------------------------------
+
+# make subsets, subsetdist 100
+# sbatch ./run_makeSubsets.sh slideseqPuck.190926_08.rctd class near 100 slideseqPuck.190926_08.rctd.subsets.near.subdist100.rds
+
+# dist 100, subsetdist 100
+#sbatch ./run_triplet.sh slideseqPuck.190926_08.rctd class slideseqPuck.190926_08.rctd.shuffled_res50-3000.rds near 100 slideseqPuck.190926_08.rctd.subsets.near.subdist100.rds slideseqPuck.190926_08.rctd.near.binom.subdist100.dist100.results.rds
+
+# dist 100, subsetdist 200
+#sbatch ./run_triplet.sh slideseqPuck.190926_08.rctd class slideseqPuck.190926_08.rctd.shuffled_res50-3000.rds near 200 slideseqPuck.190926_08.rctd.subsets.near.subdist200.rds slideseqPuck.190926_08.rctd.near.binom.subdist200.dist100.results.rds
+
+# dist 200, subsetdist 200
+#sbatch ./run_triplet.sh slideseqPuck.190926_08.rctd class slideseqPuck.190926_08.rctd.shuffled_res50-3000.rds near 200 slideseqPuck.190926_08.rctd.subsets.near.subdist200.rds slideseqPuck.190926_08.rctd.near.binom.subdist200.dist200.results.rds
+
+
+
+# ----------------------------------------------------
+## squidpy datasets
+# ----------------------------------------------------
+## triplets
+
+### make the subsets with binomial test first, because takes a long time for each one:
+
+# sbatch ./run_makeSubsets.sh compute_co_occurance_data cluster near 100 sp.cooccuranceData.subsets.near.subdist100.rds
+
+# sbatch ./run_makeSubsets.sh compute_ripley_data cluster near 100 sp.ripleyData.subsets.near.subdist100.rds
+
+# sbatch ./run_makeSubsets.sh compute_co_occurance_data cluster near 200 sp.cooccuranceData.subsets.near.subdist200.rds
+
+# sbatch ./run_makeSubsets.sh compute_ripley_data cluster near 200 sp.ripleyData.subsets.near.subdist200.rds
+
+
+# dist 100, subsetdist 100; co_occurance
+# sbatch ./run_triplet.sh compute_co_occurance_data cluster sp.cooccuranceData.shuffled_res50-800.rds near 100 sp.cooccuranceData.subsets.near.subdist100.rds sp.cooccuranceData.near.binom.subdist100.dist100.results.rds
+
+# dist 100, subsetdist 200; co_occurance
+# sbatch ./run_triplet.sh compute_co_occurance_data cluster sp.cooccuranceData.shuffled_res50-800.rds near 200 sp.cooccuranceData.subsets.near.subdist200.rds sp.cooccuranceData.near.binom.subdist200.dist100.results.rds
+
+# dist 200, subsetdist 200; co_occurance
+# sbatch ./run_triplet.sh compute_co_occurance_data cluster sp.cooccuranceData.shuffled_res50-800.rds near 200 sp.cooccuranceData.subsets.near.subdist200.rds sp.cooccuranceData.near.binom.subdist200.dist200.results.rds
+
+
+# dist 100, subsetdist 100; ripley
+# sbatch ./run_triplet.sh compute_ripley_data cluster sp.ripleyData.shuffled_res50-3000.rds near 100 sp.ripleyData.subsets.near.subdist100.rds sp.ripleyData.near.binom.subdist100.dist100.results.rds
+
+# dist 100, subsetdist 200; ripley
+# sbatch ./run_triplet.sh compute_ripley_data cluster sp.ripleyData.shuffled_res50-3000.rds near 200 sp.ripleyData.subsets.near.subdist200.rds sp.ripleyData.near.binom.subdist200.dist100.results.rds
+
+# dist 200, subsetdist 200; ripley
+# sbatch ./run_triplet.sh compute_ripley_data cluster sp.ripleyData.shuffled_res50-3000.rds near 200 sp.ripleyData.subsets.near.subdist200.rds sp.ripleyData.near.binom.subdist200.dist200.results.rds

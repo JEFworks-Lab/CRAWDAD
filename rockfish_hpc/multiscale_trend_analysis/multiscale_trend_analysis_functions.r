@@ -15,7 +15,7 @@ simulate_background <- function(size = 10000, cts = c("A"), prob = c(1), seed = 
   x <- runif(size, min = 0, max = 1)
   y <- runif(size, min = 0, max = 1)
   p <- data.frame(x = x, y = y, type = sample(cts, size = size, replace = TRUE, prob = prob)
-                  )
+  )
   
   ## scale to 3100 microns for different tile resolutions
   p$x <- p$x * scale
@@ -129,9 +129,11 @@ makeShuffledCells <- function(cells, resolutions, perms = 1, ncores = 1, seed = 
       randcelltype <- unlist(parallel::mclapply(1:length(grid), function(i) {
         ## sometimes can be on boundary, so just pick first one
         int <- sf::st_intersection(cells, grid[[i]])
+        
         # randomly grab cell labels for cell in the grid (this is a factor)
         set.seed(s)
         shuffled_cells <- sample(int$celltypes)
+        
         # assign the cell ids to the randomly sampled cell labels
         names(shuffled_cells) <- rownames(int)
         return(shuffled_cells) ## this is a factor 
@@ -171,7 +173,7 @@ makeShuffledCells <- function(cells, resolutions, perms = 1, ncores = 1, seed = 
     names(permutations) <- 1:perms
     return(permutations)
   })
-
+  
   names(randomcellslist) <- resolutions
   return(randomcellslist)
 }
@@ -192,7 +194,7 @@ evaluateSignificance <- function(cells, randomcellslist, trueNeighCells, cellBuf
   cellBuffer <- cellBuffer
   
   results <- do.call(rbind, parallel::mclapply(randomcellslist, function(cellsAtRes){
-
+    
     ## iterate through each permutation of a given resolution
     ## produce the scores for each neighbor cell type
     ## combine the tables into a dataframe, take the mean of the scores for each cell type
@@ -214,11 +216,11 @@ evaluateSignificance <- function(cells, randomcellslist, trueNeighCells, cellBuf
       p2 <- y2/n2
       p <- (y1+y2)/(n1+n2)
       Z <- (p1-p2)/sqrt(p*(1-p)*(1/n1+1/n2))
-
+      
       rm(bufferrandomcells)
       rm(randomcells)
       gc(verbose = FALSE, reset = TRUE)
-
+      
       return(Z)
     })
     )
@@ -226,7 +228,7 @@ evaluateSignificance <- function(cells, randomcellslist, trueNeighCells, cellBuf
     return(colMeans(scores))
   }, mc.cores = ncores)
   )
-
+  
   rm(allcells)
   rm(trueNeighCells)
   rm(cellBuffer)
@@ -331,7 +333,7 @@ getSubsets <- function(cells,
       sub.cells <- rownames(refs.buffer)[which(tests < sub.thresh)]
       sub.cells <- rownames(refs.buffer)[which(!rownames(refs.buffer) %in% sub.cells)]
     }
-
+    
     total_t_subset <- round(difftime(Sys.time(), start_time_subset, units = "mins"), 2)
     if(verbose){
       message(sprintf("Time to compute was %smins", total_t_subset))
@@ -428,8 +430,13 @@ findTrendsv2 <- function(pos,
     data=data.frame(
       celltypes=celltypes
       #name=rownames(pos)
-  ))
+    ))
   cells <- sf::st_as_sf(cells)
+  
+  ## Change rowname assignments of cells to integers.
+  ## Solution to keep rows in same order later on when
+  ## randomly shuffling cell labels
+  rownames(cells) <- as.character(1:dim(cells)[1])
   
   # make asumption that cell type attribute is constant throughout the geometries of each cell
   ## it removed the warning that keep popping up, which says this assumption is made anyways
@@ -507,9 +514,9 @@ findTrendsv2 <- function(pos,
       return(results)
     }) 
     names(results.all) <- levels(celltypes)
-  
-   ## Evaluate significance (cell type subsets)
-  # ============================================================
+    
+    ## Evaluate significance (cell type subsets)
+    # ============================================================
   } else if (sub.type %in% c("near", "away")){
     
     ## load in the subset file if it exists, or make it and probably be a good
@@ -532,7 +539,7 @@ findTrendsv2 <- function(pos,
     
     combo_ids <- names(subset.list)
     d <- dist
-
+    
     if(verbose){
       message("Calculating for subset type: ", sub.type)
       message("within subset distance of: ", sub.dist)
@@ -540,14 +547,14 @@ findTrendsv2 <- function(pos,
     
     ## initialize list
     results.all <- list()
-
+    
     ## for each subset of cells, evaluate significance against each reference cell type across resolutions
     for(i in combo_ids){
-
+      
       if(verbose){
         message(i)
       }
-
+      
       ## get area around the subset cells to identify neighbors
       ref.buffer <- sf::st_buffer(cells[subset.list[[i]], ], d)
       # get the different types of neighbor cells that are within "d" of the ref cells
@@ -565,13 +572,13 @@ findTrendsv2 <- function(pos,
                                       cellBuffer = ref.buffer,
                                       ncores = ncores)
       results.all[[i]] <- results
-
+      
       rm(ref.buffer)
       rm(neigh.cells)
       rm(results)
       gc(verbose = FALSE, reset = TRUE)
     }
-        
+    
   } else {
     stop("`sub.type` must be either 'pairwise', 'near' or 'away'")
   }
@@ -625,7 +632,7 @@ findTrends <- function(pos, celltypes, resolutions, dist = 30, subsetdist = NaN,
     data=data.frame(
       celltypes=celltypes
       #name=rownames(pos)
-  ))
+    ))
   cells <- sf::st_as_sf(cells)
   
   # make asumption that cell type attribute is constant throughout the geometries of each cell
@@ -639,9 +646,9 @@ findTrends <- function(pos, celltypes, resolutions, dist = 30, subsetdist = NaN,
   # visualize real data
   if(plot){
     plot.new()
-  #   par(mfrow=c(1,1), mar=rep(1,4))
-  #   plot(cells, pch=".", main = "original dataset")
-  #   # dev.off()
+    #   par(mfrow=c(1,1), mar=rep(1,4))
+    #   plot(cells, pch=".", main = "original dataset")
+    #   # dev.off()
   }
   
   ## Generate randomly permuted background at each resolution
@@ -715,7 +722,7 @@ findTrends <- function(pos, celltypes, resolutions, dist = 30, subsetdist = NaN,
       # compare the real neighbor cell results above to the random shuffles at each resolution
       results <- sapply(randomcellslist, function(randomcells){
         buffer1randomcells <- sf::st_intersection(randomcells, buffer1$geometry)
-  
+        
         ## evaluate significance https://online.stat.psu.edu/stat415/lesson/9/9.4
         y1 <- table(buffer1cells$celltypes)
         y2 <- table(buffer1randomcells$celltypes)
@@ -730,9 +737,9 @@ findTrends <- function(pos, celltypes, resolutions, dist = 30, subsetdist = NaN,
       return(t(results))
     }, mc.cores=ncores) # im getting an error is this is higher, at least for the 3 ct sims with circles...
     names(results.all) <- levels(celltypes)
-  
-   ## Evaluate significance (triplet subsetting)
-  # ============================================================
+    
+    ## Evaluate significance (triplet subsetting)
+    # ============================================================
   } else if (isTRUE(as.double(subsetdist) > 0)){
     
     if(verbose){
@@ -772,7 +779,7 @@ findTrends <- function(pos, celltypes, resolutions, dist = 30, subsetdist = NaN,
       # compare the real neighbor cell results above to the random shuffles at each resolution
       results <- sapply(randomcellslist, function(randomcells){
         buffer1randomcells <- sf::st_intersection(randomcells, buffersubsetcells$geometry)
-  
+        
         ## evaluate significance https://online.stat.psu.edu/stat415/lesson/9/9.4
         y1 <- table(cellsnearsubset$celltypes)
         y2 <- table(buffer1randomcells$celltypes)
@@ -787,7 +794,7 @@ findTrends <- function(pos, celltypes, resolutions, dist = 30, subsetdist = NaN,
       return(t(results))
     }, mc.cores=ncores) # im getting an error is this is higher, at least for the 3 ct sims with circles...
     names(results.all) <- combo_ids
-        
+    
   } else {
     stop("`subsetdist` needs to be either NaN for pairwise comparisons or a positive distance.")
   }
@@ -899,7 +906,7 @@ plotTrends <- function(results, idcol = "id", figPath = "results.pdf", width = 8
     ## for example, ref vs neigh at different distances
   } else if(inherits(results, "data.frame")){
     message("results detected to be a data.frame")
-
+    
     refs <- unique(results[,"reference"])
     neighs <- unique(results[,"neighbor"])
     ids <- unique(results[,idcol])
@@ -1070,7 +1077,7 @@ vizTrends <- function(dat, clusters, yaxis = "zscore",
                    strip.text = ggplot2::element_text(size = 12),
                    legend.title = ggplot2::element_blank()
                    # legend.position="none"
-                   )
+    )
   plt
   
 }
@@ -1158,7 +1165,7 @@ diffTrendTesting <- function(samples, refID, neighID, zscores, heatmap = TRUE, d
   inter.dists <- lapply(1:length(inter.vals), function(ix){
     MASS::fitdistr(inter.vals[[ix]], "normal")
   })
-
+  
   ## perform T-tests
   inter.tests <- lapply(1:length(inter.vals), function(ix){
     t.test(intra.vals, inter.vals[[ix]])
@@ -1233,24 +1240,24 @@ diffTrendTesting <- function(samples, refID, neighID, zscores, heatmap = TRUE, d
       ggplot2::geom_line(ggplot2::aes(x = xvals, y = value, color = variable)) +
       ggplot2::scale_color_manual(values = c(cols, "black")) +
       ggplot2::labs(title = id,
-                            x = "distance",
-                            y = "density") +
-              
-              ggplot2::theme_classic() +
-              ggplot2::theme(axis.text.x = ggplot2::element_text(size=15, color = "black"),
-                             axis.text.y = ggplot2::element_text(size=15, color = "black"),
-                             axis.title.y = ggplot2::element_text(size=15),
-                             axis.title.x = ggplot2::element_text(size=15),
-                             axis.ticks.x = ggplot2::element_blank(),
-                             plot.title = ggplot2::element_text(size=15),
-                             legend.text = ggplot2::element_text(size = 12, colour = "black"),
-                             legend.title = ggplot2::element_text(size = 15, colour = "black", angle = 0, hjust = 0.5),
-                             panel.background = ggplot2::element_blank(),
-                             plot.background = ggplot2::element_blank(),
-                             panel.grid.major.y =  ggplot2::element_blank(),
-                             axis.line = ggplot2::element_line(size = 1, colour = "black")
-                             # legend.position="none"
-              )
+                    x = "distance",
+                    y = "density") +
+      
+      ggplot2::theme_classic() +
+      ggplot2::theme(axis.text.x = ggplot2::element_text(size=15, color = "black"),
+                     axis.text.y = ggplot2::element_text(size=15, color = "black"),
+                     axis.title.y = ggplot2::element_text(size=15),
+                     axis.title.x = ggplot2::element_text(size=15),
+                     axis.ticks.x = ggplot2::element_blank(),
+                     plot.title = ggplot2::element_text(size=15),
+                     legend.text = ggplot2::element_text(size = 12, colour = "black"),
+                     legend.title = ggplot2::element_text(size = 15, colour = "black", angle = 0, hjust = 0.5),
+                     panel.background = ggplot2::element_blank(),
+                     plot.background = ggplot2::element_blank(),
+                     panel.grid.major.y =  ggplot2::element_blank(),
+                     axis.line = ggplot2::element_line(size = 1, colour = "black")
+                     # legend.position="none"
+      )
     print(plt)
     
   }

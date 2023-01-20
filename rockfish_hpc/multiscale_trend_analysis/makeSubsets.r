@@ -9,6 +9,7 @@ library(assertthat)
 library(reshape2)
 library(MASS)
 library(stats)
+library(dplyr)
 
 source("/home/bmille79/code/multiscale_trend_analysis/multiscale_trend_analysis_functions.r")
 
@@ -19,11 +20,15 @@ args <- commandArgs(TRUE)
 ## load arguments from the command line
 
 ## path to the metadata table of cell coordinates and celltype names
-meta <- read.csv2(file = args[1], row.names = 1)
+meta <- read.csv2(file = args[1], row.names = 1, sep=',')
 
 ## name of column with cell type annotations to use
 ## for example, "celltypes", or "celltypes_folBcombined"
 meta <- meta[,c("x", "y", as.character(args[2]))]
+
+## make sure the coordinates are numeric
+meta <- meta %>% 
+  dplyr::mutate_at(vars(x, y), as.numeric)
 
 subsetType <- as.character(args[3])
 
@@ -69,7 +74,13 @@ cells <- sp::SpatialPointsDataFrame(
         #name=rownames(pos)
 ))
 cells <- sf::st_as_sf(cells)
-# make asumption that cell type attribute is constant throughout the geometries of each cell
+
+## Change rowname assignments of cells to integers.
+## Solution to keep rows in same order later on when
+## randomly shuffling cell labels
+rownames(cells) <- as.character(1:dim(cells)[1])
+
+# make assumption that cell type attribute is constant throughout the geometries of each cell
 ## it removed the warning that keep popping up, which says this assumption is made anyways
 sf::st_agr(cells) <- "constant"
 

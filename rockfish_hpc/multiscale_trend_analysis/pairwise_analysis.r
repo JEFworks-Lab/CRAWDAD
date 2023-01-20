@@ -9,6 +9,7 @@ library(assertthat)
 library(reshape2)
 library(MASS)
 library(stats)
+library(dplyr)
 
 source("/home/bmille79/code/multiscale_trend_analysis/multiscale_trend_analysis_functions.r")
 
@@ -19,11 +20,15 @@ args <- commandArgs(TRUE)
 ## load arguments from the command line
 
 ## path to the metadata table of cell coordinates and celltype names
-meta <- read.csv2(file = args[1], row.names = 1)
+meta <- read.csv2(file = args[1], row.names = 1, sep=',')
 
 ## name of column with cell type annotations to use
 ## for example, "celltypes", or "celltypes_folBcombined"
 meta <- meta[,c("x", "y", as.character(args[2]))]
+
+## make sure the coordinates are numeric
+meta <- meta %>% 
+  dplyr::mutate_at(vars(x, y), as.numeric)
 
 ## full path to the shuffled data rds
 shuffledDataPath <- args[3]

@@ -1,0 +1,604 @@
+---
+title: "Untitled"
+author: "Brendan F. Miller"
+date: "1/16/2023"
+output: html_document
+---
+
+# co_occurance
+
+```{r}
+
+meta <- read.csv2(file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/multiscale_celltype_colocalization_analysis/data/squidpy/compute_co_occurance_data.meta.csv", row.names = 1, sep=",")
+
+```
+
+```{r}
+
+meta
+
+```
+
+```{r}
+
+meta <- meta %>% 
+  dplyr::mutate_at(vars(x, y), as.numeric)
+
+```
+
+```{r}
+
+subsets <- readRDS("data/squidpy/sp.cooccuranceData.subsets.near.subdist100.rds")
+subsets200 <- readRDS("data/squidpy/sp.cooccuranceData.subsets.near.subdist200.rds")
+
+```
+
+```{r}
+
+getSubsetComs <- function(com, pos, subset_list, subsetIDs, neighIDs){
+  
+  ## get vector to append cell annotations of interest
+  annots_temp <- rep(NA, length(rownames(pos)))
+  names(annots_temp) <- rownames(pos)
+  
+  ## append the neighbor cells
+  if(!is.na(neighIDs[1])){
+    for(neigh_id in neighIDs){
+      annots_temp[com == neigh_id] <- neigh_id
+    }
+  }
+  
+  ## get cell ids that are part of subset
+  ## these added after the neigbors in case
+  ## you want to plot all CD4 T cells first
+  # then color the ones that are a subset
+  ## note that the order will be important
+  ## because labels are overwritten in this way
+  if(!is.na(subsetIDs[1])){
+    for(subsetID in subsetIDs){
+      cells_temp <- as.numeric(subset_list[[subsetID]])
+      ## append the subset label
+      annots_temp[cells_temp] <- subsetID
+    }
+  }
+  
+  annots_temp <- as.factor(annots_temp)
+  return(annots_temp)
+}
+
+```
+
+```{r}
+
+pos <- meta[,c("x", "y")]
+com <- as.factor(meta$cluster)
+names(com) <- rownames(pos)
+
+
+# ----------------------------------------
+# Podoplanin subsets
+annots_temp <- getSubsetComs(com = com,
+                             pos = pos,
+                             subset_list = subsets,
+                             neighIDs = c("T cells", "apoptotic tumor cell"),
+                             subsetIDs = c("T cells_near_apoptotic tumor cell"))
+plt <- vizAllClusters(object = pos,
+               clusters = annots_temp,
+               title = "id",
+               axisAdj = 1, s = 4, a = 0.5) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
+  # ggplot2::theme(legend.position="none") +
+  ggplot2::labs(x = "x",
+                y = "y")
+plt
+
+# ggplot2::ggsave(filename ="sim_circSubset.v2.AnearB.pdf",
+#                 path = figpath, device = "pdf",
+#                 plot = plt,
+#                 dpi = 600, width = 4, height = 3, units = "in")
+
+```
+
+```{r}
+
+pos <- meta[,c("x", "y")]
+com <- as.factor(meta$cluster)
+names(com) <- rownames(pos)
+
+
+# ----------------------------------------
+# Podoplanin subsets
+annots_temp <- getSubsetComs(com = com,
+                             pos = pos,
+                             subset_list = subsets200,
+                             neighIDs = c("T cells", "apoptotic tumor cell"),
+                             subsetIDs = c("T cells_near_apoptotic tumor cell"))
+plt <- vizAllClusters(object = pos,
+               clusters = annots_temp,
+               title = "id",
+               axisAdj = 1, s = 4, a = 0.5) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
+  # ggplot2::theme(legend.position="none") +
+  ggplot2::labs(x = "x",
+                y = "y")
+plt
+
+# ggplot2::ggsave(filename ="sim_circSubset.v2.AnearB.pdf",
+#                 path = figpath, device = "pdf",
+#                 plot = plt,
+#                 dpi = 600, width = 4, height = 3, units = "in")
+
+```
+
+```{r}
+
+dataDir <- "/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/multiscale_celltype_colocalization_analysis/data/squidpy/"
+
+figpath <- "/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/multiscale_celltype_colocalization_analysis/plots/squidpy/"
+
+```
+
+```{r}
+
+outfile <- paste0(dataDir, "sp.cooccuranceData.near.binom.subdist200.dist200.results.rds")
+dat <- readRDS(outfile)
+
+dat <- meltResultsList(resultsList = dat, id = NA)
+colnames(dat) <- c("resolution", "neighbor", "Z", "reference", "dist", "subsetDist")
+
+dat <- dat[dat$resolution %in% c(100,200,300,400,500,600,700,800),]
+
+dat <- dat[grepl(pattern = "basal CK tumor cell_near_", x = dat$reference),]
+
+plotTrends(results = dat, idcol = "dist", figPath = paste0(figpath, "sp.cooccuranceData.subdist200.dist200.subsets.basalCK.pdf"),
+          width = 30, height = 30)
+
+```
+
+```{r}
+
+outfile <- paste0(dataDir, "sp.cooccuranceData.near.binom.subdist100.dist100.results.rds")
+dat <- readRDS(outfile)
+
+dat <- meltResultsList(resultsList = dat, id = NA)
+colnames(dat) <- c("resolution", "neighbor", "Z", "reference", "dist", "subsetDist")
+
+dat <- dat[dat$resolution %in% c(100,200,300,400,500,600,700,800),]
+
+dat <- dat[grepl(pattern = "basal CK tumor cell_near_", x = dat$reference),]
+
+plotTrends(results = dat, idcol = "dist", figPath = paste0(figpath, "sp.cooccuranceData.subdist100.dist100.subsets.basalCK.pdf"),
+          width = 30, height = 30)
+
+```
+
+```{r}
+
+outfile <- paste0(dataDir, "sp.cooccuranceData.near.binom.subdist200.dist100.results.rds")
+dat <- readRDS(outfile)
+
+dat <- meltResultsList(resultsList = dat, id = NA)
+colnames(dat) <- c("resolution", "neighbor", "Z", "reference", "dist", "subsetDist")
+
+dat <- dat[dat$resolution %in% c(100,200,300,400,500,600,700,800),]
+
+dat <- dat[grepl(pattern = "basal CK tumor cell_near_", x = dat$reference),]
+
+plotTrends(results = dat, idcol = "dist", figPath = paste0(figpath, "sp.cooccuranceData.subdist200.dist100.subsets.basalCK.pdf"),
+          width = 30, height = 30)
+
+```
+
+# ripley
+
+```{r}
+
+meta_ripley <- read.csv2(file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/multiscale_celltype_colocalization_analysis/data/squidpy/compute_ripley_data.meta.csv.gz", row.names = 1, sep=",")
+
+```
+
+```{r}
+
+meta_ripley
+
+```
+
+```{r}
+
+meta_ripley <- meta_ripley %>% 
+  dplyr::mutate_at(vars(x, y), as.numeric)
+
+```
+
+
+```{r}
+
+subsets100 <- readRDS("/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/multiscale_celltype_colocalization_analysis/data/squidpy/sp.ripleyData.subsets.near.subdist100.rds")
+subsets200 <- readRDS("/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/multiscale_celltype_colocalization_analysis/data/squidpy/sp.ripleyData.subsets.near.subdist200.rds")
+subsets300 <- readRDS("/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/multiscale_celltype_colocalization_analysis/data/squidpy/sp.ripleyData.subsets.near.subdist300.rds")
+
+```
+
+```{r, fig.height=18, fig.width=18}
+
+vizEachCluster(object = meta_ripley[,c("x", "y")], clusters = as.factor(meta_ripley$cluster), s = 2)
+
+```
+
+```{r}
+
+pos <- meta_ripley[,c("x", "y")]
+com <- as.factor(meta_ripley$cluster)
+names(com) <- rownames(pos)
+
+# ----------------------------------------
+annots_temp <- getSubsetComs(com = com,
+                             pos = pos,
+                             subset_list = subsets100,
+                             neighIDs = c("CA1_CA2_CA3_Subiculum", "Interneurons", "DentatePyramids"),
+                             subsetIDs = NA)
+plt <- vizAllClusters(object = pos,
+               clusters = annots_temp,
+               title = "id",
+               axisAdj = 1, s = 4, a = 0.5) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
+  # ggplot2::theme(legend.position="none") +
+  ggplot2::labs(x = "x",
+                y = "y")
+plt
+
+# ----------------------------------------
+annots_temp <- getSubsetComs(com = com,
+                             pos = pos,
+                             subset_list = subsets100,
+                             neighIDs = c("CA1_CA2_CA3_Subiculum", "Interneurons", "DentatePyramids"),
+                             subsetIDs = c("CA1_CA2_CA3_Subiculum_near_DentatePyramids"))
+plt <- vizAllClusters(object = pos,
+               clusters = annots_temp,
+               title = "id",
+               axisAdj = 1, s = 4, a = 0.5) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
+  # ggplot2::theme(legend.position="none") +
+  ggplot2::labs(x = "x",
+                y = "y")
+plt
+
+# ----------------------------------------
+annots_temp <- getSubsetComs(com = com,
+                             pos = pos,
+                             subset_list = subsets200,
+                             neighIDs = c("CA1_CA2_CA3_Subiculum", "Interneurons", "DentatePyramids"),
+                             subsetIDs = c("CA1_CA2_CA3_Subiculum_near_DentatePyramids"))
+plt <- vizAllClusters(object = pos,
+               clusters = annots_temp,
+               title = "id",
+               axisAdj = 1, s = 4, a = 0.5) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
+  # ggplot2::theme(legend.position="none") +
+  ggplot2::labs(x = "x",
+                y = "y")
+plt
+
+# ----------------------------------------
+annots_temp <- getSubsetComs(com = com,
+                             pos = pos,
+                             subset_list = subsets300,
+                             neighIDs = c("CA1_CA2_CA3_Subiculum", "Interneurons", "DentatePyramids"),
+                             subsetIDs = c("CA1_CA2_CA3_Subiculum_near_DentatePyramids"))
+plt <- vizAllClusters(object = pos,
+               clusters = annots_temp,
+               title = "id",
+               axisAdj = 1, s = 4, a = 0.5) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
+  # ggplot2::theme(legend.position="none") +
+  ggplot2::labs(x = "x",
+                y = "y")
+plt
+
+# ----------------------------------------
+annots_temp <- getSubsetComs(com = com,
+                             pos = pos,
+                             subset_list = subsets100,
+                             neighIDs = c("DentatePyramids"),
+                             subsetIDs = c("CA1_CA2_CA3_Subiculum_near_DentatePyramids"))
+plt <- vizAllClusters(object = pos,
+               clusters = annots_temp,
+               title = "id",
+               axisAdj = 1, s = 4, a = 0.5) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
+  # ggplot2::theme(legend.position="none") +
+  ggplot2::labs(x = "x",
+                y = "y")
+plt
+
+# ----------------------------------------
+annots_temp <- getSubsetComs(com = com,
+                             pos = pos,
+                             subset_list = subsets200,
+                             neighIDs = c("DentatePyramids"),
+                             subsetIDs = c("CA1_CA2_CA3_Subiculum_near_DentatePyramids"))
+plt <- vizAllClusters(object = pos,
+               clusters = annots_temp,
+               title = "id",
+               axisAdj = 1, s = 4, a = 0.5) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
+  # ggplot2::theme(legend.position="none") +
+  ggplot2::labs(x = "x",
+                y = "y")
+plt
+
+# ----------------------------------------
+annots_temp <- getSubsetComs(com = com,
+                             pos = pos,
+                             subset_list = subsets300,
+                             neighIDs = c("DentatePyramids"),
+                             subsetIDs = c("CA1_CA2_CA3_Subiculum_near_DentatePyramids"))
+plt <- vizAllClusters(object = pos,
+               clusters = annots_temp,
+               title = "id",
+               axisAdj = 1, s = 4, a = 0.5) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
+  # ggplot2::theme(legend.position="none") +
+  ggplot2::labs(x = "x",
+                y = "y")
+plt
+
+# ----------------------------------------
+annots_temp <- getSubsetComs(com = com,
+                             pos = pos,
+                             subset_list = subsets300,
+                             neighIDs = c("DentatePyramids", "CA1_CA2_CA3_Subiculum"),
+                             subsetIDs = NA)
+plt <- vizAllClusters(object = pos,
+               clusters = annots_temp,
+               title = "id",
+               axisAdj = 1, s = 4, a = 0.5) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
+  # ggplot2::theme(legend.position="none") +
+  ggplot2::labs(x = "x",
+                y = "y")
+plt
+
+# ggplot2::ggsave(filename ="sim_circSubset.v2.AnearB.pdf",
+#                 path = figpath, device = "pdf",
+#                 plot = plt,
+#                 dpi = 600, width = 4, height = 3, units = "in")
+
+```
+
+```{r}
+
+outfile <- paste0(dataDir, "sp.ripleyData.near.binom.subdist100.dist100.results.rds")
+dat <- readRDS(outfile)
+
+dat <- meltResultsList(resultsList = dat, id = NA)
+colnames(dat) <- c("resolution", "neighbor", "Z", "reference", "dist", "subsetDist")
+
+dat <- dat[dat$resolution %in% c(50,100,200,300,500,700,800,1000,3000),]
+
+dat <- dat[grepl(pattern = "CA1_CA2_CA3_Subiculum_near_", x = dat$reference),]
+
+plotTrends(results = dat, idcol = "dist", figPath = paste0(figpath, "sp.ripleyData.subdist100.dist100.subsets.CAs.pdf"),
+          width = 30, height = 30)
+
+```
+
+```{r}
+
+outfile <- paste0(dataDir, "sp.ripleyData.near.binom.subdist200.dist200.results.rds")
+dat <- readRDS(outfile)
+
+dat <- meltResultsList(resultsList = dat, id = NA)
+colnames(dat) <- c("resolution", "neighbor", "Z", "reference", "dist", "subsetDist")
+
+dat <- dat[dat$resolution %in% c(50,100,200,300,500,700,800,1000,3000),]
+
+dat <- dat[grepl(pattern = "CA1_CA2_CA3_Subiculum_near_", x = dat$reference),]
+
+plotTrends(results = dat, idcol = "dist", figPath = paste0(figpath, "sp.ripleyData.subdist200.dist200.subsets.CAs.pdf"),
+          width = 30, height = 30)
+
+```
+
+```{r}
+
+outfile <- paste0(dataDir, "sp.ripleyData.near.binom.subdist300.dist300.results.rds")
+dat <- readRDS(outfile)
+
+dat <- meltResultsList(resultsList = dat, id = NA)
+colnames(dat) <- c("resolution", "neighbor", "Z", "reference", "dist", "subsetDist")
+
+dat <- dat[dat$resolution %in% c(50,100,200,300,500,700,800,1000,3000),]
+
+dat <- dat[grepl(pattern = "CA1_CA2_CA3_Subiculum_near_", x = dat$reference),]
+
+plotTrends(results = dat, idcol = "dist", figPath = paste0(figpath, "sp.ripleyData.subdist300.dist300.subsets.CAs.pdf"),
+          width = 30, height = 30)
+
+```
+
+```{r}
+
+outfile <- paste0(dataDir, "sp.ripleyData.near.binom.subdist300.dist300.results.rds")
+dat <- readRDS(outfile)
+
+dat <- meltResultsList(resultsList = dat, id = NA)
+colnames(dat) <- c("resolution", "neighbor", "Z", "reference", "dist", "subsetDist")
+
+dat <- dat[dat$resolution %in% c(50,100,200,300,500,700,800,1000,3000),]
+
+dat <- dat[grepl(pattern = "Astrocytes_near_", x = dat$reference),]
+
+plotTrends(results = dat, idcol = "dist", figPath = paste0(figpath, "sp.ripleyData.subdist300.dist300.subsets.Astro.pdf"),
+          width = 30, height = 30)
+
+```
+
+```{r}
+
+outfile <- paste0(dataDir, "sp.ripleyData.pairwise.results.rds")
+dat <- readRDS(outfile)
+
+dat <- meltResultsList(resultsList = dat, id = NA)
+colnames(dat) <- c("resolution", "neighbor", "Z", "reference", "dist", "subsetDist")
+
+dat <- dat[dat$dist %in% c("100", "200", "300"),]
+dat <- dat[dat$resolution %in% c(50,100,200,300,500,700,800,1000,3000),]
+
+plotTrends(results = dat, idcol = "dist", figPath = paste0(figpath, "sp.ripleyData.pairwise.pdf"),
+          width = 30, height = 30)
+
+```
+
+```{r}
+
+
+outfile <- paste0(dataDir, "sp.ripleyData.pairwise.results.rds")
+dat <- readRDS(outfile)
+
+dat <- meltResultsList(resultsList = dat, id = NA)
+colnames(dat) <- c("resolution", "neighbor", "Z", "reference", "dist", "subsetDist")
+
+dat <- dat[dat$dist %in% c("200"),]
+dat <- dat[dat$resolution %in% c(50,100,200,300,500,700,800,1000,3000),]
+
+plotTrendsOverlay(results = dat, idcol = "dist", figPath = paste0(figpath, "sp.ripleyData.pairwise.overlayed.pdf"),
+          width = 4, height = 40)
+
+```
+
+
+# shuffled data for squidpy
+
+```{r}
+
+randomcellslist <- readRDS(file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/multiscale_celltype_colocalization_analysis/data/squidpy/sp.ripleyData.shuffled_res50-3000.rds")
+
+```
+
+```{r}
+
+meta_ripley$shuffled <- randomcellslist$`3000`$`1`
+
+```
+
+
+```{r, fig.height=18, fig.width=18}
+
+vizEachCluster(object = meta_ripley[,c("x", "y")], clusters = as.factor(meta_ripley$shuffled), s = 2)
+
+```
+
+```{r}
+
+m <- meta_ripley[,c("x", "y", "cluster", "shuffled")]
+colnames(m) <- c("x", "y", "cluster", "shuffled")
+write.csv2(x = m, file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/multiscale_celltype_colocalization_analysis/data/squidpy/ripley.meta.csv", row.names = TRUE)
+
+```
+
+```{r}
+
+pos <- meta_ripley[,c("x", "y")]
+com <- as.factor(meta_ripley$cluster)
+names(com) <- rownames(pos)
+
+# ----------------------------------------
+annots_temp <- getSubsetComs(com = com,
+                             pos = pos,
+                             subset_list = subsets300,
+                             neighIDs = c("CA1_CA2_CA3_Subiculum", "Astrocytes"),
+                             subsetIDs = c("Astrocytes_near_CA1_CA2_CA3_Subiculum"))
+plt <- vizAllClusters(object = pos,
+               clusters = annots_temp,
+               title = "id",
+               axisAdj = 1, s = 4, a = 0.5) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
+  # ggplot2::theme(legend.position="none") +
+  ggplot2::labs(x = "x",
+                y = "y")
+plt
+
+```
+
+# four i
+
+```{r}
+
+meta_fouri <- read.csv2(file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/multiscale_celltype_colocalization_analysis/data/squidpy/four_i_data.meta.csv.gz", row.names = 1, sep=",")
+
+```
+
+```{r}
+
+plt <- vizAllClusters(object = meta_fouri[,c("x", "y")],
+               clusters = as.factor(meta_fouri[,c("cluster")]),
+               title = "id",
+               axisAdj = 1, s = 0.8, a = 0.5) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
+  # ggplot2::theme(legend.position="none") +
+  ggplot2::labs(x = "x",
+                y = "y")
+plt
+
+```
+
+```{r}
+
+min(meta_fouri$x)
+max(meta_fouri$x)
+
+min(meta_fouri$y)
+max(meta_fouri$y)
+
+```
+
+```{r}
+
+table(meta_fouri$cluster)
+
+```
+
+```{r}
+
+randomcellslist <- readRDS(file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/multiscale_celltype_colocalization_analysis/data/squidpy/sp.fouri.shuffled_res50-800.rds")
+
+```
+
+```{r}
+
+meta_fouri$shuffled <- randomcellslist$`800`$`1`
+
+```
+
+
+```{r}
+
+plt <- vizAllClusters(object = meta_fouri[,c("x", "y")],
+               clusters = as.factor(meta_fouri[,c("shuffled")]),
+               title = "id",
+               axisAdj = 1, s = 4, a = 0.5) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
+  # ggplot2::theme(legend.position="none") +
+  ggplot2::labs(x = "x",
+                y = "y")
+plt
+
+```
+
+huge slowdown and memory problem with full dataset:
+
+it's basically like every single pixel is now being considered a "cell", although in this case its labeled by regions.
+But this means that my distances of "50" mean 50 pixels, but also means than the intersection with d=50 captures # cells = to the number of pixels of the area of circle with radius 50. This is a lot of cells. And for regions with like 30K pixels, this can add up to millions of "cells". No wonder the memory and speed are so bad for this.
+
+Honestly the triplets could be faster once the subsets are made because will hopefully break down these groups more
+
+So it's not just a matter of so many points, but that they are packed together with no gaps.
+
+
+```{r}
+
+
+
+```
+
