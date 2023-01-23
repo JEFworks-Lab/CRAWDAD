@@ -738,7 +738,7 @@ cb <- c("A", "B", "C")
 pb <- c(0.36, 0.30, 0.34)
 
 pos_circSubset <- simulate_circles(pos = simulate_background(size = s, cts = cb, prob = pb, scale = 1),
-                        locs = locs, radii = rads, cts = cts, probs = probs, replace = replacement)
+                        locs = locs, radii = rads, cts = cts, probs = probs)
 
 
 
@@ -798,7 +798,7 @@ ggplot2::ggplot(data = pos_circSubset) +
   ggplot2::geom_point(ggplot2::aes(x = x, y = y, color = type), size = 0.1) +
   ggplot2::scale_color_discrete() +
   ggplot2::coord_equal()
-ggplot2::ggsave(filename ="sim_circSubset.v2.pdf", path = figpath, device = "pdf", dpi = 600, width = 4, height = 3, units = "in")
+# ggplot2::ggsave(filename ="sim_circSubset.v2.pdf", path = figpath, device = "pdf", dpi = 600, width = 4, height = 3, units = "in")
 
 ggplot2::ggplot(data = pos_bg) +
   ggplot2::geom_point(ggplot2::aes(x = x, y = y, color = type), size = 0.1) +

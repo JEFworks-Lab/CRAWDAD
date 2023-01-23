@@ -10,7 +10,7 @@
 #' 
 #' @return data.frame of x, y coordinates of each point, and column type indicating its cell type
 #'
-simulate_background <- function(size = 10000, cts = c("A"), prob = c(1), seed = 1, scale = 3100){
+simulate_background <- function(size = 10000, cts = c("A"), prob = c(1), seed = 1, scale = 1){
   set.seed(seed)
   x <- runif(size, min = 0, max = 1)
   y <- runif(size, min = 0, max = 1)
@@ -969,7 +969,7 @@ plotTrends <- function(results, idcol = "id", figPath = "results.pdf", width = 8
         abline(h = -2, col='red')
         abline(h = 2, col='red')
         if(legend){
-          legend("topleft", legend = ids, col=cl, pch=20, cex=0.5, title = "ids")
+          legend("topright", inset=c(-0.4,0), xpd=TRUE, legend = ids, col=cl, pch=20, cex=0.5, title = "ids")
         }
       })
     })
