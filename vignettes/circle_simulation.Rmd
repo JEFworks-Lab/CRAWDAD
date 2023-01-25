@@ -97,17 +97,8 @@ results_circsize150 <- findTrendsv2(pos = positions[,c("x", "y")],
 
 ## melt this higher order dataframe list of dataframes into a single dataframe.
 ## so end up with a dataframe of ref-neigh cell type Z scores for each circle size, all for a given distance tested
-circsize_results <- meltResultsList(resultsList = results_circsize150, id = "150")
+trend_results <- meltResultsList(resultsList = results_circsize150, id = "150")
 
-# plotTrends(results = circsize_results, figPath = figpath,
-#            width = 8, height = 8)
-  
-
-## melt the list of combined dataframes and add a new column indicating the list name, aka the distance param that was used for each one.
-pos_1circle_results_melt <- purrr::map_df(pos_1circle_results, ~as.data.frame(.x), .id="dist")
-colnames(pos_1circle_results_melt) <- c("dist", "resolution", "neighbor", "Z", "reference", "ring_size")
-head(pos_1circle_results_melt)
-dim(pos_1circle_results_melt)
 ```
 
 ## visualize
@@ -120,32 +111,6 @@ In this case, we will need to generate a separate trend plot for each circle siz
 
 
 ```{r}
-plotTrends(results = results, idcol = "dist", figPath = 'test.pdf',
+plotTrends(results = trend_results, figPath = 'test.pdf',
             width = 12, height = 12)
 ```
-
-
-```{r}
-figpath <- "../plots/"
-## can generate a trend plot for each distance tested, and 
-distances <- as.character(distances)
-circles <- c("90")
-for(c in circles){
-# for(d in distances){
-  
-  figPath <- paste0(figpath, "sim_circles_size", c, "_", "distances.pdf")
-  results <- pos_1circle_results_melt[ pos_1circle_results_melt$ring_size == c,]
-  
-  plotTrends(results = results, idcol = "dist", figPath = 'test.pdf',
-            width = 12, height = 12)
-  
-}
-```
-
-```{r}
-results <- circsize_results
-ggplot2::ggplot(data = results) + 
-    ggplot2::geom_line(ggplot2::aes(x=resolution, y=Z, color=neighbor)) + 
-    ggplot2::facet_grid(rows = ggplot2::vars(reference))
-```
-
