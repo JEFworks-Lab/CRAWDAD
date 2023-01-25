@@ -54,14 +54,14 @@ simulate_circles <- function(pos, locs, radii, cts, probs){
         ro <- radii[[i]]$outer
         co <- cts[[i]]$outer
         po <- probs[[i]]$outer
-        c1o <- rownames(p[((p$x-a)^2 + (p$y - b)^2 < ro^2),])
+        c1o <- rownames(p[((p$x-a)^2 + (p$y - b)^2 < ro^2), ])
         p[c1o,]$type <- sample(co, size = length(c1o), replace = TRUE, prob = po)
 
         ## inner section of the circle
         ri <- radii[[i]]$inner
         ci <- cts[[i]]$inner
         pi <- probs[[i]]$inner
-        c1i <- rownames(p[((p$x-a)^2 + (p$y - b)^2 < ri^2),])
+        c1i <- rownames(p[((p$x-a)^2 + (p$y - b)^2 < ri^2), ])
         p[c1i,]$type <- sample(ci, size = length(c1i), replace = TRUE, prob = pi)
 
     }
