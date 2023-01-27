@@ -13,10 +13,10 @@
 #' @export
 simulate_background <- function(size = 10000, cts = c("A"), prob = c(1), seed = 1, scale = 1){
     set.seed(seed)
+
     x <- runif(size, min = 0, max = 1)
     y <- runif(size, min = 0, max = 1)
-    p <- data.frame(x = x, y = y, type = sample(cts, size = size, replace = TRUE, prob = prob)
-    )
+    p <- data.frame(x = x, y = y, type = sample(cts, size = size, replace = TRUE, prob = prob))
 
     ## scale to 3100 microns for different tile resolutions
     p$x <- p$x * scale
@@ -56,6 +56,11 @@ simulate_circles <- function(pos, locs, radii, cts, probs){
         po <- probs[[i]]$outer
         c1o <- rownames(p[((p$x-a)^2 + (p$y - b)^2 < ro^2), ])
         p[c1o,]$type <- sample(co, size = length(c1o), replace = TRUE, prob = po)
+
+        if (length(c1o) == 0) {
+            warning("There were no cells inside the specified radius.")
+            warning("Check if background and circle scales match.")
+        }
 
         ## inner section of the circle
         ri <- radii[[i]]$inner

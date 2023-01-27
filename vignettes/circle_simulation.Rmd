@@ -24,7 +24,7 @@ This vignette shows how to use our package to identify cell-type co-localization
 
 ## Simulate the data
 
-We will make a single circle, but you can make several different simulations by changing the number of circles, the size of the ring and the inner core.
+We will make a single circle, but you can make several different simulations by changing the number of circles, the size of the ring and the inner core. First, we simulate the background.
 
 ```{r}
 ## background parameters
@@ -38,79 +38,71 @@ background_data <- simulate_background(size = size,
                                        cts = cell_type_background, 
                                        prob = probability_background,
                                        scale = scale)
+```
 
+Then, we create the circle patter in this background.
+
+```{r}
 ## circle parameters
 circle_centers <- list(c(500, 500)) # on the chosen scale
 cell_types <- list(list(outer = "B", inner = c("C")))
 probabilities <- list(list(outer = c(1), inner = c(1)))
 
 ## inner circle of 100 microns and outer of 150 microns
-radii_150 <- list(list(outer = 150, inner = 100))
+radii <- list(list(outer = 150, inner = 100))
 
 ## create simulated data with pattern
-simulated_data_150 <- simulate_circles(background_data,
+simulated_data <- simulate_circles(background_data,
                                       circle_centers, 
-                                      radii_150, 
+                                      radii, 
                                       cell_types, 
                                       probabilities)
-
-simulated_data_150$id <- 150 # to identify the circle with 150 microns width
-
-## in case there ere multiple circles of different sizes, you would need to add
-## them to this list
-circle_patterns <- dplyr::bind_rows(list(
-  simulated_data_150
-))
-circle_patterns$id <- factor(circle_patterns$id, ordered = TRUE, 
-                             levels = c("150"))
 ```
 
 Visualize the data.
 
 ```{r}
-ggplot2::ggplot(data = simulated_data_150) +
+ggplot2::ggplot(data = simulated_data) +
   ggplot2::geom_point(ggplot2::aes(x = x, y = y, color = type)) +
   ggplot2::scale_color_discrete() 
 ```
 
-## find trends
+# Find trends
+
+To find the trends, we need a data frame with the (x, y) position of each cell and its cell type. If you are working with real data, you just need to organize it in the same format as the simulated_data variable and apply the following functions.
+
+## Compute trends
 
 ```{r}
-d <- 100 # each distance to define neighbors when computing trends
-resolutions <- c(50, 100, 200, 300) # different shuffling resolutions to try
-prms <- 1 # number of permutations for shuffling; I found that there isn't much variance so 1 is ok for now
-sd <- 1 # the seed for shuffling
-ncs <- 7 # number of cores for parallelization. My machine has 8 total so I use 7
+## parameters fir computing trends
+neighbor_distance <- 100 # each distance to define neighbors
+resolutions <- c(50, 100, 200, 300) # different shuffling resolutions
+permutations <- 1 # number of permutations for shuffling;
+seed <- 1
+n_cores <- 7 
+positions <- simulated_data
 
-positions <- simulated_data_150
-results_circsize150 <- findTrendsv2(pos = positions[,c("x", "y")],
+results <- findTrendsv2(pos = positions[,c("x", "y")],
                                    celltypes = positions$type,
                                    resolutions,
-                                   dist = d,
-                                   perms = prms,
-                                   ncores = ncs,
+                                   dist = neighbor_distance,
+                                   perms = permutations,
+                                   ncores = n_cores,
                                    verbose = TRUE,
                                    saveShuffleFile = 'test.rds',
-                                   seed = sd)
+                                   seed = seed)
 
-
-
-## melt this higher order dataframe list of dataframes into a single dataframe.
-## so end up with a dataframe of ref-neigh cell type Z scores for each circle size, all for a given distance tested
-trend_results <- meltResultsList(resultsList = results_circsize150, id = "150")
-
+## process data
+df_results <- meltResultsList(resultsList = results)
 ```
 
-## visualize
+## Visualize
 
-trend plots are basically a set of panels, where each panel is a reference vs neighbor cell type.
-Each trend is the Z significance score (y-axis) vs resolution (x-axis)
+Here we create a set of panels, where each panel is a reference vs neighbor cell type.
+Each trend is the Z significance score (y-axis) vs resolution (x-axis).
 For a given panel, there can be multiple trend lines, each corresponding to an additional parameter.
-For example, for a given circle size simulation, we can plot a trend line for each distance tested
-In this case, we will need to generate a separate trend plot for each circle size simulation
-
 
 ```{r}
-plotTrends(results = trend_results, figPath = 'test.pdf',
+plotTrends(results = df_results, figPath = 'test.pdf',
             width = 12, height = 12)
 ```
