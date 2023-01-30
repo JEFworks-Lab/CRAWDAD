@@ -1,10 +1,10 @@
-#' Melt the output list of findTrendsv2 into a dataframe
+#' Melt the output list of findTrends into a dataframe
 #'
-#' @description The output of findTrendsv2 is a list of dataframes, where each one
+#' @description The output of findTrends is a list of dataframes, where each one
 #' is for a reference cell type and contains the Z scores at each resolution for the neighbor cells.
 #' So here we melt this list into a single dataframe for plotting with ggplot2 and tidyverse functions.
 #'
-#' @param resultsList list; output from findTrendsv2
+#' @param resultsList list; output from findTrends
 #' @param id character; id desired, can add a column that contains an additional identifier for the results.
 #' For example, you melted a resultsList that was generated from a simulation using 2 circles.
 #' Then you generate another one that was done with 1 circle. The id column for each dataframe

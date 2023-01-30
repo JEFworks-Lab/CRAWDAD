@@ -82,7 +82,7 @@ seed <- 1
 n_cores <- 7 
 positions <- simulated_data
 
-results <- findTrendsv2(pos = positions[,c("x", "y")],
+results <- findTrends(pos = positions[,c("x", "y")],
                                    celltypes = positions$type,
                                    resolutions,
                                    dist = neighbor_distance,

@@ -319,10 +319,8 @@ evaluateSignificance <- function(cells, randomcellslist, trueNeighCells, cellBuf
 #'
 #' @return A list that contains a dataframe for each reference cell type, where the dataframe contains the significance values for each neighbor cell type at each resolution
 #'
-#' @examples
-#'
-#' export
-findTrendsv2 <- function(pos,
+#' @export
+findTrends <- function(pos,
                          celltypes,
                          resolutions = c(50, 100, 200, 300),
                          dist = 50,

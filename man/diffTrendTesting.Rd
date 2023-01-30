@@ -44,4 +44,5 @@ diffTrendTesting(list(c("PKHL", "XXCD"),c("KSFB", "NGPL"),c("PBVN", "FSLD")),
                  neighID = "CD4 Memory T cells",
                  zscores = combined_zscores)
 
+
 }

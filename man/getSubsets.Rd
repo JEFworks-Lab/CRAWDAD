@@ -14,7 +14,7 @@ getSubsets(
 )
 }
 \arguments{
-\item{cells}{sp::SpatialPointsDataFrame object, with celltypes features and point geometries}
+\item{cells}{sp::SpatialPointsDataFrame object;  with celltypes features and point geometries}
 
 \item{sub.dist}{distance to define subsets relative to a neighbor cell type (default = 50)}
 
@@ -27,7 +27,7 @@ getSubsets(
 \item{verbose}{Boolean for verbosity (default TRUE)}
 }
 \value{
-list where each entry is a subset and the values are the cell ids determined to be in the subset
+list; each entry is a subset and the values are the cell ids determined to be in the subset
 }
 \description{
 find the subset cells of a reference cell type defined by being either significantly "near" or "away" with respect to a given neighbor cell type.

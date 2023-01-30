@@ -18,11 +18,12 @@
 #' @return pvalues for each patient
 #'
 #' @examples
+#' \dontrun{
 #' diffTrendTesting(list(c("PKHL", "XXCD"),c("KSFB", "NGPL"),c("PBVN", "FSLD")),
 #'                  refID = "Ki67 proliferating",
 #'                  neighID = "CD4 Memory T cells",
 #'                  zscores = combined_zscores)
-#'
+#'}
 #'
 diffTrendTesting <- function(samples, refID, neighID, zscores, heatmap = TRUE, distplot = TRUE){
 

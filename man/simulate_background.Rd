@@ -2,30 +2,30 @@
 % Please edit documentation in R/simulations.R
 \name{simulate_background}
 \alias{simulate_background}
-\title{Create a uniform background of points, where each point is a given cell type}
+\title{Simulate background}
 \usage{
 simulate_background(
   size = 10000,
   cts = c("A"),
   prob = c(1),
   seed = 1,
-  scale = 3100
+  scale = 1
 )
 }
 \arguments{
-\item{size}{number of points to generate}
+\item{size}{numeric; number of points to generate}
 
-\item{cts}{what are the different cell types in the background? Vector of IDs}
+\item{cts}{character vector; the different cell types in the background, vector of IDs}
 
-\item{prob}{the probability, or proportion of each cell type, summing to 1. A vector of probabilities}
+\item{prob}{numeric vetor; the probability, or proportion of each cell type, summing to 1, a vector of probabilities}
 
-\item{seed}{pseudo random seed for the function sample()}
+\item{seed}{numeric; pseudo random seed for the function sample()}
 
-\item{scale}{amount to expand the coordinates by}
+\item{scale}{numeric; amount to expand the coordinates by}
 }
 \value{
-data.frame of x, y coordinates of each point, and column type indicating its cell type
+data.frame; the x, y coordinates of each point, and column type indicating its cell type
 }
 \description{
-Create a uniform background of points, where each point is a given cell type
+Create a uniform background of points, where each point is a given cell type.
 }
