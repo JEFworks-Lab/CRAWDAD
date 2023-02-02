@@ -39,10 +39,11 @@ Computes summed distance between z scores at each resolution for two given trend
     Likewise, if the intra trends are highly variable, then might be expected to also have large differences between inter as well.
 }
 \examples{
+\dontrun{
 diffTrendTesting(list(c("PKHL", "XXCD"),c("KSFB", "NGPL"),c("PBVN", "FSLD")),
                  refID = "Ki67 proliferating",
                  neighID = "CD4 Memory T cells",
                  zscores = combined_zscores)
-
+}
 
 }

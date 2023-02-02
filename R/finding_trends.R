@@ -430,7 +430,7 @@ findTrends <- function(pos,
             # use this to assess neighbors within "d" um of each cell
             ref.buffer <- sf::st_buffer(cells[cells$celltypes == ct,], d)
             # get the different types of neighbor cells that are within "d" of the ref cells
-            neigh.cells <- sf::st_intersection(cells, ref.buffer$geometry)
+            neigh.cells <- sf::st_intersection(cells, sf::st_union(ref.buffer$geometry))
 
             ## evaluate significance https://online.stat.psu.edu/stat415/lesson/9/9.4
             ## chose to shuffle the resolutions in parallel, but in each resolution, the perms done linearly
