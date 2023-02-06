@@ -1,16 +1,17 @@
 #' Shuffle the celltype labels at different resolutions
 #'
-#' @description for each resolution, and for i number of permutations, shuffle the celltype labels.
+#' @description For each resolution, and for i number of permutations, shuffle the celltype labels.
 #' Returns a list of lists, where each list is a factor of the shuffled celltype labels.
 #' Outer list is for each resolution of shuffling, and each inner list is for a given permutation with a given seed.
 #'
-#' @param cells sp::SpatialPointsDataFrame object, with celltypes features and point geometries
-#' @param resolutions numeric vector of the different resolutions to shuffle at and subsequently compute significance at
-#' @param perms number of permutations to shuffle for each resolution (default 1)
-#' @param ncores number of cores for parallelization (default 1)
-#' @param seed set seed for shuffling (if more than 1 permutation, then seed equals permutation number)
-#' @param verbose boolean for verbosity (default TRUE)
+#' @param cells sp::SpatialPointsDataFrame object; celltypes features and point geometries
+#' @param resolutions numeric vector; the different resolutions to shuffle at and subsequently compute significance at
+#' @param perms numeric; number of permutations to shuffle for each resolution (default 1)
+#' @param ncores numeric; number of cores for parallelization (default 1)
+#' @param seed numeric; set seed for shuffling (if more than 1 permutation, then seed equals permutation number)
+#' @param verbose Boolean; verbosity (default TRUE)
 #'
+#' @return list;
 makeShuffledCells <- function(cells, resolutions, perms = 1, ncores = 1, seed = 0, verbose = TRUE){
 
     ## effectively will make a list of lists of randomly shuffled cell labels.
@@ -118,14 +119,14 @@ makeShuffledCells <- function(cells, resolutions, perms = 1, ncores = 1, seed = 
 #' Note that for near, or localized, just test if significantly enriched.
 #' For "away", do the same, but then take the cells that were not significant. However, would recommend setting the p-value threshold to be very liberal, like 0.5, that way, only the cells that couldn't even pass a p-val cutoff of 0.5 would be selected for, and these would be expected to be very much depleted or separated from the neighbor cell type.
 #'
-#' @param cells sp::SpatialPointsDataFrame object, with celltypes features and point geometries
+#' @param cells sp::SpatialPointsDataFrame object;  with celltypes features and point geometries
 #' @param sub.dist distance to define subsets relative to a neighbor cell type (default = 50)
 #' @param sub.type subset type, either ref cells "near" (ie localized) a neighbor cell type, or "away" (ie separated) from a neighbor cell type.
 #' @param sub.thresh significance threshold for the binomial test (default = 0.05)
 #' @param ncores number of cores for parallelization (default 1)
 #' @param verbose Boolean for verbosity (default TRUE)
 #'
-#' @return list where each entry is a subset and the values are the cell ids determined to be in the subset
+#' @return list; each entry is a subset and the values are the cell ids determined to be in the subset
 #'
 getSubsets <- function(cells,
                        sub.dist = 100,
@@ -184,7 +185,12 @@ getSubsets <- function(cells,
         ## and compare to all cells within this distance to get local fraction
         tests <- unlist(parallel::mclapply(rownames(refs.buffer), function(i){
             neighs.inbuffer <- sf::st_intersection(cells[cells$celltypes == cells.neighbors.ix,], refs.buffer[i,]$geometry)
+            ## remove duplicates
+            neighs.inbuffer <- neighs.inbuffer[!str_detect(rownames(neighs.inbuffer), "\\."), ]
             cells.inbuffer <- sf::st_intersection(cells, refs.buffer[i,]$geometry)
+            ## remove duplicates
+            cells.inbuffer <- cells.inbuffer[!str_detect(rownames(cells.inbuffer), "\\."), ]
+            ## perform t stats
             t <- stats::binom.test(x = nrow(neighs.inbuffer),
                                    n = nrow(cells.inbuffer),
                                    p = globalFrac,
@@ -232,13 +238,13 @@ getSubsets <- function(cells,
 
 #' Evaluate significance
 #'
-#' @description compute significant different between real and randomly shuffled cell neighbor proportions
+#' @description Compute significant different between real and randomly shuffled cell neighbor proportions.
 #'
-#' @param cells sp::SpatialPointsDataFrame of all the cells
-#' @param randomcellslist list of lists of randomly shuffled cell type labels produced from `makeShuffledCells`
+#' @param cells sp::SpatialPointsDataFrame; all the cells
+#' @param randomcellslist nested list; of randomly shuffled cell type labels produced from `makeShuffledCells`
 #' @param trueNeighCells Simple feature collection of real cells for a given reference cell type, with geometries of a given dist (from sf::st_buffer)
 #' @param cellBuffer Simple feature collection of the neighbor cells that are within "dist" of the ref cells (from sf::intersection)
-#' @param ncores number of cores for parallelization (default 1)
+#' @param ncores numeric; number of cores for parallelization (default 1)
 #'
 evaluateSignificance <- function(cells, randomcellslist, trueNeighCells, cellBuffer, ncores = 1){
 
@@ -259,6 +265,8 @@ evaluateSignificance <- function(cells, randomcellslist, trueNeighCells, cellBuf
             sf::st_agr(randomcells) <- "constant"
 
             bufferrandomcells <- sf::st_intersection(randomcells, cellBuffer$geometry)
+            ## remove duplicates
+            bufferrandomcells <- bufferrandomcells[!str_detect(rownames(bufferrandomcells), "\\."), ]
 
             ## evaluate significance https://online.stat.psu.edu/stat415/lesson/9/9.4
             y1 <- table(trueNeighCells$celltypes)
@@ -299,30 +307,29 @@ evaluateSignificance <- function(cells, randomcellslist, trueNeighCells, cellBuf
 #' This is done at difference resolutions, where a resolution is whether the cell type labels are shuffled locally or globally.
 #' Trends are essentially built from significance values. The significance test basically asks if two cell types are localized or separated by assessing if the proportion of the neighboring cell type is significantly greater, or less than, random chance.
 #'
-#' @param pos matrix of x and y coordinates of each cell
-#' @param resolutions numeric vector of the different resolutions to shuffle at and subsequently compute significance at
-#' @param dist numeric distance to define neighbor cells with respect to each reference cell (default 50)
-#' @param sub.dist distance to define subsets relative to a neighbor cell type (default = 100)
-#' @param sub.type subset type, either "pairwise", to not use subsets, or susbets of ref cells "near" (ie localized) a neighbor cell type, or "away" (ie separated) from a neighbor cell type.
-#' @param sub.thresh significance threshold for the binomial test (default = 0.05)
-#' @param perms number of permutations to shuffle for each resolution (default = 1)
-#' @param seed set seed for shuffling (if more than 1 permutation, then seed equals permutation number)
-#' @param ncores number of cores for parallelization (default 1)
-#' @param loadShuffleFile path to a preshuffled randomcellslist rds object (default NA)
-#' @param saveShuffleFilePath can save the shuffled cell labels to speed things up later (default NA)
-#' @param loadSubsetFile path to a premade subset list rds object (default NA)
-#' @param saveSubsetFile can save the subset cell list to speed things up later, or use for subsequent plotting (default NA)
-#' @param plot Boolean to return plots (default TRUE)
-#' @param verbose Boolean for verbosity (default TRUE)
+#' @param pos data frame; x and y coordinates of each cell
+#' @param celltypes character vector; the cell type of each cell provided in pos
+#' @param resolutions numeric vector; the different resolutions to shuffle at and subsequently compute significance at
+#' @param dist numeric; distance to define neighbor cells with respect to each reference cell (default = 50)
+#' @param sub.dist numeric; distance to define subsets relative to a neighbor cell type (default = 100)
+#' @param sub.type character; subset type, either "pairwise", to not use subsets, or subsets of ref cells "near" (ie localized) a neighbor cell type, or "away" (ie separated) from a neighbor cell type
+#' @param sub.thresh numeric; significance threshold for the binomial test (default = 0.05)
+#' @param perms numeric; number of permutations to shuffle for each resolution (default = 1)
+#' @param seed numeric; set seed for shuffling (if more than 1 permutation, then seed equals permutation number)
+#' @param ncores numeric; number of cores for parallelization (default 1)
+#' @param loadShuffleFile character; path to a preshuffled randomcellslist rds object (default NA)
+#' @param saveShuffleFilePath character; can save the shuffled cell labels to speed things up later (default NA)
+#' @param loadSubsetFile character; path to a premade subset list rds object (default NA)
+#' @param saveSubsetFile character; can save the subset cell list to speed things up later, or use for subsequent plotting (default NA)
+#' @param plot Boolean; return plots (default TRUE)
+#' @param verbose Boolean; verbosity (default TRUE)
 #'
 #' @return A list that contains a dataframe for each reference cell type, where the dataframe contains the significance values for each neighbor cell type at each resolution
 #'
-#' @examples
-#'
-#' export
-findTrendsv2 <- function(pos,
+#' @export
+findTrends <- function(pos,
                          celltypes,
-                         resolutions,
+                         resolutions = c(50, 100, 200, 300),
                          dist = 50,
                          sub.dist = 100,
                          sub.type = c("pairwise", "near", "away"),
@@ -339,17 +346,11 @@ findTrendsv2 <- function(pos,
 
     sub.type <- match.arg(sub.type)
 
-    if(!sub.type %in% c("pairwise", "near", "away")){
-        stop("`sub.type` must be either 'pairwise', 'near' or 'away'")
-    }
-
     if(length(levels(celltypes)) == 0){
-        message("Warning: `celltypes` does not have levels. Creating levels from values")
+        message("Warning: 'celltypes' does not have levels. Creating levels from values")
         celltypes <- factor(celltypes)
         names(celltypes) <- rownames(pos)
     }
-
-    seed <- seed
 
     if(verbose){
         start_time <- Sys.time()
@@ -363,9 +364,9 @@ findTrendsv2 <- function(pos,
 
     cells <- sp::SpatialPointsDataFrame(
         coords = as.data.frame(pos),
-        data=data.frame(
-            celltypes=celltypes
-            #name=rownames(pos)
+        data = data.frame(
+            celltypes = celltypes
+            # name = rownames(pos)
         ))
     cells <- sf::st_as_sf(cells)
 
@@ -400,12 +401,16 @@ findTrendsv2 <- function(pos,
     } else {
 
         ## parallel shuffling of the grids in each resolution
+        shuffCells_init_time <- Sys.time()
+        message(sprintf("Initiating shuffle cells at %s", shuffCells_init_time))
         randomcellslist <- makeShuffledCells(cells,
                                              resolutions,
                                              perms = perms,
                                              ncores = ncores,
                                              seed = seed,
                                              verbose = verbose)
+        shuffCells_tot_time <- round(difftime(Sys.time(), shuffCells_init_time, units="mins"), 2)
+        message(sprintf("Time to shuffle cells was %s mins", shuffCells_tot_time))
 
         if(assertthat::is.string(saveShuffleFilePath)){
             saveRDS(object = randomcellslist, file = saveShuffleFilePath)
@@ -434,9 +439,27 @@ findTrendsv2 <- function(pos,
 
             # get polygon geometries of reference cells of "celltype" up to defined distance "dist"
             # use this to assess neighbors within "d" um of each cell
+            sf_init_time <- Sys.time()
+            message(sprintf("Initiating create buffer at %s", sf_init_time))
             ref.buffer <- sf::st_buffer(cells[cells$celltypes == ct,], d)
+            sf_tot_time <- round(difftime(Sys.time(), sf_init_time, units="mins"), 2)
+            message(sprintf("Time to create buffer was %s mins", sf_tot_time))
+
             # get the different types of neighbor cells that are within "d" of the ref cells
+            # sf_init_time <- Sys.time()
+            # message(sprintf("Initiating create union at %s", sf_init_time))
+            # sf_union <- sf::st_union(ref.buffer$geometry)
+            # sf_tot_time <- round(difftime(Sys.time(), sf_init_time, units="mins"), 2)
+            # message(sprintf("Time to create union was %s mins", sf_tot_time))
+
+            sf_init_time <- Sys.time()
+            message(sprintf("Initiating intersection at %s", sf_init_time))
             neigh.cells <- sf::st_intersection(cells, ref.buffer$geometry)
+            sf_tot_time <- round(difftime(Sys.time(), sf_init_time, units="mins"), 2)
+            message(sprintf("Time to intersection was %s mins", sf_tot_time))
+
+            ## remove duplicates
+            neigh.cells <- neigh.cells[!str_detect(rownames(neigh.cells), "\\."), ]
 
             ## evaluate significance https://online.stat.psu.edu/stat415/lesson/9/9.4
             ## chose to shuffle the resolutions in parallel, but in each resolution, the perms done linearly
@@ -444,11 +467,16 @@ findTrendsv2 <- function(pos,
             ## so if I split up the resolutions, might be able to get through each cell type faster and speed up entire process?
             ## I could also split up the permutations, but then each cell type for each resolution is done one by one
             ## I could do cell types in parallel, but then for each cell type need to go through each res and each perm one by one
+            evalSign_init_time <- Sys.time()
+            message(sprintf("Initiating evaluate significance at %s", evalSign_init_time))
             results <- evaluateSignificance(cells = cells,
                                             randomcellslist = randomcellslist,
                                             trueNeighCells = neigh.cells,
                                             cellBuffer = ref.buffer,
                                             ncores = ncores)
+            evalSign_tot_time <- round(difftime(Sys.time(), sf_init_time, units="mins"), 2)
+            message(sprintf("Time to evaluate significance was %s mins", evalSign_tot_time))
+
             return(results)
         })
         names(results.all) <- levels(celltypes)
@@ -497,6 +525,8 @@ findTrendsv2 <- function(pos,
             ref.buffer <- sf::st_buffer(cells[subset.list[[i]], ], d)
             # get the different types of neighbor cells that are within "d" of the ref cells
             neigh.cells <- sf::st_intersection(cells, ref.buffer$geometry)
+            ## remove duplicates
+            neigh.cells <- neigh.cells[!str_detect(rownames(neigh.cells), "\\."), ]
 
             ## evaluate significance https://online.stat.psu.edu/stat415/lesson/9/9.4
             ## chose to shuffle the resolutions in parallel, but in each resolution, the perms done linearly

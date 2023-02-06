@@ -13,16 +13,16 @@ evaluateSignificance(
 )
 }
 \arguments{
-\item{cells}{sp::SpatialPointsDataFrame of all the cells}
+\item{cells}{sp::SpatialPointsDataFrame; all the cells}
 
-\item{randomcellslist}{list of lists of randomly shuffled cell type labels produced from `makeShuffledCells`}
+\item{randomcellslist}{nested list; of randomly shuffled cell type labels produced from `makeShuffledCells`}
 
 \item{trueNeighCells}{Simple feature collection of real cells for a given reference cell type, with geometries of a given dist (from sf::st_buffer)}
 
 \item{cellBuffer}{Simple feature collection of the neighbor cells that are within "dist" of the ref cells (from sf::intersection)}
 
-\item{ncores}{number of cores for parallelization (default 1)}
+\item{ncores}{numeric; number of cores for parallelization (default 1)}
 }
 \description{
-compute significant different between real and randomly shuffled cell neighbor proportions
+Compute significant different between real and randomly shuffled cell neighbor proportions.
 }

@@ -14,20 +14,23 @@ makeShuffledCells(
 )
 }
 \arguments{
-\item{cells}{sp::SpatialPointsDataFrame object, with celltypes features and point geometries}
+\item{cells}{sp::SpatialPointsDataFrame object; celltypes features and point geometries}
 
-\item{resolutions}{numeric vector of the different resolutions to shuffle at and subsequently compute significance at}
+\item{resolutions}{numeric vector; the different resolutions to shuffle at and subsequently compute significance at}
 
-\item{perms}{number of permutations to shuffle for each resolution (default 1)}
+\item{perms}{numeric; number of permutations to shuffle for each resolution (default 1)}
 
-\item{ncores}{number of cores for parallelization (default 1)}
+\item{ncores}{numeric; number of cores for parallelization (default 1)}
 
-\item{seed}{set seed for shuffling (if more than 1 permutation, then seed equals permutation number)}
+\item{seed}{numeric; set seed for shuffling (if more than 1 permutation, then seed equals permutation number)}
 
-\item{verbose}{boolean for verbosity (default TRUE)}
+\item{verbose}{Boolean; verbosity (default TRUE)}
+}
+\value{
+list;
 }
 \description{
-for each resolution, and for i number of permutations, shuffle the celltype labels.
+For each resolution, and for i number of permutations, shuffle the celltype labels.
 Returns a list of lists, where each list is a factor of the shuffled celltype labels.
 Outer list is for each resolution of shuffling, and each inner list is for a given permutation with a given seed.
 }

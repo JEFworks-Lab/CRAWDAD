@@ -7,9 +7,9 @@
 simulate_circles(pos, locs, radii, cts, probs)
 }
 \arguments{
-\item{pos}{dataframe with columns x, y, and type (typically from simulate_background)}
+\item{pos}{dataframe; the background where the patter will be created. It should have columns x, y, and type (typically from simulate_background)}
 
-\item{locs}{list of 2-d vectors, where each vector is the x and y coordinates of a circle center (0-1)}
+\item{locs}{list of 2-d numeric vectors; each vector is the x and y coordinates of a circle center (0-1)}
 
 \item{radii}{list of 2-d lists, where each inner list has variables "inner" and "outer" that refer to the
 radius of the outer ring and the inner cores of each circle. An inner list for each circle in locs}
@@ -19,7 +19,7 @@ radius of the outer ring and the inner cores of each circle. An inner list for e
 \item{probs}{same format as radii, but "inner" and "outer" are vectors of cell types proportions}
 }
 \description{
-takes a dataframe of x,y, and type (from simulate_background, for example)
+takes a dataframe of x, y, and cell type (from simulate_background)
 and selects cells to create new cell type patterns of circles.
-THe circles can actually be an outer ring and an inner core
+The circles can actually be an outer ring and an inner core.
 }

@@ -15,12 +15,23 @@ plotTrends(
 )
 }
 \arguments{
-\item{idcol}{if results are a data.frame, this is the column that contains the additional feature to plot multiple trend lines with
-by default it is 'id', which would be the name given to the column describing each list after melting together into a single dataframe
-using `meltResultsList()`}
+\item{results}{list or data.frame; the information about the resolution, Z-score, reference and the neighbor cell. It can be the result directly obtained by the findTrends function or the melted version created by the meltResults function.}
+
+\item{idcol}{character; if results are a data.frame, this is the column that contains the additional feature to plot multiple trend lines with}
+
+\item{figPath}{character; file to save the figure}
+
+\item{width}{numeric;}
+
+\item{height}{numeric;}
+
+\item{legend}{Boolean; show legend}
 
 \item{...}{additional plotting parameters for base R plotting. Fed into "lines()" in script}
 }
+\value{
+nothing
+}
 \description{
-Plot calculated trends
+Plot panel of Z-score trends for each reference and neighbor cell-type pairs.
 }

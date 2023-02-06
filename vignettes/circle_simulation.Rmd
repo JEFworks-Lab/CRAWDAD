@@ -24,152 +24,85 @@ This vignette shows how to use our package to identify cell-type co-localization
 
 ## Simulate the data
 
-We will make a single circle, but you can make several different simulations by changing the number of circles, the size of the ring and the inner core.
+We will make a single circle, but you can make several different simulations by changing the number of circles, the size of the ring and the inner core. First, we simulate the background.
 
 ```{r}
-## circle parameters
-circle_centers <- list(c(0.5, 0.5)) # between 0 and 1, it will be scaled later
-cell_types <- list(list(outer = "B", inner = c("C")))
-probabilities <- list(list(outer = c(1), inner = c(1)))
-
 ## background parameters
-size <- 1000
+scale <- 1000 # can be interpreted as microns
+size <- 1000 # number of cells
 cell_type_background <- c("A")
 probability_background <- c(1)
-# note that the simulation starts on 0-1 scale, but is scaled to 0-3100 in 
-# the function simulate_circles
 
-## outer ring approx 0.03 or 3100um = 93 micron width
-## inner approx 744 microns across (3100*0.24)
-radii_90 <- replicate(1, list(outer = 0.15, inner = 0.1), simplify=FALSE)
 ## create background
 background_data <- simulate_background(size = size, 
                                        cts = cell_type_background, 
                                        prob = probability_background,
-                                       scale=1)
-## create simulated data with pattern
-simulated_data_90 <- simulate_circles(background_data,
-                                      circle_centers, 
-                                      radii_90, 
-                                      cell_types, 
-                                      probabilities)
-
-simulated_data_90$id <- 90 # to identify the circle with 93 microns width
-
-## in case there ere multiple circles of different sizes, you would need to add
-## them to this list
-circle_patterns <- dplyr::bind_rows(list(
-  simulated_data_90
-))
-circle_patterns$id <- factor(circle_patterns$id, ordered = TRUE, 
-                             levels = c("90"))
-
-## jeans hack
-circle_patterns$x <- circle_patterns$x*1000
-circle_patterns$y <- circle_patterns$y*1000
+                                       scale = scale)
 ```
 
-Visualize data with gganimate.
+Then, we create the circle patter in this background.
 
 ```{r}
-ggplot2::ggplot(data = circle_patterns) +
+## circle parameters
+circle_centers <- list(c(500, 500)) # on the chosen scale
+cell_types <- list(list(outer = "B", inner = c("C")))
+probabilities <- list(list(outer = c(1), inner = c(1)))
+
+## inner circle of 100 microns and outer of 150 microns
+radii <- list(list(outer = 150, inner = 100))
+
+## create simulated data with pattern
+simulated_data <- simulate_circles(background_data,
+                                      circle_centers, 
+                                      radii, 
+                                      cell_types, 
+                                      probabilities)
+```
+
+Visualize the data.
+
+```{r}
+ggplot2::ggplot(data = simulated_data) +
   ggplot2::geom_point(ggplot2::aes(x = x, y = y, color = type)) +
   ggplot2::scale_color_discrete() 
 ```
 
-## find trends
+# Find trends
+
+To find the trends, we need a data frame with the (x, y) position of each cell and its cell type. If you are working with real data, you just need to organize it in the same format as the simulated_data variable and apply the following functions.
+
+## Compute trends
 
 ```{r}
-d <- 100 # each distance to define neighbors when computing trends
-resolutions <- c(50, 100, 200, 300) # different shuffling resolutions to try
-prms <- 1 # number of permutations for shuffling; I found that there isn't much variance so 1 is ok for now
-sd <- 1 # the seed for shuffling
-ncs <- 7 # number of cores for parallelization. My machine has 8 total so I use 7
-## things that get parallelized right now:
-## 1. when making the shuffled labels, can process grids in parallel to speed up making the shuffled data
-## 2. When evaluating for a given reference cell type, can compute for the different resolutions in parallel
-## I used to do the reference cell types in parallel, but I found that a bottle neck was waiting for a 
-## given cell type with a lot of cells to finish because I was doing each resolution one at a time
-## So I felt that parallelizing the resolutions would help speed up the evaluation for a given cell type
-## and thus move through each cell type faster.
-## for each distance, compute trends.
-## Let's compute the trends for each of the different simulated cicle sizes
-## Can combine all the data together at the end into a single dataframe
+## parameters fir computing trends
+neighbor_distance <- 100 # each distance to define neighbors
+resolutions <- c(50, 100, 200, 300) # different shuffling resolutions
+permutations <- 1 # number of permutations for shuffling;
+seed <- 1
+n_cores <- 7 
+positions <- simulated_data
 
-  ## can save the shuffled dataset to use later to save a bit of time.
-  ## note that the shuffled data is done specifically for whatever set of resolutions
-  ## were indicated initially.
-  ## I don't think there is a current way in the function to check if the correct
-  ## resolutions are being used for a given shuffled data object
-  ## so important to make sure that the right one is being use for now
-  
-#shuffledData <- paste0("../data/pos_1circle_results.circsize90.shuffledData.res50-3000.rds")
-#if(file.exists(shuffledData)){
+results <- findTrends(pos = positions[,c("x", "y")],
+                                   celltypes = positions$type,
+                                   resolutions,
+                                   dist = neighbor_distance,
+                                   perms = permutations,
+                                   ncores = n_cores,
+                                   verbose = TRUE,
+                                   saveShuffleFile = 'test.rds',
+                                   seed = seed)
 
-pos <- circle_patterns[circle_patterns$id == "90",]
-results_circsize90 <- findTrendsv2(pos = pos[,c("x", "y")],
-                           celltypes = pos$type,
-                           resolutions,
-                           dist = d,
-                           perms = prms,
-                           ncores = ncs,
-                           verbose = TRUE,
-                           saveShuffleFile = 'test.rds',
-                           seed = sd)
-
-
-## for a given distance tested:
-## each results is a list of dataframes of Z scores for neighbor cells types vs each ref cell type
-## melt each list into a dataframe, and give it an id corresponding to the circle size simulation where trends were evaluated
-## melt this higher order dataframe list of dataframes into a single dataframe.
-## so end up with a dataframe of ref-neigh cell type Z scores for each circle size, all for a given distance tested
-
-circsize_results <- dplyr::bind_rows(
-     meltResultsList(resultsList = results_circsize90, id = "90")
-)
-
-circsize_results$id <- factor(x = as.character(circsize_results$id), levels = c("90"), ordered = TRUE)
-
-# plotTrends(results = circsize_results, figPath = figpath,
-#            width = 8, height = 8)
-  
-
-## melt the list of combined dataframes and add a new column indicating the list name, aka the distance param that was used for each one.
-pos_1circle_results_melt <- purrr::map_df(pos_1circle_results, ~as.data.frame(.x), .id="dist")
-colnames(pos_1circle_results_melt) <- c("dist", "resolution", "neighbor", "Z", "reference", "ring_size")
-head(pos_1circle_results_melt)
-dim(pos_1circle_results_melt)
+## process data
+df_results <- meltResultsList(resultsList = results)
 ```
 
-## visualize
+## Visualize
 
-trend plots are basically a set of panels, where each panel is a reference vs neighbor cell type.
-Each trend is the Z significance score (y-axis) vs resolution (x-axis)
+Here we create a set of panels, where each panel is a reference vs neighbor cell type.
+Each trend is the Z significance score (y-axis) vs resolution (x-axis).
 For a given panel, there can be multiple trend lines, each corresponding to an additional parameter.
-For example, for a given circle size simulation, we can plot a trend line for each distance tested
-In this case, we will need to generate a separate trend plot for each circle size simulation
 
 ```{r}
-figpath <- "../plots/"
-## can generate a trend plot for each distance tested, and 
-distances <- as.character(distances)
-circles <- c("90")
-for(c in circles){
-# for(d in distances){
-  
-  figPath <- paste0(figpath, "sim_circles_size", c, "_", "distances.pdf")
-  results <- pos_1circle_results_melt[ pos_1circle_results_melt$ring_size == c,]
-  
-  plotTrends(results = results, idcol = "dist", figPath = 'test.pdf',
+plotTrends(results = df_results, figPath = 'test.pdf',
             width = 12, height = 12)
-  
-}
 ```
-
-```{r}
-results = circsize_results
-ggplot2::ggplot(data = results) + 
-    ggplot2::geom_line(ggplot2::aes(x=resolution, y=Z, color=neighbor)) + 
-    ggplot2::facet_grid(rows = ggplot2::vars(reference))
-```
-
