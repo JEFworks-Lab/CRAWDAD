@@ -185,7 +185,12 @@ getSubsets <- function(cells,
         ## and compare to all cells within this distance to get local fraction
         tests <- unlist(parallel::mclapply(rownames(refs.buffer), function(i){
             neighs.inbuffer <- sf::st_intersection(cells[cells$celltypes == cells.neighbors.ix,], refs.buffer[i,]$geometry)
+            ## remove duplicates
+            neighs.inbuffer <- neighs.inbuffer[!str_detect(rownames(neighs.inbuffer), "\\."), ]
             cells.inbuffer <- sf::st_intersection(cells, refs.buffer[i,]$geometry)
+            ## remove duplicates
+            cells.inbuffer <- cells.inbuffer[!str_detect(rownames(cells.inbuffer), "\\."), ]
+            ## perform t stats
             t <- stats::binom.test(x = nrow(neighs.inbuffer),
                                    n = nrow(cells.inbuffer),
                                    p = globalFrac,
@@ -260,6 +265,8 @@ evaluateSignificance <- function(cells, randomcellslist, trueNeighCells, cellBuf
             sf::st_agr(randomcells) <- "constant"
 
             bufferrandomcells <- sf::st_intersection(randomcells, cellBuffer$geometry)
+            ## remove duplicates
+            bufferrandomcells <- bufferrandomcells[!str_detect(rownames(bufferrandomcells), "\\."), ]
 
             ## evaluate significance https://online.stat.psu.edu/stat415/lesson/9/9.4
             y1 <- table(trueNeighCells$celltypes)
@@ -359,7 +366,7 @@ findTrends <- function(pos,
         coords = as.data.frame(pos),
         data = data.frame(
             celltypes = celltypes
-            #name=rownames(pos)
+            # name = rownames(pos)
         ))
     cells <- sf::st_as_sf(cells)
 
@@ -394,12 +401,16 @@ findTrends <- function(pos,
     } else {
 
         ## parallel shuffling of the grids in each resolution
+        shuffCells_init_time <- Sys.time()
+        message(sprintf("Initiating shuffle cells at %s", shuffCells_init_time))
         randomcellslist <- makeShuffledCells(cells,
                                              resolutions,
                                              perms = perms,
                                              ncores = ncores,
                                              seed = seed,
                                              verbose = verbose)
+        shuffCells_tot_time <- round(difftime(Sys.time(), shuffCells_init_time, units="mins"), 2)
+        message(sprintf("Time to shuffle cells was %s mins", shuffCells_tot_time))
 
         if(assertthat::is.string(saveShuffleFilePath)){
             saveRDS(object = randomcellslist, file = saveShuffleFilePath)
@@ -428,9 +439,27 @@ findTrends <- function(pos,
 
             # get polygon geometries of reference cells of "celltype" up to defined distance "dist"
             # use this to assess neighbors within "d" um of each cell
+            sf_init_time <- Sys.time()
+            message(sprintf("Initiating create buffer at %s", sf_init_time))
             ref.buffer <- sf::st_buffer(cells[cells$celltypes == ct,], d)
+            sf_tot_time <- round(difftime(Sys.time(), sf_init_time, units="mins"), 2)
+            message(sprintf("Time to create buffer was %s mins", sf_tot_time))
+
             # get the different types of neighbor cells that are within "d" of the ref cells
-            neigh.cells <- sf::st_intersection(cells, sf::st_union(ref.buffer$geometry))
+            # sf_init_time <- Sys.time()
+            # message(sprintf("Initiating create union at %s", sf_init_time))
+            # sf_union <- sf::st_union(ref.buffer$geometry)
+            # sf_tot_time <- round(difftime(Sys.time(), sf_init_time, units="mins"), 2)
+            # message(sprintf("Time to create union was %s mins", sf_tot_time))
+
+            sf_init_time <- Sys.time()
+            message(sprintf("Initiating intersection at %s", sf_init_time))
+            neigh.cells <- sf::st_intersection(cells, ref.buffer$geometry)
+            sf_tot_time <- round(difftime(Sys.time(), sf_init_time, units="mins"), 2)
+            message(sprintf("Time to intersection was %s mins", sf_tot_time))
+
+            ## remove duplicates
+            neigh.cells <- neigh.cells[!str_detect(rownames(neigh.cells), "\\."), ]
 
             ## evaluate significance https://online.stat.psu.edu/stat415/lesson/9/9.4
             ## chose to shuffle the resolutions in parallel, but in each resolution, the perms done linearly
@@ -438,11 +467,16 @@ findTrends <- function(pos,
             ## so if I split up the resolutions, might be able to get through each cell type faster and speed up entire process?
             ## I could also split up the permutations, but then each cell type for each resolution is done one by one
             ## I could do cell types in parallel, but then for each cell type need to go through each res and each perm one by one
+            evalSign_init_time <- Sys.time()
+            message(sprintf("Initiating evaluate significance at %s", evalSign_init_time))
             results <- evaluateSignificance(cells = cells,
                                             randomcellslist = randomcellslist,
                                             trueNeighCells = neigh.cells,
                                             cellBuffer = ref.buffer,
                                             ncores = ncores)
+            evalSign_tot_time <- round(difftime(Sys.time(), sf_init_time, units="mins"), 2)
+            message(sprintf("Time to evaluate significance was %s mins", evalSign_tot_time))
+
             return(results)
         })
         names(results.all) <- levels(celltypes)
@@ -491,6 +525,8 @@ findTrends <- function(pos,
             ref.buffer <- sf::st_buffer(cells[subset.list[[i]], ], d)
             # get the different types of neighbor cells that are within "d" of the ref cells
             neigh.cells <- sf::st_intersection(cells, ref.buffer$geometry)
+            ## remove duplicates
+            neigh.cells <- neigh.cells[!str_detect(rownames(neigh.cells), "\\."), ]
 
             ## evaluate significance https://online.stat.psu.edu/stat415/lesson/9/9.4
             ## chose to shuffle the resolutions in parallel, but in each resolution, the perms done linearly
