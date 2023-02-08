@@ -185,11 +185,11 @@ getSubsets <- function(cells,
         ## and compare to all cells within this distance to get local fraction
         tests <- unlist(parallel::mclapply(rownames(refs.buffer), function(i){
             neighs.inbuffer <- sf::st_intersection(cells[cells$celltypes == cells.neighbors.ix,], refs.buffer[i,]$geometry)
-            ## remove duplicates
-            neighs.inbuffer <- neighs.inbuffer[!str_detect(rownames(neighs.inbuffer), "\\."), ]
+            neighs.inbuffer <- neighs.inbuffer[intersect(rownames(neighs.inbuffer), rownames(cells)),] ## remove duplicates
+
             cells.inbuffer <- sf::st_intersection(cells, refs.buffer[i,]$geometry)
-            ## remove duplicates
-            cells.inbuffer <- cells.inbuffer[!str_detect(rownames(cells.inbuffer), "\\."), ]
+            cells.inbuffer <- cells.inbuffer[intersect(rownames(cells.inbuffer), rownames(cells)),] ## remove duplicates
+
             ## perform t stats
             t <- stats::binom.test(x = nrow(neighs.inbuffer),
                                    n = nrow(cells.inbuffer),
@@ -265,8 +265,7 @@ evaluateSignificance <- function(cells, randomcellslist, trueNeighCells, cellBuf
             sf::st_agr(randomcells) <- "constant"
 
             bufferrandomcells <- sf::st_intersection(randomcells, cellBuffer$geometry)
-            ## remove duplicates
-            bufferrandomcells <- bufferrandomcells[!str_detect(rownames(bufferrandomcells), "\\."), ]
+            bufferrandomcells <- bufferrandomcells[intersect(rownames(bufferrandomcells), rownames(cells)),] ## remove duplicates
 
             ## evaluate significance https://online.stat.psu.edu/stat415/lesson/9/9.4
             y1 <- table(trueNeighCells$celltypes)
@@ -458,8 +457,7 @@ findTrends <- function(pos,
             sf_tot_time <- round(difftime(Sys.time(), sf_init_time, units="mins"), 2)
             message(sprintf("Time to intersection was %s mins", sf_tot_time))
 
-            ## remove duplicates
-            neigh.cells <- neigh.cells[!str_detect(rownames(neigh.cells), "\\."), ]
+            neigh.cells <- neigh.cells[intersect(rownames(neigh.cells), rownames(cells)),] ## remove duplicates
 
             ## evaluate significance https://online.stat.psu.edu/stat415/lesson/9/9.4
             ## chose to shuffle the resolutions in parallel, but in each resolution, the perms done linearly
@@ -526,7 +524,7 @@ findTrends <- function(pos,
             # get the different types of neighbor cells that are within "d" of the ref cells
             neigh.cells <- sf::st_intersection(cells, ref.buffer$geometry)
             ## remove duplicates
-            neigh.cells <- neigh.cells[!str_detect(rownames(neigh.cells), "\\."), ]
+            neigh.cells <- neigh.cells[intersect(rownames(neigh.cells), rownames(cells)),]
 
             ## evaluate significance https://online.stat.psu.edu/stat415/lesson/9/9.4
             ## chose to shuffle the resolutions in parallel, but in each resolution, the perms done linearly
