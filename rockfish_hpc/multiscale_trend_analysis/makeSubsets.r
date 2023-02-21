@@ -11,7 +11,9 @@ library(MASS)
 library(stats)
 library(dplyr)
 
-source("/home/bmille79/code/multiscale_trend_analysis/multiscale_trend_analysis_functions.r")
+# source("/home/bmille79/code/multiscale_trend_analysis/multiscale_trend_analysis_functions.r")
+
+source("/home/bmille79/code/multiscale_trend_analysis/functions.R")
 
 ## commands loaded in from command line, but really from the slurm script. A different job per dataset, and in its own node with x number of cores for parallelization
 args <- commandArgs(TRUE)
@@ -20,7 +22,14 @@ args <- commandArgs(TRUE)
 ## load arguments from the command line
 
 ## path to the metadata table of cell coordinates and celltype names
-meta <- read.csv2(file = args[1], row.names = 1, sep=',')
+
+## for the spleen data, for example
+## also for the slideseqPuck rctd cerebelleum
+meta <- read.csv2(file = args[1], row.names = 1)
+
+## for sp.imc, other squidpy datasets
+# sim.pairwise, etc
+# meta <- read.csv2(file = args[1], row.names = 1, sep=',')
 
 ## name of column with cell type annotations to use
 ## for example, "celltypes", or "celltypes_folBcombined"
@@ -105,7 +114,8 @@ if(assertthat::is.string(loadSubset)){
                             sub.type = subsetType,
                             sub.thresh = subThresh,
                             ncores = ncs,
-                            verbose = TRUE)
+                            verbose = TRUE,
+                            removeDups = FALSE)
     if(assertthat::is.string(saveSubset)){
         saveRDS(object = subset.list, file = saveSubset)
     }

@@ -7,7 +7,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=32
 #SBATCH --mem-per-cpu=2G
-#SBATCH --time=0:1600:0
+#SBATCH --time=0:4000:0
 
 ## note that the above #SBATCH lines are very specific to set flags for the sbattch command
 ## they do not take variables, and only have certain placeholders like %x (jobname) %j (jobid)
