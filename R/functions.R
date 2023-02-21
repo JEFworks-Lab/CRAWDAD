@@ -194,7 +194,12 @@ makeShuffledCells <- function(cells, resolutions, perms = 1, ncores = 1, seed = 
 #' @param cellBuffer Simple feature collection of the neighbor cells that are within "dist" of the ref cells (from sf::intersection)
 #' @param ncores number of cores for parallelization (default 1)
 #'
-evaluateSignificance <- function(cells, randomcellslist, trueNeighCells, cellBuffer, ncores = 1){
+evaluateSignificance <- function(cells,
+                                 randomcellslist,
+                                 trueNeighCells,
+                                 cellBuffer,
+                                 ncores = 1,
+                                 removeDups = TRUE){
   
   allcells <- cells
   trueNeighCells <- trueNeighCells
@@ -213,6 +218,14 @@ evaluateSignificance <- function(cells, randomcellslist, trueNeighCells, cellBuf
       sf::st_agr(randomcells) <- "constant"
       
       bufferrandomcells <- sf::st_intersection(randomcells, cellBuffer$geometry)
+      
+      ## remove duplicate neighbor cells to prevent them from being counted multiple times
+      ## and inflate the Z scores
+      if(removeDups){
+        # message("number of permuted neighbor cells before: ", nrow(bufferrandomcells))
+        bufferrandomcells <- bufferrandomcells[intersect(rownames(bufferrandomcells), rownames(randomcells)),]
+        # message("number of permuted neighbor cells after removing dups: ", nrow(bufferrandomcells))
+      }
       
       ## evaluate significance https://online.stat.psu.edu/stat415/lesson/9/9.4
       y1 <- table(trueNeighCells$celltypes)
@@ -264,7 +277,8 @@ getSubsets <- function(cells,
                        sub.type = c("near", "away"),
                        sub.thresh = 0.05,
                        ncores = 1,
-                       verbose = TRUE) {
+                       verbose = TRUE,
+                       removeDups = FALSE) {
   
   start_time <- Sys.time()
   sub.type <- match.arg(sub.type)
@@ -315,8 +329,23 @@ getSubsets <- function(cells,
     ## for each ref cell, look for neighbor cells that are within given distance
     ## and compare to all cells within this distance to get local fraction
     tests <- unlist(parallel::mclapply(rownames(refs.buffer), function(i){
+      
       neighs.inbuffer <- sf::st_intersection(cells[cells$celltypes == cells.neighbors.ix,], refs.buffer[i,]$geometry)
+      
+      if(removeDups){
+        message("number of permuted neighbor cells before: ", nrow(neighs.inbuffer))
+        neighs.inbuffer <- neighs.inbuffer[intersect(rownames(neighs.inbuffer), rownames(cells)),]
+        message("number of permuted neighbor cells after removing dups: ", nrow(neighs.inbuffer))
+      }
+      
       cells.inbuffer <- sf::st_intersection(cells, refs.buffer[i,]$geometry)
+      
+      if(removeDups){
+        message("number of permuted neighbor cells before: ", nrow(cells.inbuffer))
+        cells.inbuffer <- cells.inbuffer[intersect(rownames(cells.inbuffer), rownames(cells)),]
+        message("number of permuted neighbor cells after removing dups: ", nrow(cells.inbuffer))
+      }
+      
       t <- stats::binom.test(x = nrow(neighs.inbuffer),
                              n = nrow(cells.inbuffer),
                              p = globalFrac,
@@ -405,7 +434,8 @@ findTrendsv2 <- function(pos,
                          loadSubsetFile = NA,
                          saveSubsetFile = NA,
                          plot = FALSE,
-                         verbose = TRUE){
+                         verbose = TRUE,
+                         removeDups = TRUE){
   
   sub.type <- match.arg(sub.type)
   
@@ -508,6 +538,14 @@ findTrendsv2 <- function(pos,
       # get the different types of neighbor cells that are within "d" of the ref cells
       neigh.cells <- sf::st_intersection(cells, ref.buffer$geometry)
       
+      ## remove duplicate neighbor cells to prevent them from being counted multiple times
+      ## and inflate the Z scores
+      if(removeDups){
+        # message("number of neighbor cells before: ", nrow(neigh.cells))
+        neigh.cells <- neigh.cells[intersect(rownames(neigh.cells), rownames(cells)),]
+        # message("number of neighbor cells after removing dups: ", nrow(neigh.cells))
+      }
+      
       ## evaluate significance https://online.stat.psu.edu/stat415/lesson/9/9.4
       ## chose to shuffle the resolutions in parallel, but in each resolution, the perms done linearly
       ## I think a bottle neck originally was waiting for certain cell types to finish
@@ -518,7 +556,8 @@ findTrendsv2 <- function(pos,
                                       randomcellslist = randomcellslist,
                                       trueNeighCells = neigh.cells,
                                       cellBuffer = ref.buffer,
-                                      ncores = ncores)
+                                      ncores = ncores,
+                                      removeDups = removeDups)
       return(results)
     }) 
     names(results.all) <- levels(celltypes)
@@ -539,7 +578,8 @@ findTrendsv2 <- function(pos,
                                 sub.type = sub.type,
                                 sub.thresh = sub.thresh,
                                 ncores = ncores,
-                                verbose = verbose)
+                                verbose = verbose,
+                                removeDups = removeDups)
       if(assertthat::is.string(saveSubsetFile)){
         saveRDS(object = subset.list, file = saveSubsetFile)
       }
@@ -568,6 +608,14 @@ findTrendsv2 <- function(pos,
       # get the different types of neighbor cells that are within "d" of the ref cells
       neigh.cells <- sf::st_intersection(cells, ref.buffer$geometry)
       
+      ## remove duplicate neighbor cells to prevent them from being counted multiple times
+      ## and inflate the Z scores
+      if(removeDups){
+        # message("number of neighbor cells before: ", nrow(neigh.cells))
+        neigh.cells <- neigh.cells[intersect(rownames(neigh.cells), rownames(cells)),]
+        # message("number of neighbor cells after removing dups: ", nrow(neigh.cells))
+      }
+      
       ## evaluate significance https://online.stat.psu.edu/stat415/lesson/9/9.4
       ## chose to shuffle the resolutions in parallel, but in each resolution, the perms done linearly
       ## I think a bottle neck originally was waiting for certain cell types to finish
@@ -578,7 +626,8 @@ findTrendsv2 <- function(pos,
                                       randomcellslist = randomcellslist,
                                       trueNeighCells = neigh.cells,
                                       cellBuffer = ref.buffer,
-                                      ncores = ncores)
+                                      ncores = ncores,
+                                      removeDups = removeDups)
       results.all[[i]] <- results
       
       rm(ref.buffer)
@@ -925,7 +974,7 @@ plotTrends <- function(results, idcol = "id", figPath = "results.pdf", width = 8
     # par(mfrow=c(length(refs), length(neighs)),
     #     mar=rep(4,4))
     par(mfrow=c(length(neighs), length(refs)),
-        mar=rep(4,4))
+        mar=c(4,4,4,6)) ## bot, top, left, right
     # par(mfrow=c(2, 6),
     #     mar=rep(4,4))
     
@@ -969,7 +1018,7 @@ plotTrends <- function(results, idcol = "id", figPath = "results.pdf", width = 8
         abline(h = -2, col='red')
         abline(h = 2, col='red')
         if(legend){
-          legend("topright", inset=c(-0.4,0), xpd=TRUE, legend = ids, col=cl, pch=20, cex=0.5, title = "ids")
+          legend("topright", inset=c(-0.3,0), xpd=TRUE, legend = ids, col=cl, pch=20, cex=0.5, title = "ids")
         }
       })
     })

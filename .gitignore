@@ -5,9 +5,7 @@
 .Rhistory
 .RDataTmp*
 plots/joint_meeting_figs/
-plots/slideseq/
 plots/squidpy/
 *.RData
 data/temp/
 data/squidpy/
-data/sim/

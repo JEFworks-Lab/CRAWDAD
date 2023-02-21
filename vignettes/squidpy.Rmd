@@ -83,6 +83,44 @@ annots_temp <- getSubsetComs(com = com,
                              neighIDs = c("T cells", "apoptotic tumor cell"),
                              subsetIDs = c("T cells_near_apoptotic tumor cell"))
 plt <- vizAllClusters(object = pos,
+               clusters = com,
+               title = "id",
+               axisAdj = 1, s = 4, a = 0.5) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
+  # ggplot2::theme(legend.position="none") +
+  ggplot2::labs(x = "x",
+                y = "y")
+plt
+
+# ggplot2::ggsave(filename ="sim_circSubset.v2.AnearB.pdf",
+#                 path = figpath, device = "pdf",
+#                 plot = plt,
+#                 dpi = 600, width = 4, height = 3, units = "in")
+
+```
+
+```{r}
+
+write.csv(meta, file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/multiscale_celltype_colocalization_analysis/squidpy/imc.squidpy.meta.csv", sep = ",")
+
+```
+
+
+```{r}
+
+pos <- meta[,c("x", "y")]
+com <- as.factor(meta$cluster)
+names(com) <- rownames(pos)
+
+
+# ----------------------------------------
+# Podoplanin subsets
+annots_temp <- getSubsetComs(com = com,
+                             pos = pos,
+                             subset_list = subsets,
+                             neighIDs = c("T cells", "apoptotic tumor cell"),
+                             subsetIDs = c("T cells_near_apoptotic tumor cell"))
+plt <- vizAllClusters(object = pos,
                clusters = annots_temp,
                title = "id",
                axisAdj = 1, s = 4, a = 0.5) +
@@ -111,8 +149,8 @@ names(com) <- rownames(pos)
 annots_temp <- getSubsetComs(com = com,
                              pos = pos,
                              subset_list = subsets200,
-                             neighIDs = c("T cells", "apoptotic tumor cell"),
-                             subsetIDs = c("T cells_near_apoptotic tumor cell"))
+                             neighIDs = c("T cells", "apoptotic tumor cell", "basal CK tumor cell", "endothelial"),
+                             subsetIDs = NA)
 plt <- vizAllClusters(object = pos,
                clusters = annots_temp,
                title = "id",
@@ -197,16 +235,16 @@ dat <- readRDS(outfile)
 dat <- meltResultsList(resultsList = dat, id = NA)
 colnames(dat) <- c("resolution", "neighbor", "Z", "reference", "dist", "subsetDist")
 
-# dat <- dat[dat$dist %in% c("100", "200", "300"),]
-# dat <- dat[dat$resolution %in% c(50,100,200,300,500,700,800,1000,3000),]
+dat <- dat[dat$dist %in% c("50", "100", "200"),]
+dat <- dat[dat$resolution %in% c(50,100,200,300,500,600,700,800),]
+dat <- dat[grepl(pattern = "basal CK tumor cell", x = dat$reference),]
 
-plotTrends(results = dat, idcol = "dist", figPath = paste0(figpath, "sp.cooccuranceData.pairwise.results.10-300.pdf"),
-          width = 30, height = 30)
+plotTrends(results = dat, idcol = "dist", figPath = paste0(figpath, "sp.cooccuranceData.pairwise.results.50-200.basalCK.pdf"),
+          width = 3, height = 30)
 
 ```
 
 ```{r}
-
 
 outfile <- paste0(dataDir, "sp.cooccuranceData.pairwise.results.10-300.rds")
 dat <- readRDS(outfile)
@@ -214,11 +252,13 @@ dat <- readRDS(outfile)
 dat <- meltResultsList(resultsList = dat, id = NA)
 colnames(dat) <- c("resolution", "neighbor", "Z", "reference", "dist", "subsetDist")
 
-dat <- dat[dat$dist %in% c("200"),]
-dat <- dat[dat$resolution %in% c(50,100,200,300,500,700,800,1000,3000),]
+dat <- dat[dat$dist %in% c("100"),]
+dat <- dat[dat$resolution %in% c(100,200,300,500,600,700,800),]
 
-plotTrendsOverlay(results = dat, idcol = "dist", figPath = paste0(figpath, "sp.ripleyData.pairwise.overlayed.pdf"),
-          width = 4, height = 40)
+dat <- dat[dat$reference %in% c("apoptotic tumor cell", "macrophages", "T cells", "basal CK tumor cell"),]
+
+plotTrendsOverlay(results = dat, idcol = "dist", figPath = paste0(figpath, "sp.cooccuranceData.pairwise.overlayed.dist100.pdf"),
+          width = 3, height = 10)
 
 ```
 
@@ -255,6 +295,12 @@ subsets300 <- readRDS("/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/multisca
 ```{r, fig.height=18, fig.width=18}
 
 vizEachCluster(object = meta_ripley[,c("x", "y")], clusters = as.factor(meta_ripley$cluster), s = 2)
+
+```
+
+```{r}
+
+write.csv(meta_ripley, file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/multiscale_celltype_colocalization_analysis/data/squidpy/slideseqv2.squidpy.meta.csv", sep = ",")
 
 ```
 
@@ -399,6 +445,124 @@ plt
 
 ```
 
+
+```{r}
+
+pos <- meta_ripley[,c("x", "y")]
+com <- as.factor(meta_ripley$cluster)
+names(com) <- rownames(pos)
+
+# ----------------------------------------
+annots_temp <- getSubsetComs(com = com,
+                             pos = pos,
+                             subset_list = subsets100,
+                             neighIDs = c("DentatePyramids", "CA1_CA2_CA3_Subiculum"),
+                             subsetIDs = NA)
+plt <- vizAllClusters(object = pos,
+               clusters = annots_temp,
+               title = "id",
+               axisAdj = 1, s = 2.5, a = 0.5) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
+  # ggplot2::theme(legend.position="none") +
+  ggplot2::labs(x = "x",
+                y = "y")
+plt
+
+```
+
+```{r}
+
+
+meta <- meta_ripley[,c("x", "y", "cluster")]
+meta <- meta %>% 
+  dplyr::mutate_at(vars(x, y), as.numeric)
+pos = meta[,c("x", "y")]
+celltypes = meta[,3]
+
+cells <- sp::SpatialPointsDataFrame(
+  coords = as.data.frame(pos),
+  data=data.frame(
+    celltypes=celltypes
+    #name=rownames(pos)
+))
+cells <- sf::st_as_sf(cells)
+
+## Change rowname assignments of cells to integers.
+## Solution to keep rows in same order later on when
+## randomly shuffling cell labels
+rownames(cells) <- as.character(1:dim(cells)[1])
+
+# make asumption that cell type attribute is constant throughout the geometries of each cell
+## it removed the warning that keep popping up, which says this assumption is made anyways
+sf::st_agr(cells) <- "constant"
+
+grid <- sf::st_make_grid(cells, cellsize = 500)
+
+```
+
+```{r}
+
+pos <- meta_ripley[,c("x", "y")]
+com <- as.factor(meta_ripley$cluster)
+names(com) <- rownames(pos)
+
+# ----------------------------------------
+annots_temp <- getSubsetComs(com = com,
+                             pos = pos,
+                             subset_list = subsets100,
+                             neighIDs = c("DentatePyramids", "CA1_CA2_CA3_Subiculum"),
+                             subsetIDs = NA)
+
+
+axisAdj <- 100
+tempCom <- droplevels(annots_temp)
+dat <- data.frame("x" = pos[,"x"],
+                  "y" = pos[,"y"],
+                  "Clusters" = annots_temp)
+
+plt <- ggplot2::ggplot(data = dat) +
+  # ggplot2::geom_point(ggplot2::aes(x = x, y = y,
+  #                                  color = Clusters), size = s, alpha = a) +
+  scattermore::geom_scattermore(ggplot2::aes(x = x, y = y,
+                                             color = Clusters), pointsize = 2, alpha = 1,
+                                pixels=c(1000,1000)) +
+  
+  ggplot2::scale_color_manual(values = rainbow(n = length(levels(tempCom))), na.value = "gray")
+  
+plt <- plt + ggplot2::scale_y_continuous(expand = c(0, 0), limits = c( min(dat$y)-axisAdj, max(dat$y)+axisAdj)) +
+             ggplot2::scale_x_continuous(expand = c(0, 0), limits = c( min(dat$x)-axisAdj, max(dat$x)+axisAdj) ) +
+            
+            ggplot2::labs(title = "",
+                          x = "x",
+                          y = "y") +
+            
+            ggplot2::theme_classic() +
+            ggplot2::theme(axis.text.x = ggplot2::element_text(size=15, color = "black"),
+                           axis.text.y = ggplot2::element_text(size=15, color = "black"),
+                           axis.title.y = ggplot2::element_text(size=15),
+                           axis.title.x = ggplot2::element_text(size=15),
+                           axis.ticks.x = ggplot2::element_blank(),
+                           plot.title = ggplot2::element_text(size=15),
+                           legend.text = ggplot2::element_text(size = 12, colour = "black"),
+                           legend.title = ggplot2::element_text(size = 15, colour = "black", angle = 0, hjust = 0.5),
+                           panel.background = ggplot2::element_blank(),
+                           plot.background = ggplot2::element_blank(),
+                           panel.grid.major.y =  ggplot2::element_blank(),
+                           axis.line = ggplot2::element_line(size = 1, colour = "black")
+                           # legend.position="none"
+            ) +
+            
+            ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 2)
+            ) #+ ggplot2::geom_sf(data = grid, fill = NA)
+
+plt
+
+```
+
+
+
+
+
 ```{r}
 
 outfile <- paste0(dataDir, "sp.ripleyData.near.binom.subdist100.dist100.results.rds")
@@ -485,7 +649,6 @@ plotTrends(results = dat, idcol = "dist", figPath = paste0(figpath, "sp.ripleyDa
 
 ```{r}
 
-
 outfile <- paste0(dataDir, "sp.ripleyData.pairwise.results.rds")
 dat <- readRDS(outfile)
 
@@ -493,9 +656,51 @@ dat <- meltResultsList(resultsList = dat, id = NA)
 colnames(dat) <- c("resolution", "neighbor", "Z", "reference", "dist", "subsetDist")
 
 dat <- dat[dat$dist %in% c("200"),]
-dat <- dat[dat$resolution %in% c(50,100,200,300,500,700,800,1000,3000),]
+dat <- dat[dat$resolution %in% c(200,300,500,600,700,900,1000,1200,1500,3000),]
 
-plotTrendsOverlay(results = dat, idcol = "dist", figPath = paste0(figpath, "sp.ripleyData.pairwise.overlayed.pdf"),
+dat <- dat[dat$reference %in% c("CA1_CA2_CA3_Subiculum") & dat$neighbor %in% c("Interneurons"),]
+
+plotTrends(results = dat, idcol = "dist", figPath = paste0(figpath, "sp.ripleyData.pairwise.CA_inter.pdf"),
+          width = 4, height = 4)
+
+```
+
+```{r}
+
+outfile <- paste0(dataDir, "sp.ripleyData.near.binom.subdist200.dist200.results.rds")
+dat <- readRDS(outfile)
+
+dat <- meltResultsList(resultsList = dat, id = NA)
+colnames(dat) <- c("resolution", "neighbor", "Z", "reference", "dist", "subsetDist")
+
+dat <- dat[dat$dist %in% c("200"),]
+dat <- dat[dat$resolution %in% c(200,300,500,600,700,900,1000,1200,1500,3000),]
+
+dat <- dat[dat$reference %in% c("CA1_CA2_CA3_Subiculum") & dat$neighbor %in% c("Interneurons"),]
+
+plotTrends(results = dat, idcol = "dist", figPath = paste0(figpath, "sp.ripleyData.subdist300.dist300.CA_inter.pdf"),
+          width = 4, height = 4)
+sp.ripleyData.subdist300.dist300.subsets.Astro
+```
+
+
+
+
+```{r}
+
+
+outfile <- paste0(dataDir, "sp.ripleyData.near.binom.subdist200.dist200.results.rds")
+dat <- readRDS(outfile)
+
+dat <- meltResultsList(resultsList = dat, id = NA)
+colnames(dat) <- c("resolution", "neighbor", "Z", "reference", "dist", "subsetDist")
+
+dat <- dat[dat$dist %in% c("200"),]
+dat <- dat[dat$resolution %in% c(50,100,200,300,500,600,700,800,900,1000,1200,1500,3000),]
+
+dat <- dat[grepl(pattern = "CA1_CA2_CA3_Subiculum_near_", x = dat$reference),]
+
+plotTrendsOverlay(results = dat, idcol = "dist", figPath = paste0(figpath, "sp.ripleyData.near.binom.subdist200.dist200.overlayed.CAsubs.pdf"),
           width = 4, height = 40)
 
 ```
@@ -666,6 +871,21 @@ plt
 
 ```
 
+subsample cells to make more reasonable for multiscale
+
+```{r}
+
+meta_fouri
+
+```
+
+```{r}
+
+write.csv(meta_fouri, file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/multiscale_celltype_colocalization_analysis/data/squidpy/four_i.squidpy.meta.csv", sep = ",")
+
+```
+
+
 ```{r}
 
 min(meta_fouri$x)
@@ -820,6 +1040,489 @@ dat$y <- dat$y * 3100
 write.csv(x = dat[,c("x", "y", "type")], file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/multiscale_celltype_colocalization_analysis/data/sim/simPairwise.meta.csv", row.names = TRUE, sep = ",")
 
 ```
+
+
+circles of different sizes? How does multiscale do? What about squidoy? Hypothesize that squidpy co-occurance might not looks so great anymore. But will multiscale be able to pick it up?
+
+```{r}
+
+locs <- list(
+  c(0.25, 0.25),
+  c(0.5, 0.5),
+  c(0.75, 0.75)
+  )
+
+cts <- list(
+  list(outer = "B", inner = c("C")),
+  list(outer = "B", inner = c("C")),
+  list(outer = "B", inner = c("C"))
+  )
+
+probs <- list(
+  list(outer = c(1), inner = c(1)),
+  list(outer = c(1), inner = c(1)),
+  list(outer = c(1), inner = c(1))
+  )
+
+rads <- list(
+  list(outer = 0.15, inner = 0.05),
+  list(outer = 0.15, inner = 0.08),
+  list(outer = 0.15, inner = 0.11)
+)
+
+## background params
+s <- 10000
+cb <- c("A")
+pb <- c(1)
+
+
+pos_3circs <- simulate_circles(simulate_background(size = s, cts = cb, prob = pb),
+                        locs, radii = rads, cts, probs)
+
+pos_3circs$x <- pos_3circs$x * 3100
+pos_3circs$y <- pos_3circs$y * 3100
+
+ggplot2::ggplot(data = pos_3circs) +
+  ggplot2::geom_point(ggplot2::aes(x = x, y = y, color = type), size = 0.2) +
+  ggplot2::scale_color_manual(values = c("A" = "#F8766D", "B" = "#00B81F", "C" = "#00A5FF")) +
+  ggplot2::coord_equal() +
+  ggplot2::guides(color = ggplot2::guide_legend(title = "cell type"))
+
+```
+
+```{r}
+
+write.csv(x = pos_3circs[,c("x", "y", "type")], file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/multiscale_celltype_colocalization_analysis/data/sim/sim3circ.meta.csv", row.names = TRUE, sep = ",")
+
+```
+
+```{r}
+
+dataDir_sim <- "/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/multiscale_celltype_colocalization_analysis/data/sim/"
+
+outfile <- paste0(dataDir_sim, "sim3circ.pairwise.results.30-300.rds")
+dat <- readRDS(outfile)
+
+dat <- meltResultsList(resultsList = dat, id = NA)
+colnames(dat) <- c("resolution", "neighbor", "Z", "reference", "dist", "subsetDist")
+
+dat <- dat[dat$dist %in% c(30, 50, 100, 200, 300),]
+dat <- dat[dat$resolution %in% c(30, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000),]
+
+plotTrends(results = dat, idcol = "dist", figPath = paste0(figpath, "sim3circ.pairwise.results.30-300.pdf"),
+          width = 30, height = 30)
+
+```
+
+```{r}
+
+
+dataDir_sim <- "/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/multiscale_celltype_colocalization_analysis/data/sim/"
+
+outfile <- paste0(dataDir_sim, "sim3circ.pairwise.results.30-300.rds")
+dat <- readRDS(outfile)
+
+dat <- meltResultsList(resultsList = dat, id = NA)
+colnames(dat) <- c("resolution", "neighbor", "Z", "reference", "dist", "subsetDist")
+
+dat <- dat[dat$dist %in% c(200),]
+dat <- dat[dat$resolution %in% c(30, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000),]
+
+plotTrendsOverlay(results = dat, idcol = "dist", figPath = paste0(figpath, "sim3circ.pairwise.results.overlay200.pdf"),
+          width = 4, height = 10)
+
+```
+
+```{r}
+
+dataDir_sim <- "/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/multiscale_celltype_colocalization_analysis/data/sim/"
+
+outfile <- paste0(dataDir_sim, "sim3circ.near.binom.subdist100.dist30-300.results.rds")
+dat <- readRDS(outfile)
+
+dat <- meltResultsList(resultsList = dat, id = NA)
+colnames(dat) <- c("resolution", "neighbor", "Z", "reference", "dist", "subsetDist")
+
+dat <- dat[dat$dist %in% c(30, 50, 100, 200, 300),]
+dat <- dat[dat$resolution %in% c(30, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000),]
+
+# dat <- dat[grepl(pattern = "CA1_CA2_CA3_Subiculum_near_", x = dat$reference),]
+
+plotTrends(results = dat, idcol = "dist", figPath = paste0(figpath, "sim3circ.near.binom.subdist100.dist30-300.results.pdf"),
+          width = 30, height = 10)
+
+```
+
+```{r}
+
+dataDir_sim <- "/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/multiscale_celltype_colocalization_analysis/data/sim/"
+
+outfile <- paste0(dataDir_sim, "sim3circ.near.binom.subdist200.dist30-300.results.rds")
+dat <- readRDS(outfile)
+
+dat <- meltResultsList(resultsList = dat, id = NA)
+colnames(dat) <- c("resolution", "neighbor", "Z", "reference", "dist", "subsetDist")
+
+dat <- dat[dat$dist %in% c(30, 50, 100, 200),]
+dat <- dat[dat$resolution %in% c(30, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000),]
+
+# dat <- dat[grepl(pattern = "CA1_CA2_CA3_Subiculum_near_", x = dat$reference),]
+
+plotTrends(results = dat, idcol = "dist", figPath = paste0(figpath, "sim3circ.near.binom.subdist200.dist30-300.results.pdf"),
+          width = 30, height = 10)
+
+```
+
+```{r}
+
+dataDir_sim <- "/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/multiscale_celltype_colocalization_analysis/data/sim/"
+
+outfile <- paste0(dataDir_sim, "sim3circ.near.binom.subdist300.dist30-300.results.rds")
+dat <- readRDS(outfile)
+
+dat <- meltResultsList(resultsList = dat, id = NA)
+colnames(dat) <- c("resolution", "neighbor", "Z", "reference", "dist", "subsetDist")
+
+dat <- dat[dat$dist %in% c(30, 50, 100, 200),]
+dat <- dat[dat$resolution %in% c(30, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000),]
+
+# dat <- dat[grepl(pattern = "CA1_CA2_CA3_Subiculum_near_", x = dat$reference),]
+
+plotTrends(results = dat, idcol = "dist", figPath = paste0(figpath, "sim3circ.near.binom.subdist300.dist30-300.results.pdf"),
+          width = 30, height = 10)
+
+```
+
+
+# phkl
+
+```{r}
+
+pkhl_meta <- read.csv2(file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/multiscale_celltype_colocalization_analysis/data/CODEX/HBM389.PKHL.936.meta.csv.gz", row.names = 1, sep=',')
+
+## name of column with cell type annotations to use
+## for example, "celltypes", or "celltypes_folBcombined"
+pkhl_meta <- pkhl_meta[,c("x", "y", "com_nn50_VolnormExpr_data_annots")]
+
+## make sure the coordinates are numeric
+pkhl_meta <- pkhl_meta %>% 
+  dplyr::mutate_at(vars(x, y), as.numeric)
+
+```
+
+```{r}
+
+colnames(pkhl_meta) <- c("x", "y", "cluster")
+
+pkhl_meta$y <- pkhl_meta$y * -1
+
+pkhl_meta
+
+```
+
+```{r}
+
+write.csv(x = pkhl_meta[,c("x", "y", "cluster")], file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/multiscale_celltype_colocalization_analysis/data/sim/pkhl_test.meta.csv", row.names = TRUE, sep = ",")
+
+```
+
+
+
+
+# CA differential expression
+
+```{r}
+
+meta_ripley
+
+```
+
+```{r}
+
+slideseqv2.exp <- read.csv2(file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/multiscale_celltype_colocalization_analysis/data/squidpy/slideseqv2.exp.csv.gz", row.names = 1, sep=',')
+
+slideseqv2.exp <- sapply(slideseqv2.exp, as.numeric)
+slideseqv2.exp <- Matrix(slideseqv2.exp, sparse = TRUE)
+slideseqv2.exp
+
+```
+
+```{r}
+
+rownames(slideseqv2.exp) <- rownames(meta_ripley)
+
+```
+
+
+```{r}
+
+meta_ripley
+
+```
+
+subset data to select the CAs near the dentate
+
+```{r}
+
+slideseqv2.subsets <- readRDS("/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/multiscale_celltype_colocalization_analysis/data/squidpy/sp.ripleyData.subsets.near.subdist200.rds")
+
+meta_ripley[as.numeric(slideseqv2.subsets$CA1_CA2_CA3_Subiculum_near_DentatePyramids),]
+
+```
+
+```{r}
+
+hist(Matrix::rowSums(slideseqv2.exp), breaks = 50)
+
+```
+
+```{r}
+
+CA_near_dentate.exp <- slideseqv2.exp[as.numeric(slideseqv2.subsets$CA1_CA2_CA3_Subiculum_near_DentatePyramids),]
+CA_near_dentate.exp
+
+```
+
+```{r}
+
+# other_CA.exp <- 
+
+CA.subset.idx <- as.numeric(slideseqv2.subsets$CA1_CA2_CA3_Subiculum_near_DentatePyramids)
+CA.idx <- which(meta_ripley$cluster == "CA1_CA2_CA3_Subiculum")
+
+other_CA.exp <- slideseqv2.exp[CA.idx[which(!CA.idx %in% CA.subset.idx)],]
+
+other_CA.exp
+
+```
+
+just load it all into seurat, label clusters appropriates to hit the subsets, assume gexp is already normalized, and compute differentialy expression between 2 cell types explicitly
+
+
+```{r}
+
+groups <- rep("Other", dim(meta_ripley)[1])
+groups[CA.idx] <- "CA"
+groups[CA.subset.idx] <- "CA_near_dentate"
+
+```
+
+```{r}
+
+
+
+```
+
+
+```{r}
+
+metadata <- data.frame(row.names = rownames(meta_ripley),
+                         "cluster" = meta_ripley$cluster,
+                         "x" = meta_ripley[,"x"],
+                         "y" = meta_ripley[,"y"],
+                         "CA_group" = groups
+                       )
+
+```
+
+
+```{r}
+
+slideseqv2.seur <- Seurat::CreateSeuratObject(counts = t(slideseqv2.exp), assay = "Expression", project = "slideseqv2", meta.data = metadata)
+
+```
+
+```{r}
+
+Seurat::Idents(slideseqv2.seur) <- "cluster"
+
+```
+
+```{r}
+
+# Find differentially expressed features between CA1_CA2_CA3_Subiculum and all other cells, only
+# search for positive markers
+# Pre-filter features that are detected at <50% frequency
+CA.de.markers <- Seurat::FindMarkers(slideseqv2.seur,
+                                     slot = "data",
+                                     ident.1 = "CA1_CA2_CA3_Subiculum",
+                                     ident.2 = NULL,
+                                     only.pos = TRUE,
+                                     min.pct = 0.5,
+                                     logfc.threshold = 0.25,
+                                     test.use = "wilcox",
+                                     min.diff.pct = -Inf,
+                                     min.cells.feature = 3,
+                                     min.cells.group = 3
+                                     
+                                     )
+
+```
+
+
+```{r}
+
+CA.de.markers
+
+```
+
+```{r}
+
+# Take all cells in cluster CA1_CA2_CA3_Subiculum (subset.ident), and find markers that separate cells in the 'CA_near_dentate' (ident.1) group
+# metadata variable 'CA_group' ('group.by')
+
+# # Take all cells in cluster 2, and find markers that separate cells in the 'g1' group (metadata
+# # variable 'group')
+# markers <- FindMarkers(pbmc_small, ident.1 = "g1", group.by = 'groups', subset.ident = "2")
+
+# Find differentially expressed features between CA1_CA2_CA3_Subiculum and all other cells, only
+# search for positive markers
+# Pre-filter features that are detected at <50% frequency
+CA_near_dentate.de.markers <- Seurat::FindMarkers(slideseqv2.seur,
+                                     slot = "data",
+                                     ident.1 = "CA_near_dentate",
+                                     subset.ident = "CA1_CA2_CA3_Subiculum",
+                                     group.by = "CA_group",
+                                     only.pos = TRUE,
+                                     min.pct = 0.5,
+                                     logfc.threshold = 0.25,
+                                     test.use = "wilcox",
+                                     min.diff.pct = -Inf,
+                                     min.cells.feature = 3,
+                                     min.cells.group = 3
+                                     
+                                     )
+
+```
+
+```{r}
+
+CA_near_dentate.de.markers
+
+```
+
+slideseqv2.exp
+
+rownames(CA.de.markers)
+
+```{r}
+
+markers <- c(rownames(CA.de.markers), "Malat1")
+
+df <- merge(as.data.frame(meta_ripley[,c("x", "y", "cluster")]), 
+            as.data.frame(slideseqv2.exp[,markers]), 
+            by = 0)
+
+```
+
+```{r, fig.width=20, fig.height=20}
+
+ps <- lapply(markers, function(marker) {
+  STdeconvolve::vizGeneCounts(df = df,
+              gene = marker,
+              # groups = annot,
+              # group_cols = rainbow(length(levels(annot))),
+              size = 1, stroke = 0,
+              plotTitle = marker,
+              winsorize = 0.0,
+              showLegend = TRUE) +
+    
+    ## remove the pixel "groups", which is the color aesthetic for the pixel borders
+    ggplot2::guides(colour = "none") +
+    
+    ## change some plot aesthetics
+    ggplot2::theme(axis.text.x = ggplot2::element_text(size=0, color = "black", hjust = 0, vjust = 0.5),
+                   axis.text.y = ggplot2::element_text(size=0, color = "black"),
+                   axis.title.y = ggplot2::element_text(size=15),
+                   axis.title.x = ggplot2::element_text(size=15),
+                   plot.title = ggplot2::element_text(size=15),
+                   legend.text = ggplot2::element_text(size = 15, colour = "black"),
+                   legend.title = ggplot2::element_text(size = 15, colour = "black", angle = 90),
+                   panel.background = ggplot2::element_blank(),
+                   ## border around plot
+                   panel.border = ggplot2::element_rect(fill = NA, color = "black", size = 2),
+                   plot.background = ggplot2::element_blank()
+                   ) +
+    ggplot2::guides(fill = ggplot2::guide_colorbar(title = "Expression",
+                                                   title.position = "left",
+                                                   title.hjust = 0.5,
+                                                   ticks.colour = "black",
+                                                   ticks.linewidth = 2,
+                                                   frame.colour= "black",
+                                                   frame.linewidth = 2,
+                                                   label.hjust = 0
+                                                   ))
+})
+gridExtra::grid.arrange(
+  grobs = ps,
+  layout_matrix = rbind(c(1, 2, 3),
+                        c(4, 5, 6),
+                        c(7, 8, 9))
+)
+
+```
+
+```{r, fig.width=20, fig.height=20}
+
+pos <- meta_ripley[,c("x", "y")]
+com <- as.factor(meta_ripley$cluster)
+names(com) <- rownames(pos)
+
+annots_temp <- getSubsetComs(com = com,
+                             pos = pos,
+                             subset_list = slideseqv2.subsets,
+                             neighIDs = c("CA1_CA2_CA3_Subiculum", "DentatePyramids"),
+                             subsetIDs = c("CA1_CA2_CA3_Subiculum_near_DentatePyramids"))
+plt <- vizAllClusters(object = pos,
+               clusters = annots_temp,
+               title = "id",
+               axisAdj = 1, s = 4, a = 0.5) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
+  # ggplot2::theme(legend.position="none") +
+  ggplot2::labs(x = "x",
+                y = "y")
+plt
+
+```
+
+
+```{r}
+
+Seurat::Idents(slideseqv2.seur) <- "CA_group"
+
+```
+
+```{r}
+
+# Find differentially expressed features between CA_near_dentate and  other CA
+# only search for positive markers
+# Pre-filter features that are detected at <50% frequency
+CAdentate_vs_CA.de.markers <- Seurat::FindMarkers(slideseqv2.seur,
+                                     slot = "data",
+                                     ident.1 = "CA_near_dentate",
+                                     ident.2 = "CA",
+                                     only.pos = TRUE,
+                                     min.pct = 0.5,
+                                     logfc.threshold = 0.25,
+                                     test.use = "wilcox",
+                                     min.diff.pct = -Inf,
+                                     min.cells.feature = 3,
+                                     min.cells.group = 3
+                                     
+                                     )
+
+```
+
+```{r}
+
+CAdentate_vs_CA.de.markers
+
+```
+
+
+
+
+
 
 
 
