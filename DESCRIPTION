@@ -1,4 +1,4 @@
-Package: msctcla
+Package: crawdad
 Type: Package
 Title: What the Package Does (Title Case)
 Version: 0.1.0
@@ -14,12 +14,10 @@ Imports:
     BiocParallel,
     gganimate,
     ggplot2,
-    gifski,
     grDevices,
     MASS,
     parallel,
     reshape2,
-    scattermore,
     sf,
     sp
 RoxygenNote: 7.2.3
