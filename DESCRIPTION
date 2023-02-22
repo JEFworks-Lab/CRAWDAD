@@ -18,6 +18,7 @@ Imports:
     MASS,
     parallel,
     reshape2,
+    scattermore,
     sf,
     sp
 RoxygenNote: 7.2.3

@@ -135,7 +135,7 @@ getSubsets <- function(cells,
                        ncores = 1,
                        verbose = TRUE) {
 
-    start_time <- Sys.time()
+    #start_time <- Sys.time()
     sub.type <- match.arg(sub.type)
 
     if(!sub.type %in% c("near", "away")){
@@ -168,7 +168,7 @@ getSubsets <- function(cells,
         cells.ref.ix <- levels(cell.types)[as.numeric(combos[i,1])]
         cells.neighbors.ix <- levels(cell.types)[as.numeric(combos[i,2])]
         id <- paste0(cells.ref.ix, "_", sub.type, "_", cells.neighbors.ix)
-        message("computing subsets for ", id)
+        #message("computing subsets for ", id)
 
         cells.ref <- names(cell.types[cell.types == cells.ref.ix])
         cells.neighbors <- names(cell.types[cell.types == cells.neighbors.ix])
@@ -179,7 +179,7 @@ getSubsets <- function(cells,
         ## get area around the reference cells to test if they are enriched with the neighbor cell type
         refs.buffer <- sf::st_buffer(cells[cells$celltypes == cells.ref.ix,], sub.dist)
 
-        start_time_subset <- Sys.time()
+        #start_time_subset <- Sys.time()
         # -------------------------------------------------------------------------
         ## for each ref cell, look for neighbor cells that are within given distance
         ## and compare to all cells within this distance to get local fraction
@@ -214,20 +214,20 @@ getSubsets <- function(cells,
             sub.cells <- rownames(refs.buffer)[which(!rownames(refs.buffer) %in% sub.cells)]
         }
 
-        total_t_subset <- round(difftime(Sys.time(), start_time_subset, units = "mins"), 2)
-        if(verbose){
-            message(sprintf("Time to compute was %smins", total_t_subset))
-        }
+        #total_t_subset <- round(difftime(Sys.time(), start_time_subset, units = "mins"), 2)
+        #if(verbose){
+        #    message(sprintf("Time to compute was %smins", total_t_subset))
+        #}
 
         return(sub.cells)
     })
 
     names(subsets) <- combo_ids
 
-    if(verbose){
-        total_t <- round(difftime(Sys.time(), start_time, units = "mins"), 2)
-        message(sprintf("Time to compute was %smins", total_t))
-    }
+    #if(verbose){
+    #    total_t <- round(difftime(Sys.time(), start_time, units = "mins"), 2)
+    #    message(sprintf("Time to compute was %smins", total_t))
+    #}
 
     return(subsets)
 
@@ -306,8 +306,7 @@ evaluateSignificance <- function(cells, randomcellslist, trueNeighCells, cellBuf
 #' This is done at difference resolutions, where a resolution is whether the cell type labels are shuffled locally or globally.
 #' Trends are essentially built from significance values. The significance test basically asks if two cell types are localized or separated by assessing if the proportion of the neighboring cell type is significantly greater, or less than, random chance.
 #'
-#' @param pos data frame; x and y coordinates of each cell
-#' @param celltypes character vector; the cell type of each cell provided in pos
+#' @param cells SpatialPointsDataFrame; output of toSP()
 #' @param resolutions numeric vector; the different resolutions to shuffle at and subsequently compute significance at
 #' @param dist numeric; distance to define neighbor cells with respect to each reference cell (default = 50)
 #' @param sub.dist numeric; distance to define subsets relative to a neighbor cell type (default = 100)
@@ -326,8 +325,7 @@ evaluateSignificance <- function(cells, randomcellslist, trueNeighCells, cellBuf
 #' @return A list that contains a dataframe for each reference cell type, where the dataframe contains the significance values for each neighbor cell type at each resolution
 #'
 #' @export
-findTrends <- function(pos,
-                         celltypes,
+findTrends <- function(cells,
                          resolutions = c(50, 100, 200, 300),
                          dist = 50,
                          sub.dist = 100,
@@ -336,85 +334,12 @@ findTrends <- function(pos,
                          perms = 1,
                          seed = 0,
                          ncores = 1,
-                         loadShuffleFile = NA,
-                         saveShuffleFilePath = NA,
-                         loadSubsetFile = NA,
-                         saveSubsetFile = NA,
+                         shuffle.list = NA,
+                         subset.list = NA,
                          plot = FALSE,
                          verbose = TRUE){
 
     sub.type <- match.arg(sub.type)
-
-    if(length(levels(celltypes)) == 0){
-        message("Warning: 'celltypes' does not have levels. Creating levels from values")
-        celltypes <- factor(celltypes)
-        names(celltypes) <- rownames(pos)
-    }
-
-    if(verbose){
-        start_time <- Sys.time()
-    }
-
-    ## load the real data
-    # ============================================================
-    if(verbose){
-        message("creating `sp::SpatialPointsDataFrame`")
-    }
-
-    cells <- sp::SpatialPointsDataFrame(
-        coords = as.data.frame(pos),
-        data = data.frame(
-            celltypes = celltypes
-            # name = rownames(pos)
-        ))
-    cells <- sf::st_as_sf(cells)
-
-    ## Change rowname assignments of cells to integers.
-    ## Solution to keep rows in same order later on when
-    ## randomly shuffling cell labels
-    rownames(cells) <- as.character(1:dim(cells)[1])
-
-    # make asumption that cell type attribute is constant throughout the geometries of each cell
-    ## it removed the warning that keep popping up, which says this assumption is made anyways
-    sf::st_agr(cells) <- "constant"
-
-    print(cells)
-
-    if(verbose){
-        message("Generate randomly permuted background at each resolution")
-    }
-
-    # visualize real data
-    # if(plot){
-    #   plot.new()
-    #   par(mfrow=c(1,1), mar=rep(1,4))
-    #   plot(cells, pch=".", main = "original dataset")
-    #   # dev.off()
-    # }
-
-    ## Generate randomly permuted background at each resolution
-    # ============================================================
-
-    if(assertthat::is.string(loadShuffleFile)){
-        randomcellslist <- readRDS(file = loadShuffleFile)
-    } else {
-
-        ## parallel shuffling of the grids in each resolution
-        shuffCells_init_time <- Sys.time()
-        message(sprintf("Initiating shuffle cells at %s", shuffCells_init_time))
-        randomcellslist <- makeShuffledCells(cells,
-                                             resolutions,
-                                             perms = perms,
-                                             ncores = ncores,
-                                             seed = seed,
-                                             verbose = verbose)
-        shuffCells_tot_time <- round(difftime(Sys.time(), shuffCells_init_time, units="mins"), 2)
-        message(sprintf("Time to shuffle cells was %s mins", shuffCells_tot_time))
-
-        if(assertthat::is.string(saveShuffleFilePath)){
-            saveRDS(object = randomcellslist, file = saveShuffleFilePath)
-        }
-    }
 
     if(verbose){
         message("Evaluating significance for each cell type")
@@ -430,7 +355,7 @@ findTrends <- function(pos,
         }
 
         d <- dist
-        results.all <- lapply(levels(celltypes), function(ct) {
+        results.all <- lapply(levels(cells$celltypes), function(ct) {
 
             if(verbose){
                 message(ct)
@@ -438,11 +363,11 @@ findTrends <- function(pos,
 
             # get polygon geometries of reference cells of "celltype" up to defined distance "dist"
             # use this to assess neighbors within "d" um of each cell
-            sf_init_time <- Sys.time()
-            message(sprintf("Initiating create buffer at %s", sf_init_time))
+            #sf_init_time <- Sys.time()
+            #message(sprintf("Initiating create buffer at %s", sf_init_time))
             ref.buffer <- sf::st_buffer(cells[cells$celltypes == ct,], d)
-            sf_tot_time <- round(difftime(Sys.time(), sf_init_time, units="mins"), 2)
-            message(sprintf("Time to create buffer was %s mins", sf_tot_time))
+            #sf_tot_time <- round(difftime(Sys.time(), sf_init_time, units="mins"), 2)
+            #message(sprintf("Time to create buffer was %s mins", sf_tot_time))
 
             # get the different types of neighbor cells that are within "d" of the ref cells
             # sf_init_time <- Sys.time()
@@ -451,11 +376,11 @@ findTrends <- function(pos,
             # sf_tot_time <- round(difftime(Sys.time(), sf_init_time, units="mins"), 2)
             # message(sprintf("Time to create union was %s mins", sf_tot_time))
 
-            sf_init_time <- Sys.time()
-            message(sprintf("Initiating intersection at %s", sf_init_time))
+            #sf_init_time <- Sys.time()
+            #message(sprintf("Initiating intersection at %s", sf_init_time))
             neigh.cells <- sf::st_intersection(cells, ref.buffer$geometry)
-            sf_tot_time <- round(difftime(Sys.time(), sf_init_time, units="mins"), 2)
-            message(sprintf("Time to intersection was %s mins", sf_tot_time))
+            #sf_tot_time <- round(difftime(Sys.time(), sf_init_time, units="mins"), 2)
+            #message(sprintf("Time to intersection was %s mins", sf_tot_time))
 
             neigh.cells <- neigh.cells[intersect(rownames(neigh.cells), rownames(cells)),] ## remove duplicates
 
@@ -465,41 +390,23 @@ findTrends <- function(pos,
             ## so if I split up the resolutions, might be able to get through each cell type faster and speed up entire process?
             ## I could also split up the permutations, but then each cell type for each resolution is done one by one
             ## I could do cell types in parallel, but then for each cell type need to go through each res and each perm one by one
-            evalSign_init_time <- Sys.time()
-            message(sprintf("Initiating evaluate significance at %s", evalSign_init_time))
+            #evalSign_init_time <- Sys.time()
+            #message(sprintf("Initiating evaluate significance at %s", evalSign_init_time))
             results <- evaluateSignificance(cells = cells,
-                                            randomcellslist = randomcellslist,
+                                            randomcellslist = shuffle.list,
                                             trueNeighCells = neigh.cells,
                                             cellBuffer = ref.buffer,
                                             ncores = ncores)
-            evalSign_tot_time <- round(difftime(Sys.time(), sf_init_time, units="mins"), 2)
-            message(sprintf("Time to evaluate significance was %s mins", evalSign_tot_time))
+            #evalSign_tot_time <- round(difftime(Sys.time(), sf_init_time, units="mins"), 2)
+            #message(sprintf("Time to evaluate significance was %s mins", evalSign_tot_time))
 
             return(results)
         })
-        names(results.all) <- levels(celltypes)
+        names(results.all) <- levels(cells$celltypes)
 
         ## Evaluate significance (cell type subsets)
         # ============================================================
     } else if (sub.type %in% c("near", "away")){
-
-        ## load in the subset file if it exists, or make it and probably be a good
-        ## idea to save it, too
-        if(assertthat::is.string(loadSubsetFile)){
-            subset.list <- readRDS(file = loadSubsetFile)
-        } else {
-
-            ## parallel shuffling of the grids in each resolution
-            subset.list <- getSubsets(cells = cells,
-                                      sub.dist = sub.dist,
-                                      sub.type = sub.type,
-                                      sub.thresh = sub.thresh,
-                                      ncores = ncores,
-                                      verbose = verbose)
-            if(assertthat::is.string(saveSubsetFile)){
-                saveRDS(object = subset.list, file = saveSubsetFile)
-            }
-        }
 
         combo_ids <- names(subset.list)
         d <- dist
@@ -533,7 +440,7 @@ findTrends <- function(pos,
             ## I could also split up the permutations, but then each cell type for each resolution is done one by one
             ## I could do cell types in parallel, but then for each cell type need to go through each res and each perm one by one
             results <- evaluateSignificance(cells = cells,
-                                            randomcellslist = randomcellslist,
+                                            randomcellslist = shuffle.list,
                                             trueNeighCells = neigh.cells,
                                             cellBuffer = ref.buffer,
                                             ncores = ncores)
@@ -549,10 +456,10 @@ findTrends <- function(pos,
         stop("`sub.type` must be either 'pairwise', 'near' or 'away'")
     }
 
-    if(verbose){
-        total_t <- round(difftime(Sys.time(), start_time, units="mins"), 2)
-        message(sprintf("Time was %s mins", total_t))
-    }
+    #if(verbose){
+    #    total_t <- round(difftime(Sys.time(), start_time, units="mins"), 2)
+    #    message(sprintf("Time was %s mins", total_t))
+    #}
 
     return(results.all)
 

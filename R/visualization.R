@@ -4,10 +4,6 @@
 #'
 #' @param results list or data.frame; the information about the resolution, Z-score, reference and the neighbor cell. It can be the result directly obtained by the findTrends function or the melted version created by the meltResults function.
 #' @param idcol character; if results are a data.frame, this is the column that contains the additional feature to plot multiple trend lines with
-#' @param figPath character; file to save the figure
-#' @param width numeric;
-#' @param height numeric;
-#' @param legend Boolean; show legend
 #' @param ... additional plotting parameters for base R plotting. Fed into "lines()" in script
 #'
 #' @return nothing
@@ -15,9 +11,7 @@
 #' @export
 plotTrends <- function(results,
                        idcol = "id",
-                       figPath = "results.pdf",
-                       width = 8, height = 8,
-                       legend = TRUE, ...){
+                       ...){
 
 
     ## setup to check if original list output from `findTrends`, and plot one way
@@ -25,9 +19,9 @@ plotTrends <- function(results,
 
     ## if in original list format from `findTrends`:
     if(inherits(results, "list")){
-        message("results detected to be a list")
+        #message("results detected to be a list")
 
-        pdf(figPath, width=width, height=height)
+        #pdf(figPath, width=width, height=height)
         par(mfrow=c(length(names(results)), length(names(results))),
             mar=rep(4,4))
 
@@ -55,7 +49,7 @@ plotTrends <- function(results,
                 abline(h = 2, col='red')
             })
         })
-        dev.off()
+        #dev.off()
 
         ## if a melted dataframe,
         ## will have an additional column that can serve to plot
@@ -76,7 +70,7 @@ plotTrends <- function(results,
 
         cl <- rainbow(length(ids))
 
-        pdf(figPath, width=width, height=height)
+        #pdf(figPath, width=width, height=height)
         # par(mfrow=c(length(refs), length(neighs)),
         #     mar=rep(4,4))
         par(mfrow=c(length(neighs), length(refs)),
@@ -123,12 +117,12 @@ plotTrends <- function(results,
                 ## threshold lines
                 abline(h = -2, col='red')
                 abline(h = 2, col='red')
-                if(legend){
-                    legend("topright", inset=c(-0.4,0), xpd=TRUE, legend = ids, col=cl, pch=20, cex=0.5, title = "ids")
-                }
+                #if(legend){
+                #    legend("topright", inset=c(-0.4,0), xpd=TRUE, legend = ids, col=cl, pch=20, cex=0.5, title = "ids")
+                #}
             })
         })
-        dev.off()
+        #dev.off()
 
     } else {
         stop("`results` are neither a list from `findTrends` or a melted data.frame from `meltResultsList`")
