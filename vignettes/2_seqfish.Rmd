@@ -363,43 +363,6 @@ about 19.5K cells in this dataset
 
 ## visualize subsets
 
-for selecting specific cells for plotting
-
-```{r}
-
-getSubsetComs <- function(com, pos, subset_list, subsetIDs, neighIDs){
-  
-  ## get vector to append cell annotations of interest
-  annots_temp <- rep(NA, length(rownames(pos)))
-  names(annots_temp) <- rownames(pos)
-  
-  ## append the neighbor cells
-  if(!is.na(neighIDs[1])){
-    for(neigh_id in neighIDs){
-      annots_temp[com == neigh_id] <- neigh_id
-    }
-  }
-  
-  ## get cell ids that are part of subset
-  ## these added after the neigbors in case
-  ## you want to plot all CD4 T cells first
-  # then color the ones that are a subset
-  ## note that the order will be important
-  ## because labels are overwritten in this way
-  if(!is.na(subsetIDs[1])){
-    for(subsetID in subsetIDs){
-      cells_temp <- as.numeric(subset_list[[subsetID]])
-      ## append the subset label
-      annots_temp[cells_temp] <- subsetID
-    }
-  }
-  
-  annots_temp <- as.factor(annots_temp)
-  return(annots_temp)
-}
-
-```
-
 ```{r}
 
 subsets <- readRDS(subsetDataPath)
@@ -412,10 +375,10 @@ names(com) <- rownames(pos)
 
 # ----------------------------------------
 
-annots_temp <- getSubsetComs(com = com,
+annots_temp <- selectLabels(com = com,
                              pos = pos,
                              subset_list = subsets,
-                             neighIDs = c("Lateral plate mesoderm", "Allantois", "Intermediate mesoderm"),
+                             cellIDs = c("Lateral plate mesoderm", "Allantois", "Intermediate mesoderm"),
                              subsetIDs = NA)
 plt <- vizAllClusters(object = pos,
                clusters = annots_temp,

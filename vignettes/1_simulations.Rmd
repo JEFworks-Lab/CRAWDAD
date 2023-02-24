@@ -15,6 +15,12 @@ repoPath <- "/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/multiscale_celltyp
 
 ```{r}
 
+figPath <- paste0(repoPath, "plots/sim/")
+
+```
+
+```{r}
+
 library(parallel)
 library(sf)
 library(sp)
@@ -64,14 +70,20 @@ pos <- simulate_circles(simulate_background(size = s, cts = cb, prob = pb),
 pos$x <- pos$x * 3100
 pos$y <- pos$y * 3100
 
-vizAllClusters(object = pos[,c("x", "y")],
+plt <- vizAllClusters(object = pos[,c("x", "y")],
               clusters = pos[,c("type")], s = 3)
 
-# ggplot2::ggplot(data = pos) +
-#   ggplot2::geom_point(ggplot2::aes(x = x, y = y, color = type), size = 0.2) +
-#   ggplot2::scale_color_manual(values = c("A" = "#F8766D", "B" = "#00B81F", "C" = "#00A5FF")) +
-#   ggplot2::coord_equal() +
-#   ggplot2::guides(color = ggplot2::guide_legend(title = "cell type"))
+plt
+
+ggplot2::ggsave(plot = plt,
+                filename = paste0(figPath, "sim.pairwise.circle.png"),
+                device = "png",
+                dpi = 300,
+                scale = 1,
+                width = 6,
+                height = 6,
+                units = c("in")
+                )
 
 ```
 
@@ -257,12 +269,6 @@ Time was 0.19 mins
 
 ```{r}
 
-figPath <- paste0(repoPath, "plots/sim/")
-
-```
-
-```{r}
-
 dat <- readRDS(outfile_pairwise)
 
 dat <- meltResultsList(resultsList = dat, id = NA)
@@ -330,13 +336,20 @@ pos_subset <- simulate_circles(pos = simulate_background(size = s, cts = cb, pro
 pos_subset$x <- pos_subset$x * 3100
 pos_subset$y <- pos_subset$y * 3100
 
-vizAllClusters(object = pos_subset[,c("x", "y")],
-              clusters = pos_subset[,c("type")], s = 3)
+plt <- vizAllClusters(object = pos_subset[,c("x", "y")],
+                      clusters = pos_subset[,c("type")], s = 3)
 
-# ggplot2::ggplot(data = pos_subset) +
-#   ggplot2::geom_point(ggplot2::aes(x = x, y = y, color = type), size = 0.1) +
-#   ggplot2::scale_color_discrete() +
-#   ggplot2::coord_equal()
+plt
+
+ggplot2::ggsave(plot = plt,
+                filename = paste0(figPath, "sim.subset.circle.png"),
+                device = "png",
+                dpi = 300,
+                scale = 1,
+                width = 6,
+                height = 6,
+                units = c("in")
+                )
 
 ```
 
@@ -479,7 +492,7 @@ subsetDataPath <- paste0(repoPath, "data/sim/sim.subsets.near.subdist300.rds")
 subsetType <- "near"
 
 ## distance to define subsets; ie the distance to define neighbors for this test
-subdist <- 100
+subdist <- 300
 
 
 ## for "away", loosely test for enrichment, then take the cells that still fail this test
@@ -599,43 +612,6 @@ Recommend  doing this step separately
 
 ## visualize subsets
 
-for selecting specific cells for plotting
-
-```{r}
-
-getSubsetComs <- function(com, pos, subset_list, subsetIDs, neighIDs){
-  
-  ## get vector to append cell annotations of interest
-  annots_temp <- rep(NA, length(rownames(pos)))
-  names(annots_temp) <- rownames(pos)
-  
-  ## append the neighbor cells
-  if(!is.na(neighIDs[1])){
-    for(neigh_id in neighIDs){
-      annots_temp[com == neigh_id] <- neigh_id
-    }
-  }
-  
-  ## get cell ids that are part of subset
-  ## these added after the neigbors in case
-  ## you want to plot all CD4 T cells first
-  # then color the ones that are a subset
-  ## note that the order will be important
-  ## because labels are overwritten in this way
-  if(!is.na(subsetIDs[1])){
-    for(subsetID in subsetIDs){
-      cells_temp <- as.numeric(subset_list[[subsetID]])
-      ## append the subset label
-      annots_temp[cells_temp] <- subsetID
-    }
-  }
-  
-  annots_temp <- as.factor(annots_temp)
-  return(annots_temp)
-}
-
-```
-
 ```{r}
 
 subsets <- readRDS(subsetDataPath)
@@ -648,10 +624,10 @@ names(com) <- rownames(pos)
 
 # ----------------------------------------
 
-annots_temp <- getSubsetComs(com = com,
+annots_temp <- selectLabels(com = com,
                              pos = pos,
                              subset_list = subsets,
-                             neighIDs = c("A", "B", "C"),
+                             cellIDs = c("A", "B", "C"),
                              subsetIDs = c("A_near_B"))
 plt <- vizAllClusters(object = pos,
                clusters = annots_temp,

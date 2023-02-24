@@ -75,6 +75,92 @@ simulate_circles <- function(pos, locs, radii, cts, probs){
 # functions for finding trends
 
 
+#' Go from positions and celltype annotations to spatialpointsdataframe object
+#' 
+#' @param pos data frame; x and y coordinates of each cell
+#' @param celltypes character vector; the cell type of each cell provided in pos
+#' @param verbose Boolean; verbosity (default TRUE)
+#' 
+toSP <- function(pos, celltypes, verbose=TRUE){
+  
+  if(length(levels(celltypes)) == 0){
+    message("Warning: 'celltypes' does not have levels. Creating levels from values")
+    celltypes <- factor(celltypes)
+    names(celltypes) <- rownames(pos)
+  }
+  
+  if(verbose){
+    message("creating `sp::SpatialPointsDataFrame`")
+  }
+  
+  cells <- sp::SpatialPointsDataFrame(
+    coords = as.data.frame(pos),
+    data = data.frame(
+      celltypes = celltypes
+      # name = rownames(pos)
+    ))
+  cells <- sf::st_as_sf(cells)
+  
+  ## Change rowname assignments of cells to integers.
+  ## Solution to keep rows in same order later on when
+  ## randomly shuffling cell labels
+  rownames(cells) <- as.character(1:dim(cells)[1])
+  
+  # make asumption that cell type attribute is constant throughout the geometries of each cell
+  ## it removed the warning that keep popping up, which says this assumption is made anyways
+  sf::st_agr(cells) <- "constant"
+  
+  return(cells)
+}
+
+
+#' convert an sp::SpatialPointsDataFrame object to a dataframe with x y coords and cell type labels
+#' @param cells sp::SpatialPointsDataFrame object, with celltypes features and point geometries
+#'
+#' @return datafame with columns: x, y, and celltype
+#'
+spToDF <- function(cells){
+  
+  pos <- data.frame(sf::st_coordinates(sf::st_cast(cells$geometry,"POINT")))
+  pos$type <- cells$celltypes
+  colnames(pos) <- c("x", "y", "celltypes")
+  return(pos)
+  
+}
+
+
+#' get neighbor cells defined as being a distance away from a set of reference cells
+#' @description get neighbor cells defined as being a distance away from a set of reference cells.
+#'      `reference.ids` can be selected by subsetting rownames from `cells`:
+#'       ex: rownames(cells)[which(cells$celltypes == "A")]
+#'       or can be an entry in a subset list from `selectSubsets()`
+#' 
+#' @param cells sp::SpatialPointsDataFrame object, with celltypes features and point geometries
+#' @param reference.ids vector of cell ids (rownames) in `cells` to be used as the reference cell set
+#' @param dist distance to define neighbors (default = 100)
+#'
+#' @return sp::SpatialPointsDataFrame object of the neighbor cells
+#' 
+getNeighbors <- function(cells,
+                         reference.ids,
+                         dist = 100){
+  
+  ## get the reference cells
+  ref.cells <- cells[reference.ids,]
+  
+  ## define the buffer around the reference cells with distance of
+  refs.buffer <- sf::st_buffer(ref.cells, dist)
+  
+  ## get the neighbor cells
+  cells.inbuffer <- sf::st_intersection(cells, refs.buffer$geometry)
+  ## remove duplicate neighbors
+  neigh.cells <- cells.inbuffer[intersect(rownames(cells.inbuffer), rownames(cells)),]
+  
+  return(neigh.cells)
+  
+}
+
+
 #' Shuffle the celltype labels at different shuffling resolutions
 #'
 #' @description for each resolution, and for i number of permutations, shuffle the celltype labels.
@@ -254,6 +340,207 @@ evaluateSignificance <- function(cells,
   gc(verbose = FALSE, reset = TRUE)
   
   return(results)
+}
+
+
+#' Generate matrix of pvalues indicating if a cell is enriched in neighbors of a given cell type
+#' @description pvalues are based on a binomial test and neighbors are defined within a given distance from a cell
+#' @param cells sp::SpatialPointsDataFrame object, with celltypes features and point geometries
+#' @param sub.dist distance to define neighbors (default = 100)
+#' @param ncores number of cores for parallelization (default 1)
+#' @param verbose Boolean for verbosity (default TRUE)
+#' 
+#' @return matrix where rows are cells, columns are cell types and values are p-values whether or not a cell is enriched in neighbors of a given cell type based on a binomial test.
+#' 
+binomialTestMatrix <- function(cells,
+                               sub.dist = 100,
+                               ncores = 1,
+                               verbose = TRUE) {
+  
+  start_time <- Sys.time()
+  
+  if(verbose){
+    message("Binomial test for each cell testing if it is enriched in neighbors of a given cell type based on distance of ",
+            sub.dist)
+  }
+  
+  cell.types <- cells$celltypes
+  names(cell.types) <- rownames(cells)
+  
+  if(length(levels(cell.types)) == 0){
+    message("Warning: `celltypes` does not have levels. Creating levels from values")
+    cell.types <- factor(cell.types)
+    names(cell.types) <- rownames(cells)
+  }
+  
+  ## get global fractions of each cell type (hypothesized probability of success)
+  p <- table(cell.types)/sum(table(cell.types))
+  
+  ## get buffer around each cell with diameter of sub.dist
+  refs.buffer <- sf::st_buffer(cells, sub.dist)
+  
+  ## define the binomial test to be performed and used in the mapply below
+  binom <- function(x, n, p){stats::binom.test(x, n, p, alternative="greater")$p.value}
+  
+  ## for each cell: (parallelize this)
+  ## get number of each cell type that are neighbors (x, ie number of successes)
+  ## and total number of neighbors (n, number of trials)
+  ## compute pvals for a binomial test for each cell type neighbor
+  ## As we loop through each cell, add the pvals for each cell type as a new row of a matrix
+  message("Performing tests...")
+  results <- do.call(rbind, parallel::mclapply(rownames(cells), function(c){
+    
+    cells.inbuffer <- sf::st_intersection(cells, refs.buffer[c,]$geometry)
+    x <- table(cells.inbuffer$celltypes)
+    n <- rep(sum(x), length(x))
+    
+    ## apply the binomial test across the vectors using mapply
+    pvals <- mapply(binom, x, n, p)
+    pvals
+    
+  }, mc.cores = ncores))
+  
+  rownames(results) <- rownames(cells)
+  colnames(results) <- names(p)
+  
+  if(verbose){
+    total_t <- round(difftime(Sys.time(), start_time, units = "mins"), 2)
+    message(sprintf("Time to compute was %smins", total_t))
+  }
+  
+  return(results)
+}
+
+
+#' find subsets of cells
+#' @description assign cells to subsets based on whether they are enriched in a given neighbor cell type based on the pvalues in the input `binomMatrix`
+#'
+#' @param binomMatrix matrix where rows are cells, columns are cell types and values are p-values whether or not a cell is enriched in neighbors of a given cell type based on a binomial test. Output from `binomialTestMatrix()`
+#' @param celltypes named vector or factor of cell type labels of each cell in `binomMatrix` and in the same order.
+#' @param sub.type subset type, either ref cells "near" (ie localized) a neighbor cell type, or "away" (ie separated) from a neighbor cell type.
+#' @param sub.thresh significance threshold for the binomial test (default = 0.05)
+#' @param ncores number of cores for parallelization (default 1)
+#' @param verbose Boolean for verbosity (default TRUE)
+#' 
+#' @return list where each entry is a subset and the values are the cell ids determined to be in the subset
+#' 
+selectSubsets <- function(binomMatrix,
+                          celltypes,
+                          sub.type = c("near", "away"),
+                          sub.thresh = 0.05,
+                          ncores = 1,
+                          verbose = TRUE){
+  
+  start_time <- Sys.time()
+  sub.type <- match.arg(sub.type)
+  
+  if(!sub.type %in% c("near", "away")){
+    stop("`sub.type` must be either 'near' or 'away'")
+  }
+  
+  ## make sure cell types is a factor
+  cell.types <- factor(celltypes)
+  
+  ## setup possible subset combinations:
+  combos <- expand.grid(rep(list(1:length(levels(cell.types))),2))
+  colnames(combos) <- c("ref", "neighbors")
+  combo_ids <- unlist(lapply(rownames(combos), function(i){
+    cells.ref.ix <- levels(cell.types)[as.numeric(combos[i,1])]
+    cells.neighbors.ix <- levels(cell.types)[as.numeric(combos[i,2])]
+    id <- paste0(cells.ref.ix, "_", sub.type, "_", cells.neighbors.ix)
+    id
+  }))
+  
+  subsets <- parallel::mclapply(rownames(combos), function(i){
+    
+    cells.ref.ix <- levels(cell.types)[as.numeric(combos[i,1])]
+    cells.neighbors.ix <- levels(cell.types)[as.numeric(combos[i,2])]
+    id <- paste0(cells.ref.ix, "_", sub.type, "_", cells.neighbors.ix)
+    message("computing subsets for ", id)
+    
+    ## get reference cell rows
+    ref.cells <- binomMatrix[which(cell.types == cells.ref.ix),]
+    
+    ## subset reference cells whose pval is below thresh for given neighbor cell type
+    ## return cells that were significant
+    if(sub.type == "near"){
+      sub.cells <- rownames(ref.cells)[which(ref.cells[,cells.neighbors.ix] < sub.thresh)]
+    }
+    
+    ## return the cells that were not significant
+    if (sub.type == "away"){
+      ## recommend setting threshold very liberal, like 0.5,
+      ## that way, only the cells that couldn't even pass a p-val cutoff of 0.5 would be selected for,
+      ## and these would be expected to be very much depleted or separated from the neighbor cell type
+      sub.cells <- rownames(ref.cells)[which(ref.cells[,cells.neighbors.ix] < sub.thresh)]
+      sub.cells <- rownames(ref.cells)[which(!rownames(ref.cells) %in% sub.cells)]
+    }
+    
+    return(sub.cells)
+    
+  }, mc.cores = ncores)
+  
+  if(verbose){
+    total_t <- round(difftime(Sys.time(), start_time, units = "mins"), 2)
+    message(sprintf("Time to compute was %smins", total_t))
+  }
+  
+  names(subsets) <- combo_ids
+  return(subsets)
+  
+}
+
+
+#' Update cell type labels to only include specific cell types or subtypes
+#' @description make a factor of selected cell type labels for visualizing specific cells with `vizAllClusters()`.
+#'      Could append new entries into the `subset_list` to select and label other custom subsets of cells 
+#'
+#' @param df dataframe or sp::SpatialPointsDataFrame object of cells
+#' @param com original factor or vector of cell type labels for cells in `df`
+#' @param cellIDs vector of cell type labels to include in output (default: NA)
+#' @param subset_list list of subsets from `selectSubsets()` (default; NA)
+#' @param subsetIDs vector of susbet cell type labels to include in output (names of vectors in `subset_list`) (default: NA)
+#'
+#' @return factor of specific cell type labels for visualizing with `vizAllClusters()` in the parameter: `clusters`
+#'
+selectLabels <- function(df,
+                         com,
+                         cellIDs = NA,
+                         subset_list = NA,
+                         subsetIDs = NA
+){
+  
+  ## get vector to append cell annotations of interest
+  annots_temp <- rep(NA, length(rownames(pos)))
+  names(annots_temp) <- rownames(pos)
+  
+  ## append the neighbor cells
+  if(!is.na(cellIDs[1])){
+    for(neigh_id in cellIDs){
+      annots_temp[com == neigh_id] <- neigh_id
+    }
+  } else {
+    message("`cellIDs` set to NA")
+  }
+  
+  ## get cell ids that are part of subset
+  ## these added after the neigbors in case
+  ## you want to plot all CD4 T cells first
+  # then color the ones that are a subset
+  ## note that the order will be important
+  ## because labels are overwritten in this way
+  if( !is.na(subsetIDs[1]) & !is.na(subset_list[1]) ){
+    for(subsetID in subsetIDs){
+      cells_temp <- as.numeric(subset_list[[subsetID]])
+      ## append the subset label
+      annots_temp[cells_temp] <- subsetID
+    }
+  } else {
+    message("`subsetIDs` and `subset_list` set to NA")
+  }
+  
+  annots_temp <- as.factor(annots_temp)
+  return(annots_temp)
 }
 
 
@@ -1145,6 +1432,137 @@ plotTrendsOverlay <- function(results, figPath = "results.pdf", width = 4, heigh
   } else {
     stop("`results` are neither a list from `findTrends` or a melted data.frame from `meltResultsList`")
   }
+  
+}
+
+
+#' Visualize all clusters on the tissue
+#' 
+#' @description uses the x and y position information and a chosen set of communities
+#' 
+#' @param object the Seurat object
+#' @param clusters a column of clusters in the meta.data
+#' @param ofInterest a vector of specific clusters to visualize (default; NULL)
+#' @param title title of plot (default: NULL)
+#' @param axisAdj how much to increase axis ranges. If tissue, 100 okay, if embedding, 1 ok (default: 100)
+#' @param size size of points (default: 0.01)
+#' @param a alpha of points (default: 1; no transparency)
+#' @param nacol color of the NA values for cells of "other" cluster (default: (transparentCol(color = "gray", percent = 50)))
+#' 
+#' @return plot of clusters
+#' 
+#' @examples 
+#' vizAllClusters(obj, clusters = "com_nn50_VolnormExpr_data", ofInterest = c("1", "2"))
+#' 
+vizAllClusters <- function(object, clusters, ofInterest = NULL,
+                           axisAdj = 100, s = 0.01, a = 1, title = NULL,
+                           nacol = transparentCol(color = "gray", percent = 50)){
+  
+  ## if object is seurat S4 object, else assume matrix and factor already
+  ## will need to make this check better in future
+  ## maybe have embeddings stored in object? Tricky if embedding is for mult datasets
+  if(typeof(object) == "S4"){
+    pos <- object@meta.data[, c("x", "y")]
+    tempCom <- object@meta.data[, clusters]
+    names(tempCom) <- rownames(object@meta.data)
+  } else {
+    pos <- object
+    tempCom <- clusters
+  }
+  
+  # pos <- object@meta.data[, c("x", "y")]
+  # tempCom <- object@meta.data[, clusters]
+  # names(tempCom) <- rownames(object@meta.data)
+  
+  if(!is.null(ofInterest)){
+    ## goal:
+    ## setup so the clusters of interest are plotted on top of everything else
+    
+    tempCom[which(!tempCom %in% ofInterest)] <- NA
+    tempCom <- droplevels(tempCom)
+    
+    cluster_cell_id <- which(tempCom %in% ofInterest)
+    other_cells_id <- as.vector(which(is.na(tempCom)))
+    
+    cluster_cols <- rainbow(n = length(ofInterest))
+    names(cluster_cols) <- ofInterest
+    
+    dat <- data.frame("x" = pos[,"x"],
+                      "y" = pos[,"y"])
+    
+    ## note: "Clusters" will be a variable id used to assign colors.
+    ## for the "other cells" make this NA
+    dat_cluster <- data.frame("x" = pos[cluster_cell_id,"x"],
+                              "y" = pos[cluster_cell_id,"y"],
+                              "Clusters" = as.vector(tempCom[cluster_cell_id]))
+    
+    dat_other <- data.frame("x" = pos[other_cells_id,"x"],
+                            "y" = pos[other_cells_id,"y"],
+                            "Clusters" = NA)
+    
+    plt <- ggplot2::ggplot() +
+      
+      ## plot other cells
+      # ggplot2::geom_point(data = dat_other, ggplot2::aes(x = x, y = y,
+      #                                                    color = Clusters), size = s, alpha = a) +
+      scattermore::geom_scattermore(data = dat_other, ggplot2::aes(x = x, y = y,
+                                                                   color = Clusters), pointsize = s, alpha = a,
+                                    pixels=c(1000,1000)) +
+      ## cluster cells on top
+      # ggplot2::geom_point(data = dat_cluster, ggplot2::aes(x = x, y = y,
+      #                                                      color = Clusters), size = s, alpha = a) +
+      scattermore::geom_scattermore(data = dat_cluster, ggplot2::aes(x = x, y = y,
+                                                                     color = Clusters), pointsize = s, alpha = a,
+                                    pixels=c(1000,1000)) +
+      
+      ggplot2::scale_color_manual(values = cluster_cols, na.value = nacol)
+    
+  } else {
+    
+    tempCom <- droplevels(tempCom)
+    dat <- data.frame("x" = pos[,"x"],
+                      "y" = pos[,"y"],
+                      "Clusters" = tempCom)
+    
+    plt <- ggplot2::ggplot(data = dat) +
+      # ggplot2::geom_point(ggplot2::aes(x = x, y = y,
+      #                                  color = Clusters), size = s, alpha = a) +
+      scattermore::geom_scattermore(ggplot2::aes(x = x, y = y,
+                                                 color = Clusters), pointsize = s, alpha = a,
+                                    pixels=c(1000,1000)) +
+      
+      ggplot2::scale_color_manual(values = rainbow(n = length(levels(tempCom))), na.value = nacol)
+  }
+  
+  plt <- plt + ggplot2::scale_y_continuous(expand = c(0, 0), limits = c( min(dat$y)-axisAdj, max(dat$y)+axisAdj)) +
+    ggplot2::scale_x_continuous(expand = c(0, 0), limits = c( min(dat$x)-axisAdj, max(dat$x)+axisAdj) ) +
+    
+    ggplot2::labs(title = title,
+                  x = "x",
+                  y = "y") +
+    
+    ggplot2::theme_classic() +
+    ggplot2::theme(axis.text.x = ggplot2::element_text(size=15, color = "black"),
+                   axis.text.y = ggplot2::element_text(size=15, color = "black"),
+                   axis.title.y = ggplot2::element_text(size=15),
+                   axis.title.x = ggplot2::element_text(size=15),
+                   axis.ticks.x = ggplot2::element_blank(),
+                   plot.title = ggplot2::element_text(size=15),
+                   legend.text = ggplot2::element_text(size = 12, colour = "black"),
+                   legend.title = ggplot2::element_text(size = 15, colour = "black", angle = 0, hjust = 0.5),
+                   panel.background = ggplot2::element_blank(),
+                   plot.background = ggplot2::element_blank(),
+                   panel.grid.major.y =  ggplot2::element_blank(),
+                   axis.line = ggplot2::element_line(size = 1, colour = "black")
+                   # legend.position="none"
+    ) +
+    
+    ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 2)
+    ) +
+    
+    ggplot2::coord_equal()
+  
+  plt
   
 }
 
