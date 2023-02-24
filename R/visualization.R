@@ -1,10 +1,17 @@
-#' @param idcol if results are a data.frame, this is the column that contains the additional feature to plot multiple trend lines with
-#' by default it is 'id', which would be the name given to the column describing each list after melting together into a single dataframe
-#' using `meltResultsList()`
+#' Plot trends
+#'
+#' @description Plot panel of Z-score trends for each reference and neighbor cell-type pairs.
+#'
+#' @param results list or data.frame; the information about the resolution, Z-score, reference and the neighbor cell. It can be the result directly obtained by the findTrends function or the melted version created by the `meltResultsList()` function.
+#' @param idcol character; if results are a data.frame, this is the column that contains the additional feature to plot multiple trend lines with
 #' @param ... additional plotting parameters for base R plotting. Fed into "lines()" in script
-#' 
+#'
+#' @return nothing
+#'
 #' @export
-plotTrends <- function(results, idcol = "id", figPath = "results.pdf", width = 8, height = 8, legend = TRUE, ...){
+plotTrends <- function(results,
+                       idcol = "id",
+                       ...){
   
   
   ## setup to check if original list output from `findTrends`, and plot one way
@@ -14,7 +21,7 @@ plotTrends <- function(results, idcol = "id", figPath = "results.pdf", width = 8
   if(inherits(results, "list")){
     message("results detected to be a list")
     
-    pdf(figPath, width=width, height=height)
+    # pdf(figPath, width=width, height=height)
     par(mfrow=c(length(names(results)), length(names(results))),
         mar=rep(4,4))
     
@@ -42,7 +49,7 @@ plotTrends <- function(results, idcol = "id", figPath = "results.pdf", width = 8
         abline(h = 2, col='red')
       })
     })
-    dev.off()
+    # dev.off()
     
     ## if a melted dataframe,
     ## will have an additional column that can serve to plot
@@ -57,7 +64,7 @@ plotTrends <- function(results, idcol = "id", figPath = "results.pdf", width = 8
     
     cl <- rainbow(length(ids))
     
-    pdf(figPath, width=width, height=height)
+    # pdf(figPath, width=width, height=height)
     # par(mfrow=c(length(refs), length(neighs)),
     #     mar=rep(4,4))
     par(mfrow=c(length(neighs), length(refs)),
@@ -104,12 +111,12 @@ plotTrends <- function(results, idcol = "id", figPath = "results.pdf", width = 8
         ## threshold lines
         abline(h = -2, col='red')
         abline(h = 2, col='red')
-        if(legend){
-          legend("topright", inset=c(-0.3,0), xpd=TRUE, legend = ids, col=cl, pch=20, cex=0.5, title = "ids")
-        }
+        # if(legend){
+        #   legend("topright", inset=c(-0.3,0), xpd=TRUE, legend = ids, col=cl, pch=20, cex=0.5, title = "ids")
+        # }
       })
     })
-    dev.off()
+    # dev.off()
     
   } else {
     stop("`results` are neither a list from `findTrends` or a melted data.frame from `meltResultsList`")
@@ -119,10 +126,14 @@ plotTrends <- function(results, idcol = "id", figPath = "results.pdf", width = 8
 
 
 #' This one overlays each neighbor trend wrt the same reference cell type on the plot
+#' 
+#' @param results data.frame; the information about the resolution, Z-score, reference and the neighbor cell. It can be the result directly obtained by the melted `findTrends` output created by the `meltResultsList()` function.
 #' @param ... additional plotting parameters for base R plotting. Fed into "lines()" in script
 #' 
+#' @return nothing
+#' 
 #' @export
-plotTrendsOverlay <- function(results, figPath = "results.pdf", width = 4, height = 10, legend = TRUE, ...){
+plotTrendsOverlay <- function(results, ...){
   
   
   ## setup to check if original list output from `findTrends`, and plot one way
@@ -132,7 +143,7 @@ plotTrendsOverlay <- function(results, figPath = "results.pdf", width = 4, heigh
   if(inherits(results, "list")){
     message("results detected to be a list")
     
-    pdf(figPath, width=width, height=height)
+    # pdf(figPath, width=width, height=height)
     par(mfrow=c(length(names(results)), length(names(results))),
         mar=rep(4,4))
     
@@ -160,7 +171,7 @@ plotTrendsOverlay <- function(results, figPath = "results.pdf", width = 4, heigh
         abline(h = 2, col='red')
       })
     })
-    dev.off()
+    # dev.off()
     
     ## if a melted dataframe,
     ## will have an additional column that can serve to plot
@@ -175,7 +186,7 @@ plotTrendsOverlay <- function(results, figPath = "results.pdf", width = 4, heigh
     neighs <- unique(results[,"neighbor"])
     cl <- rainbow(length(neighs))
     
-    pdf(figPath, width=width, height=height)
+    # pdf(figPath, width=width, height=height)
     # par(mfrow=c(length(refs), length(neighs)),
     #     mar=rep(4,4))
     par(mfrow=c(length(refs),1),
@@ -230,7 +241,7 @@ plotTrendsOverlay <- function(results, figPath = "results.pdf", width = 4, heigh
       }
       
     })
-    dev.off()
+    # dev.off()
   } else {
     stop("`results` are neither a list from `findTrends` or a melted data.frame from `meltResultsList`")
   }

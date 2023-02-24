@@ -6,7 +6,7 @@
 \usage{
 makeShuffledCells(
   cells,
-  resolutions,
+  resolutions = c(50, 100, 200, 300, 400, 500),
   perms = 1,
   ncores = 1,
   seed = 0,
@@ -16,7 +16,7 @@ makeShuffledCells(
 \arguments{
 \item{cells}{sp::SpatialPointsDataFrame object, with celltypes features and point geometries}
 
-\item{resolutions}{numeric vector of the different resolutions to shuffle at and subsequently compute significance at}
+\item{resolutions}{numeric vector of the different resolutions to shuffle at and subsequently compute significance at (default: c(50, 100, 200, 300, 400, 500))}
 
 \item{perms}{number of permutations to shuffle for each resolution (default = 1)}
 

@@ -92,7 +92,7 @@ invisible(sapply(1:M, function(i) {
   c1o <- rownames(p[((p$x-a)^2 + (p$y - b)^2 < ro^2),])
   p[c1o,]$type <<- sample(co, size = length(c1o), replace = TRUE, prob = po)
 }))
-#ggplot(p, aes(x=x, y=y,col=type)) + geom_point(size=0.5) 
+ggplot2::ggplot(p, ggplot2::aes(x=x, y=y,col=type)) + ggplot2::geom_point(size=0.5) 
 ```
 Actually using `crawdad`
 
@@ -113,9 +113,9 @@ plot(cells, pch=16)
 shuffle.list <- crawdad:::makeShuffledCells(cells,
                         resolutions = c(250, 500, 1000, 3000, 5000, 10000),
                         perms = 1,
-                        ncores = 10,
+                        ncores = 7,
                         seed = 1,
-                        verbose = FALSE)
+                        verbose = TRUE)
 ```
 
 
@@ -127,9 +127,9 @@ results <- crawdad::findTrends(cells,
                         sub.type = "pairwise",
                         shuffle.list = shuffle.list,
                         perms = 1,
-                        ncores = 10,
+                        ncores = 7,
                         seed = 1, 
-                        verbose = FALSE)
+                        verbose = TRUE)
 ```
 
 ## plot

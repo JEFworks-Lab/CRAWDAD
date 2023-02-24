@@ -4,14 +4,19 @@
 #' Returns a list of lists, where each list is a factor of the shuffled celltype labels.
 #' Outer list is for each resolution of shuffling, and each inner list is for a given permutation with a given seed.
 #' @param cells sp::SpatialPointsDataFrame object, with celltypes features and point geometries
-#' @param resolutions numeric vector of the different resolutions to shuffle at and subsequently compute significance at
+#' @param resolutions numeric vector of the different resolutions to shuffle at and subsequently compute significance at (default: c(50, 100, 200, 300, 400, 500))
 #' @param perms number of permutations to shuffle for each resolution (default = 1)
 #' @param ncores number of cores for parallelization (default 1)
 #' @param seed set seed for shuffling (if more than 1 permutation, then seed equals permutation number)
 #' @param verbose Boolean for verbosity (default TRUE)
 #'
 #' @export
-makeShuffledCells <- function(cells, resolutions, perms = 1, ncores = 1, seed = 0, verbose = TRUE){
+makeShuffledCells <- function(cells,
+                              resolutions = c(50, 100, 200, 300, 400, 500),
+                              perms = 1,
+                              ncores = 1,
+                              seed = 0,
+                              verbose = TRUE){
   
   ## effectively will make a list of lists of randomly shuffled cell labels.
   ## a list for each resolution that contains factors of shuffled cell labels for each permutation
@@ -339,19 +344,16 @@ selectSubsets <- function(binomMatrix,
 #' This is done at difference resolutions, where a resolution is whether the cell type labels are shuffled locally or globally.
 #' Trends are essentially built from significance values. The significance test basically asks if two cell types are localized or separated by assessing if the proportion of the neighboring cell type is significantly greater, or less than, random chance.
 #'
-#' @param pos matrix of x and y coordinates of each cell
-#' @param resolutions numeric vector of the different resolutions to shuffle at and subsequently compute significance at
-#' @param dist numeric distance to define neighbor cells with respect to each reference cell (default: c(50, 100, 200, 300))
+#' @param cells sp::SpatialPointsDataFrame object, with celltypes features and point geometries
+#' @param dist numeric distance to define neighbor cells with respect to each reference cell (default: 50)
 #' @param sub.dist distance to define subsets relative to a neighbor cell type (default = 100)
 #' @param sub.type subset type, either "pairwise", to not use subsets, or susbets of ref cells "near" (ie localized) a neighbor cell type, or "away" (ie separated) from a neighbor cell type.
 #' @param sub.thresh significance threshold for the binomial test (default = 0.05)
 #' @param perms number of permutations to shuffle for each resolution (default = 1)
 #' @param seed set seed for shuffling (if more than 1 permutation, then seed equals permutation number)
 #' @param ncores number of cores for parallelization (default 1)
-#' @param loadShuffleFile path to a preshuffled randomcellslist rds object (default NA)
-#' @param saveShuffleFilePath can save the shuffled cell labels to speed things up later (default NA)
-#' @param loadSubsetFile path to a premade subset list rds object (default NA)
-#' @param saveSubsetFile can save the subset cell list to speed things up later, or use for subsequent plotting (default NA)
+#' @param shuffle.list a list of cell type labels shuffled at different resolutions (output from `makeShuffledCells()`)
+#' @param subset.list a subset list (output from `selectSubsets()`). Required if computing trends for subsets (default NA)
 #' @param plot Boolean to return plots (default TRUE)
 #' @param verbose Boolean for verbosity (default TRUE)
 #'
@@ -360,28 +362,36 @@ selectSubsets <- function(binomMatrix,
 #' @examples 
 #' 
 #' @export
-findTrends <- function(pos,
-                         celltypes,
-                         resolutions = c(50, 100, 200, 300),
-                         dist = 50,
-                         sub.dist = 100,
-                         sub.type = c("pairwise", "near", "away"),
-                         sub.thresh = 0.05,
-                         perms = 1,
-                         seed = 0,
-                         ncores = 1,
-                         loadShuffleFile = NA,
-                         saveShuffleFilePath = NA,
-                         loadSubsetFile = NA,
-                         saveSubsetFile = NA,
-                         plot = FALSE,
-                         verbose = TRUE,
-                         removeDups = TRUE){
+findTrends <- function(cells,
+                       dist = 50,
+                       sub.dist = 100,
+                       sub.type = c("pairwise", "near", "away"),
+                       sub.thresh = 0.05,
+                       perms = 1,
+                       seed = 0,
+                       ncores = 1,
+                       shuffle.list,
+                       subset.list = NA,
+                       plot = FALSE,
+                       verbose = TRUE,
+                       removeDups = TRUE){
   
   sub.type <- match.arg(sub.type)
   
   if(!sub.type %in% c("pairwise", "near", "away")){
     stop("`sub.type` must be either 'pairwise', 'near' or 'away'")
+  }
+  
+  if(!is.list(shuffle.list)){
+    stop("`shuffle.list` is not a list. You can make this using `makeShuffledCells()`")
+  }
+  
+  if( !any(class(cells)[1] == "sf") ){
+    stop("`cells` needs to be an `sf` object. You can make this using `toSP()`")
+  }
+  
+  if( !any(grepl("celltypes", colnames(cells))) ){
+    stop("`cells` needs a column named `celltypes`. You can make this using `toSP()`")
   }
   
   seed <- seed
@@ -393,34 +403,8 @@ findTrends <- function(pos,
   ## load the real data
   # ============================================================
   
-  cells <- toSP(pos = pos,
-                celltypes = celltypes,
-                verbose = verbose)
-  
-  print(cells)
-  
   if(verbose){
-    message("Generate randomly permuted background at each resolution")
-  }
-  
-  ## Generate randomly permuted background at each resolution
-  # ============================================================
-  
-  if(assertthat::is.string(loadShuffleFile)){
-    randomcellslist <- readRDS(file = loadShuffleFile)
-  } else {
-    
-    ## parallel shuffling of the grids in each resolution
-    randomcellslist <- makeShuffledCells(cells,
-                                         resolutions,
-                                         perms = perms,
-                                         ncores = ncores,
-                                         seed = seed,
-                                         verbose = verbose)
-    
-    if(assertthat::is.string(saveShuffleFilePath)){
-      saveRDS(object = randomcellslist, file = saveShuffleFilePath)
-    }
+    print(cells)
   }
   
   if(verbose){
@@ -435,6 +419,8 @@ findTrends <- function(pos,
     if(verbose){
       message("Calculating for pairwise combinations")
     }
+    
+    celltypes <- factor(cells$celltypes)
     
     d <- dist
     results.all <- lapply(levels(celltypes), function(ct) {
@@ -464,7 +450,7 @@ findTrends <- function(pos,
       ## I could also split up the permutations, but then each cell type for each resolution is done one by one
       ## I could do cell types in parallel, but then for each cell type need to go through each res and each perm one by one
       results <- evaluateSignificance(cells = cells,
-                                      randomcellslist = randomcellslist,
+                                      randomcellslist = shuffle.list,
                                       trueNeighCells = neigh.cells,
                                       cellBuffer = ref.buffer,
                                       ncores = ncores,
@@ -479,26 +465,8 @@ findTrends <- function(pos,
     
     ## load in the subset file if it exists, or make it and probably be a good
     ## idea to save it, too
-    if(assertthat::is.string(loadSubsetFile)){
-      subset.list <- readRDS(file = loadSubsetFile)
-    } else {
-      
-      binomMat <- binomialTestMatrix(cells = cells,
-                                     sub.dist = sub.dist,
-                                     ncores = ncores,
-                                     verbose = verbose)
-      
-      subset.list <- selectSubsets(binomMatrix = binomMat,
-                                   celltypes = cells$celltypes,
-                                   sub.type = sub.type,
-                                   sub.thresh = sub.thresh,
-                                   ncores = ncores,
-                                   verbose = verbose)
-      
-      
-      if(assertthat::is.string(saveSubsetFile)){
-        saveRDS(object = subset.list, file = saveSubsetFile)
-      }
+    if(!is.list(subset.list)){
+      stop("`subset.list` is not a list. You can build this using: `binomialTestMatrix()` then `selectSubsets()`")
     }
     
     combo_ids <- names(subset.list)

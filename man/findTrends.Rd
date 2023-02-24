@@ -5,9 +5,7 @@
 \title{Compute trends of cell type colocalization for each cell type combination across specified resolutions}
 \usage{
 findTrends(
-  pos,
-  celltypes,
-  resolutions = c(50, 100, 200, 300),
+  cells,
   dist = 50,
   sub.dist = 100,
   sub.type = c("pairwise", "near", "away"),
@@ -15,21 +13,17 @@ findTrends(
   perms = 1,
   seed = 0,
   ncores = 1,
-  loadShuffleFile = NA,
-  saveShuffleFilePath = NA,
-  loadSubsetFile = NA,
-  saveSubsetFile = NA,
+  shuffle.list,
+  subset.list = NA,
   plot = FALSE,
   verbose = TRUE,
   removeDups = TRUE
 )
 }
 \arguments{
-\item{pos}{matrix of x and y coordinates of each cell}
+\item{cells}{sp::SpatialPointsDataFrame object, with celltypes features and point geometries}
 
-\item{resolutions}{numeric vector of the different resolutions to shuffle at and subsequently compute significance at}
-
-\item{dist}{numeric distance to define neighbor cells with respect to each reference cell (default: c(50, 100, 200, 300))}
+\item{dist}{numeric distance to define neighbor cells with respect to each reference cell (default: 50)}
 
 \item{sub.dist}{distance to define subsets relative to a neighbor cell type (default = 100)}
 
@@ -43,13 +37,9 @@ findTrends(
 
 \item{ncores}{number of cores for parallelization (default 1)}
 
-\item{loadShuffleFile}{path to a preshuffled randomcellslist rds object (default NA)}
+\item{shuffle.list}{a list of cell type labels shuffled at different resolutions (output from \code{makeShuffledCells()})}
 
-\item{saveShuffleFilePath}{can save the shuffled cell labels to speed things up later (default NA)}
-
-\item{loadSubsetFile}{path to a premade subset list rds object (default NA)}
-
-\item{saveSubsetFile}{can save the subset cell list to speed things up later, or use for subsequent plotting (default NA)}
+\item{subset.list}{a subset list (output from \code{selectSubsets()}). Required if computing trends for subsets (default NA)}
 
 \item{plot}{Boolean to return plots (default TRUE)}
 
