@@ -14,6 +14,7 @@
 #' @export
 getNeighbors <- function(cells,
                          reference.ids,
+                         removeRef = TRUE,
                          dist = 100){
   
   ## get the reference cells
@@ -26,6 +27,11 @@ getNeighbors <- function(cells,
   cells.inbuffer <- sf::st_intersection(cells, refs.buffer$geometry)
   ## remove duplicate neighbors
   neigh.cells <- cells.inbuffer[intersect(rownames(cells.inbuffer), rownames(cells)),]
+  
+  ## remove the reference cells from the set of neighbor cells
+  if(removeRef){
+    neigh.cells <- neigh.cells[setdiff(rownames(neigh.cells), reference.ids),]
+  }
   
   return(neigh.cells)
   

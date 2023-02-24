@@ -4,7 +4,7 @@
 \alias{getNeighbors}
 \title{get neighbor cells defined as being a distance away from a set of reference cells}
 \usage{
-getNeighbors(cells, reference.ids, dist = 100)
+getNeighbors(cells, reference.ids, removeRef = TRUE, dist = 100)
 }
 \arguments{
 \item{cells}{sp::SpatialPointsDataFrame object, with celltypes features and point geometries}

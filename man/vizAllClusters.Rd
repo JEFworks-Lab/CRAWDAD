@@ -5,8 +5,8 @@
 \title{Visualize all clusters on the tissue}
 \usage{
 vizAllClusters(
-  object,
-  clusters,
+  cells,
+  coms,
   ofInterest = NULL,
   axisAdj = 100,
   s = 0.01,
@@ -16,9 +16,9 @@ vizAllClusters(
 )
 }
 \arguments{
-\item{object}{the Seurat object}
+\item{cells}{either a data.frame or sp::SpatialPointsDataFrame object with cell spatial coordinates}
 
-\item{clusters}{a column of clusters in the meta.data}
+\item{coms}{a factor of cell type labels for the cells}
 
 \item{ofInterest}{a vector of specific clusters to visualize (default; NULL)}
 

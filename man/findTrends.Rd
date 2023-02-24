@@ -7,9 +7,7 @@
 findTrends(
   cells,
   dist = 50,
-  sub.dist = 100,
   sub.type = c("pairwise", "near", "away"),
-  sub.thresh = 0.05,
   perms = 1,
   seed = 0,
   ncores = 1,
@@ -25,12 +23,6 @@ findTrends(
 
 \item{dist}{numeric distance to define neighbor cells with respect to each reference cell (default: 50)}
 
-\item{sub.dist}{distance to define subsets relative to a neighbor cell type (default = 100)}
-
-\item{sub.type}{subset type, either "pairwise", to not use subsets, or susbets of ref cells "near" (ie localized) a neighbor cell type, or "away" (ie separated) from a neighbor cell type.}
-
-\item{sub.thresh}{significance threshold for the binomial test (default = 0.05)}
-
 \item{perms}{number of permutations to shuffle for each resolution (default = 1)}
 
 \item{seed}{set seed for shuffling (if more than 1 permutation, then seed equals permutation number)}
@@ -44,6 +36,8 @@ findTrends(
 \item{plot}{Boolean to return plots (default TRUE)}
 
 \item{verbose}{Boolean for verbosity (default TRUE)}
+
+\item{sub.dist}{distance to define subsets relative to a neighbor cell type (default = 100)}
 }
 \value{
 A list that contains a dataframe for each reference cell type, where the dataframe contains the significance values for each neighbor cell type at each resolution

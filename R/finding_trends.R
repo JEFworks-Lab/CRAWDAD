@@ -347,8 +347,6 @@ selectSubsets <- function(binomMatrix,
 #' @param cells sp::SpatialPointsDataFrame object, with celltypes features and point geometries
 #' @param dist numeric distance to define neighbor cells with respect to each reference cell (default: 50)
 #' @param sub.dist distance to define subsets relative to a neighbor cell type (default = 100)
-#' @param sub.type subset type, either "pairwise", to not use subsets, or susbets of ref cells "near" (ie localized) a neighbor cell type, or "away" (ie separated) from a neighbor cell type.
-#' @param sub.thresh significance threshold for the binomial test (default = 0.05)
 #' @param perms number of permutations to shuffle for each resolution (default = 1)
 #' @param seed set seed for shuffling (if more than 1 permutation, then seed equals permutation number)
 #' @param ncores number of cores for parallelization (default 1)
@@ -364,9 +362,7 @@ selectSubsets <- function(binomMatrix,
 #' @export
 findTrends <- function(cells,
                        dist = 50,
-                       sub.dist = 100,
                        sub.type = c("pairwise", "near", "away"),
-                       sub.thresh = 0.05,
                        perms = 1,
                        seed = 0,
                        ncores = 1,
@@ -386,7 +382,7 @@ findTrends <- function(cells,
     stop("`shuffle.list` is not a list. You can make this using `makeShuffledCells()`")
   }
   
-  if( !any(class(cells)[1] == "sf") ){
+  if( !any(class(cells) == "sf") ){
     stop("`cells` needs to be an `sf` object. You can make this using `toSP()`")
   }
   
@@ -466,7 +462,7 @@ findTrends <- function(cells,
     ## load in the subset file if it exists, or make it and probably be a good
     ## idea to save it, too
     if(!is.list(subset.list)){
-      stop("`subset.list` is not a list. You can build this using: `binomialTestMatrix()` then `selectSubsets()`")
+      stop(paste0("`sub.type` selected as ", sub.type, " but `subset.list` is not a list. You can build this using: `binomialTestMatrix()` then `selectSubsets()`"))
     }
     
     combo_ids <- names(subset.list)
@@ -474,7 +470,6 @@ findTrends <- function(cells,
     
     if(verbose){
       message("Calculating for subset type: ", sub.type)
-      message("within subset distance of: ", sub.dist)
     }
     
     ## initialize list
@@ -507,7 +502,7 @@ findTrends <- function(cells,
       ## I could also split up the permutations, but then each cell type for each resolution is done one by one
       ## I could do cell types in parallel, but then for each cell type need to go through each res and each perm one by one
       results <- evaluateSignificance(cells = cells,
-                                      randomcellslist = randomcellslist,
+                                      randomcellslist = shuffle.list,
                                       trueNeighCells = neigh.cells,
                                       cellBuffer = ref.buffer,
                                       ncores = ncores,

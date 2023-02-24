@@ -92,7 +92,17 @@ invisible(sapply(1:M, function(i) {
   c1o <- rownames(p[((p$x-a)^2 + (p$y - b)^2 < ro^2),])
   p[c1o,]$type <<- sample(co, size = length(c1o), replace = TRUE, prob = po)
 }))
-ggplot2::ggplot(p, ggplot2::aes(x=x, y=y,col=type)) + ggplot2::geom_point(size=0.5) 
+
+
+plt <- crawdad::vizAllClusters(cells = p,
+                               coms = p$type,
+                               title = "sim",
+                               axisAdj = 1, s = 6, a = 0.5) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
+  # ggplot2::theme(legend.position="none") +
+  ggplot2::labs(x = "x",
+                y = "y")
+plt
 ```
 Actually using `crawdad`
 
@@ -136,22 +146,225 @@ results <- crawdad::findTrends(cells,
 ```{r}
 ## give users option to save
 #crawdad::plotTrends(results = results, idcol = "dist")
-crawdad::plotTrends(results = results[1], idcol = "dist")
+crawdad::plotTrends(results = results["A"], idcol = "dist")
 ```
 
 ```{r}
-##### get subsets
-## note I can choose to save the output
-## or I should be able to just pass subset.list as a parameter
-## rather than forcing me to save and load from a file
-##### also currently not exported so using :::
-subset.list <- crawdad:::getSubsets(cells = cells,
-                          sub.dist = 250,
-                          sub.type = "near",
-                          sub.thresh = 0.05,
-                          ncores = 10,
-                          verbose = FALSE)
+
+binomMat <- crawdad::binomialTestMatrix(cells,
+                               sub.dist = 1000,
+                               ncores = 7,
+                               verbose = TRUE)
+
 ```
+
+```{r}
+
+subset.list <- crawdad::selectSubsets(binomMat,
+                             cells$celltypes,
+                             sub.type = "near",
+                             sub.thresh = 0.05,
+                             ncores = 7,
+                             verbose = TRUE)
+
+```
+
+visualize the subsets
+
+```{r}
+
+## make a temporary annotation factor with annotations for cells that are of a specific subsets
+annots_temp <- crawdad::selectLabels(df = cells,
+                                     com = cells$celltypes,
+                                     subset_list = subset.list,
+                                     cellIDs = c("A", "B", "C", "D"),
+                                     subsetIDs = c("C_near_B"))
+
+## visualize the subset only
+plt <- crawdad::vizAllClusters(cells = cells,
+                               coms = annots_temp,
+                               ofInterest = c("C_near_B"),
+                               title = "sim",
+                               axisAdj = 1, s = 6, a = 0.5) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
+  # ggplot2::theme(legend.position="none") +
+  ggplot2::labs(x = "x",
+                y = "y")
+plt
+
+```
+
+visualize neighbors around a subset of cells
+
+```{r}
+
+neighCells <- getNeighbors(cells = cells,
+                           reference.ids = subset.list[["C_near_B"]],
+                           removeRef = TRUE,
+                           dist = 1000)
+neighCells
+
+```
+
+```{r}
+
+## can add the neighbor cells to the list of cell subsets
+subset.list[["C_near_B_neighs"]] <- rownames(neighCells)
+
+```
+
+```{r}
+
+## make a temporary annotation factor with annotations for cells that are of a specific subsets
+annots_temp <- crawdad::selectLabels(df = cells,
+                                     com = cells$celltypes,
+                                     subset_list = subset.list,
+                                     cellIDs = c("A", "B", "C", "D"), ## original IDs in com of interest
+                                     subsetIDs = c("C_near_B", "C_near_B_neighs") ## subsets in subset_list of interest
+                                     )
+
+## visualize just the cells in the subsets of interest
+plt <- crawdad::vizAllClusters(cells = cells,
+                               coms = annots_temp,
+                               ofInterest = c("C_near_B", "C_near_B_neighs"), ## choose specific type to visualize
+                               title = "sim",
+                               axisAdj = 1, s = 6, a = 0.5) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
+  # ggplot2::theme(legend.position="none") +
+  ggplot2::labs(x = "x",
+                y = "y")
+plt
+
+```
+
+```{r}
+
+## get the neighbor cells of a given subset (or cell type)
+neighCells <- getNeighbors(cells = cells,
+                           reference.ids = subset.list[["C_near_B"]],
+                           removeRef = TRUE,
+                           dist = 1000)
+
+## make new data.frame with new cell labels column that marks non neighbors NA
+pos <- spToDF(cells)
+## make new column of cell type labels
+pos$neighs <- pos$celltypes
+## set the non neighbor cell labels to NA
+non_neighbors <- setdiff(rownames(pos), rownames(neighCells))
+pos[non_neighbors, "neighs"] <- NA
+pos$neighs <- factor(pos$neighs)
+
+
+## label the cells that are the specific subset that we originally were looking for neighbors
+annots_temp <- crawdad::selectLabels(df = pos,
+                                     com = pos$neighs,
+                                     subset_list = subset.list,
+                                     cellIDs = c("A", "B", "C", "D"), ## original IDs in com of interest
+                                     subsetIDs = c("C_near_B") ## subsets in subset_list of interest
+                                     )
+
+## visualize the new data.frame with the temporary annotations that specifically labels the neighbor cells and the selected subset
+plt <- crawdad::vizAllClusters(cells = pos,
+                               coms = annots_temp,
+                               title = "sim",
+                               axisAdj = 1, s = 6, a = 0.5) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
+  # ggplot2::theme(legend.position="none") +
+  ggplot2::labs(x = "x",
+                y = "y")
+plt
+
+```
+
+visualize real vs shuffling, and then look at specific tiles to visualize
+
+```{r}
+
+## add new column of labels, now just plot
+pos$shuff <- shuffle.list$`3000`$`1`
+
+```
+
+```{r}
+
+## shuffling grid
+grid <- sf::st_make_grid(cells, cellsize = 3000)
+
+grid_coords <- as.data.frame(sf::st_coordinates(grid))
+
+## centers of the grids to add the tile IDs
+grid_coords_centroids <- as.data.frame(sf::st_coordinates(sf::st_centroid(grid)))
+grid_coords_centroids$name <- as.character(rownames(grid_coords_centroids))
+
+```
+
+```{r}
+
+plt <- crawdad::vizAllClusters(cells = pos,
+                               coms = pos$celltypes,
+                               title = "sim",
+                               axisAdj = 1, s = 6, a = 0.5) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
+  # ggplot2::theme(legend.position="none") +
+  ggplot2::labs(x = "x",
+                y = "y") +
+  ggplot2::geom_sf(data = grid, fill = NA) +
+  ggplot2::geom_text(data = grid_coords_centroids, ggplot2::aes(X, Y, label = name))
+  
+plt
+
+```
+
+```{r}
+
+plt <- crawdad::vizAllClusters(cells = pos,
+                               coms = pos$shuff,
+                               title = "sim",
+                               axisAdj = 1, s = 6, a = 0.5) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
+  # ggplot2::theme(legend.position="none") +
+  ggplot2::labs(x = "x",
+                y = "y") +
+  ggplot2::geom_sf(data = grid, fill = NA) +
+  ggplot2::geom_text(data = grid_coords_centroids, ggplot2::aes(X, Y, label = name))
+  
+plt
+
+```
+
+```{r}
+
+## pull out cells in specific grids
+int <- sf::st_intersection(cells, grid[[11]])
+pos2 <- pos[rownames(int),]
+
+## grid 11 real
+plt <- crawdad::vizAllClusters(cells = pos2,
+                               coms = pos2$celltypes,
+                               title = "grid 11",
+                               axisAdj = 1, s = 10, a = 0.5) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
+  # ggplot2::theme(legend.position="none") +
+  ggplot2::labs(x = "x",
+                y = "y")
+  
+plt
+
+## grid 11 shuffled
+plt <- crawdad::vizAllClusters(cells = pos2,
+                               coms = pos2$shuff,
+                               title = "grid 11",
+                               axisAdj = 1, s = 10, a = 0.5) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
+  # ggplot2::theme(legend.position="none") +
+  ggplot2::labs(x = "x",
+                y = "y")
+  
+plt
+
+
+```
+
 
 ```{r}
 ## bit confusing that findTrends for pairs and triplets are same
@@ -163,22 +376,14 @@ results2 <- crawdad::findTrends(cells,
                         shuffle.list = shuffle.list,
                         subset.list = subset.list,
                         perms = 1,
-                        ncores = 10,
+                        ncores = 7,
                         seed = 1, 
-                        verbose = FALSE)
+                        verbose = TRUE)
 ```
 
 ```{r}
-## issue has Nans because some cells not ever found near each other
-## ideally should be ignored when plotting
-## currently hack fix by setting to 0
-results2.fixed <- lapply(results2, function(x) {
-  x[is.nan(x)] <- 0
-  return(x)
-})
-
 ## plot just some
-crawdad::plotTrends(results = results2.fixed[11], idcol = "dist")
+crawdad::plotTrends(results = results2["C_near_B"], idcol = "dist")
 ```
 
 

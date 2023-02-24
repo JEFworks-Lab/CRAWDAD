@@ -35,10 +35,11 @@ Imports:
   BiocParallel,
   parallel,
   ggplot2,
+  scattermore,
   grDevices,
   MASS,
   reshape2,
-  scattermore,
+  stats,
   sf,
   sp,
   dplyr

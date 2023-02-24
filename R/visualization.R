@@ -37,6 +37,10 @@ plotTrends <- function(results,
         rg <- max(abs(results.norm[, ct2]), na.rm = TRUE)
         resolutions <- rownames(results.norm)
         
+        if(is.infinite(rg)){
+          rg <- 2.0
+        }
+        
         ## instantiate a plot and plot trend
         plot(resolutions, results.norm[,ct2],
              type="l", lwd = 2,
@@ -119,7 +123,7 @@ plotTrends <- function(results,
     # dev.off()
     
   } else {
-    stop("`results` are neither a list from `findTrends` or a melted data.frame from `meltResultsList`")
+    stop("`results` are neither a list from `findTrends()` or a melted data.frame from `meltResultsList()`")
   }
   
 }
@@ -253,8 +257,8 @@ plotTrendsOverlay <- function(results, ...){
 #' 
 #' @description uses the x and y position information and a chosen set of communities
 #' 
-#' @param object the Seurat object
-#' @param clusters a column of clusters in the meta.data
+#' @param cells either a data.frame or sp::SpatialPointsDataFrame object with cell spatial coordinates
+#' @param coms a factor of cell type labels for the cells
 #' @param ofInterest a vector of specific clusters to visualize (default; NULL)
 #' @param title title of plot (default: NULL)
 #' @param axisAdj how much to increase axis ranges. If tissue, 100 okay, if embedding, 1 ok (default: 100)
@@ -268,25 +272,24 @@ plotTrendsOverlay <- function(results, ...){
 #' vizAllClusters(obj, clusters = "com_nn50_VolnormExpr_data", ofInterest = c("1", "2"))
 #' 
 #' @export
-vizAllClusters <- function(object, clusters, ofInterest = NULL,
+vizAllClusters <- function(cells, coms, ofInterest = NULL,
                            axisAdj = 100, s = 0.01, a = 1, title = NULL,
                            nacol = transparentCol(color = "gray", percent = 50)){
   
-  ## if object is seurat S4 object, else assume matrix and factor already
-  ## will need to make this check better in future
-  ## maybe have embeddings stored in object? Tricky if embedding is for mult datasets
-  if(typeof(object) == "S4"){
-    pos <- object@meta.data[, c("x", "y")]
-    tempCom <- object@meta.data[, clusters]
-    names(tempCom) <- rownames(object@meta.data)
-  } else {
-    pos <- object
-    tempCom <- clusters
+  ## if cells are a data.frame with "x" and "y" cell coordinate columns
+  if( class(cells)[1] == "data.frame" ){
+    pos <- cells[,c("x", "y")]
+    tempCom <- factor(coms)
+    names(tempCom) <- rownames(cells)
   }
   
-  # pos <- object@meta.data[, c("x", "y")]
-  # tempCom <- object@meta.data[, clusters]
-  # names(tempCom) <- rownames(object@meta.data)
+  ## if cells are the sp::SpatialPointsDataFrame() object
+  if( any(class(cells) == "sf") ){
+    p <- spToDF(cells)
+    pos <- p[,c("x", "y")]
+    tempCom <- factor(coms)
+    names(tempCom) <- rownames(cells)
+  }
   
   if(!is.null(ofInterest)){
     ## goal:
@@ -454,8 +457,8 @@ selectLabels <- function(df,
 ){
   
   ## get vector to append cell annotations of interest
-  annots_temp <- rep(NA, length(rownames(pos)))
-  names(annots_temp) <- rownames(pos)
+  annots_temp <- rep(NA, length(rownames(df)))
+  names(annots_temp) <- rownames(df)
   
   ## append the neighbor cells
   if(!is.na(cellIDs[1])){
@@ -484,4 +487,22 @@ selectLabels <- function(df,
   
   annots_temp <- as.factor(annots_temp)
   return(annots_temp)
+}
+
+
+#' Function to make transparent colors
+#' 
+#' @noRd
+transparentCol <- function(color, percent = 50, name = NULL) {
+  ## Get RGB values for named color
+  rgb.val <- grDevices::col2rgb(color)
+  
+  ## Make new color using input color as base and alpha set by transparency
+  t.col <- grDevices::rgb(rgb.val[1], rgb.val[2], rgb.val[3],
+                          maxColorValue = 255,
+                          alpha = (100 - percent) * 255 / 100,
+                          names = name)
+  
+  ## Save the color
+  invisible(t.col)
 }
