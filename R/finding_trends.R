@@ -10,6 +10,7 @@
 #' @param seed set seed for shuffling (if more than 1 permutation, then seed equals permutation number)
 #' @param verbose Boolean for verbosity (default TRUE)
 #'
+#' @export
 makeShuffledCells <- function(cells, resolutions, perms = 1, ncores = 1, seed = 0, verbose = TRUE){
   
   ## effectively will make a list of lists of randomly shuffled cell labels.
@@ -117,6 +118,7 @@ makeShuffledCells <- function(cells, resolutions, perms = 1, ncores = 1, seed = 
 #' @param cellBuffer Simple feature collection of the neighbor cells that are within "dist" of the ref cells (from sf::intersection)
 #' @param ncores number of cores for parallelization (default 1)
 #'
+#'@export
 evaluateSignificance <- function(cells,
                                  randomcellslist,
                                  trueNeighCells,
@@ -189,6 +191,7 @@ evaluateSignificance <- function(cells,
 #' 
 #' @return matrix where rows are cells, columns are cell types and values are p-values whether or not a cell is enriched in neighbors of a given cell type based on a binomial test.
 #' 
+#' @export
 binomialTestMatrix <- function(cells,
                                sub.dist = 100,
                                ncores = 1,
@@ -261,6 +264,7 @@ binomialTestMatrix <- function(cells,
 #' 
 #' @return list where each entry is a subset and the values are the cell ids determined to be in the subset
 #' 
+#' @export
 selectSubsets <- function(binomMatrix,
                           celltypes,
                           sub.type = c("near", "away"),
@@ -355,7 +359,7 @@ selectSubsets <- function(binomMatrix,
 #' 
 #' @examples 
 #' 
-#' export
+#' @export
 findTrends <- function(pos,
                          celltypes,
                          resolutions = c(50, 100, 200, 300),

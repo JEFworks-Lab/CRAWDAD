@@ -25,6 +25,7 @@
 #'                  zscores = combined_zscores)
 #' }
 #'
+#' @export
 diffTrendTesting <- function(samples, refID, neighID, zscores, heatmap = TRUE, distplot = TRUE){
   
   r <- refID

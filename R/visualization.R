@@ -2,6 +2,8 @@
 #' by default it is 'id', which would be the name given to the column describing each list after melting together into a single dataframe
 #' using `meltResultsList()`
 #' @param ... additional plotting parameters for base R plotting. Fed into "lines()" in script
+#' 
+#' @export
 plotTrends <- function(results, idcol = "id", figPath = "results.pdf", width = 8, height = 8, legend = TRUE, ...){
   
   
@@ -118,6 +120,8 @@ plotTrends <- function(results, idcol = "id", figPath = "results.pdf", width = 8
 
 #' This one overlays each neighbor trend wrt the same reference cell type on the plot
 #' @param ... additional plotting parameters for base R plotting. Fed into "lines()" in script
+#' 
+#' @export
 plotTrendsOverlay <- function(results, figPath = "results.pdf", width = 4, height = 10, legend = TRUE, ...){
   
   
@@ -252,6 +256,7 @@ plotTrendsOverlay <- function(results, figPath = "results.pdf", width = 4, heigh
 #' @examples 
 #' vizAllClusters(obj, clusters = "com_nn50_VolnormExpr_data", ofInterest = c("1", "2"))
 #' 
+#' @export
 vizAllClusters <- function(object, clusters, ofInterest = NULL,
                            axisAdj = 100, s = 0.01, a = 1, title = NULL,
                            nacol = transparentCol(color = "gray", percent = 50)){
@@ -428,7 +433,8 @@ vizTrends <- function(dat, clusters, yaxis = "zscore",
 #' @param subsetIDs vector of susbet cell type labels to include in output (names of vectors in `subset_list`) (default: NA)
 #'
 #' @return factor of specific cell type labels for visualizing with `vizAllClusters()` in the parameter: `clusters`
-#'
+#' 
+#' @export
 selectLabels <- function(df,
                          com,
                          cellIDs = NA,

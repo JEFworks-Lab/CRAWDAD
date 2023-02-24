@@ -4,6 +4,7 @@
 #' @param celltypes character vector; the cell type of each cell provided in pos
 #' @param verbose Boolean; verbosity (default TRUE)
 #' 
+#' @export
 toSP <- function(pos, celltypes, verbose=TRUE){
   
   if(length(levels(celltypes)) == 0){
@@ -42,6 +43,7 @@ toSP <- function(pos, celltypes, verbose=TRUE){
 #'
 #' @return datafame with columns: x, y, and celltype
 #'
+#' @export
 spToDF <- function(cells){
   
   pos <- data.frame(sf::st_coordinates(sf::st_cast(cells$geometry,"POINT")))

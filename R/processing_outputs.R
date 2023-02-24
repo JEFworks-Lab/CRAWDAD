@@ -1,17 +1,3 @@
-#' convert an sp::SpatialPointsDataFrame object to a dataframe with x y coords and cell type labels
-#' @param cells sp::SpatialPointsDataFrame object, with celltypes features and point geometries
-#'
-#' @return datafame with columns: x, y, and celltype
-#'
-spToDF <- function(cells){
-  
-  pos <- data.frame(sf::st_coordinates(sf::st_cast(cells$geometry,"POINT")))
-  pos$type <- cells$celltypes
-  colnames(pos) <- c("x", "y", "celltypes")
-  return(pos)
-  
-}
-
 
 #' get neighbor cells defined as being a distance away from a set of reference cells
 #' @description get neighbor cells defined as being a distance away from a set of reference cells.
@@ -25,6 +11,7 @@ spToDF <- function(cells){
 #'
 #' @return sp::SpatialPointsDataFrame object of the neighbor cells
 #' 
+#' @export
 getNeighbors <- function(cells,
                          reference.ids,
                          dist = 100){
@@ -58,6 +45,8 @@ getNeighbors <- function(cells,
 #' can be set to "2" and "1". Then both dataframes can be combined into one final dataframe
 #' Now you have identifiers that include: resolution, neighbor, reference, and simulation type.
 #' Can use these for plotting and comparing different things
+#' 
+#' @export
 meltResultsList <- function(resultsList, id = NA){
   
   df <- reshape2::melt(resultsList)
