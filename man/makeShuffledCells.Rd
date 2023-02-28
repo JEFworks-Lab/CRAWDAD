@@ -2,11 +2,11 @@
 % Please edit documentation in R/finding_trends.R
 \name{makeShuffledCells}
 \alias{makeShuffledCells}
-\title{Shuffle the celltype labels at different resolutions}
+\title{Shuffle the celltype labels at different shuffling resolutions}
 \usage{
 makeShuffledCells(
   cells,
-  resolutions,
+  resolutions = c(50, 100, 200, 300, 400, 500),
   perms = 1,
   ncores = 1,
   seed = 0,
@@ -14,23 +14,20 @@ makeShuffledCells(
 )
 }
 \arguments{
-\item{cells}{sp::SpatialPointsDataFrame object; celltypes features and point geometries}
+\item{cells}{sp::SpatialPointsDataFrame object, with celltypes features and point geometries}
 
-\item{resolutions}{numeric vector; the different resolutions to shuffle at and subsequently compute significance at}
+\item{resolutions}{numeric vector of the different resolutions to shuffle at and subsequently compute significance at (default: c(50, 100, 200, 300, 400, 500))}
 
-\item{perms}{numeric; number of permutations to shuffle for each resolution (default 1)}
+\item{perms}{number of permutations to shuffle for each resolution (default = 1)}
 
-\item{ncores}{numeric; number of cores for parallelization (default 1)}
+\item{ncores}{number of cores for parallelization (default 1)}
 
-\item{seed}{numeric; set seed for shuffling (if more than 1 permutation, then seed equals permutation number)}
+\item{seed}{set seed for shuffling (if more than 1 permutation, then seed equals permutation number)}
 
-\item{verbose}{Boolean; verbosity (default TRUE)}
-}
-\value{
-list;
+\item{verbose}{Boolean for verbosity (default TRUE)}
 }
 \description{
-For each resolution, and for i number of permutations, shuffle the celltype labels.
+for each resolution, and for i number of permutations, shuffle the celltype labels.
 Returns a list of lists, where each list is a factor of the shuffled celltype labels.
 Outer list is for each resolution of shuffling, and each inner list is for a given permutation with a given seed.
 }

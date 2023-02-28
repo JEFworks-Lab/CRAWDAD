@@ -2,27 +2,28 @@
 % Please edit documentation in R/finding_trends.R
 \name{evaluateSignificance}
 \alias{evaluateSignificance}
-\title{Evaluate significance}
+\title{compute significant different between real and randomly shuffled cell neighbor proportions}
 \usage{
 evaluateSignificance(
   cells,
   randomcellslist,
   trueNeighCells,
   cellBuffer,
-  ncores = 1
+  ncores = 1,
+  removeDups = TRUE
 )
 }
 \arguments{
-\item{cells}{sp::SpatialPointsDataFrame; all the cells}
+\item{cells}{sp::SpatialPointsDataFrame of all the cells}
 
-\item{randomcellslist}{nested list; of randomly shuffled cell type labels produced from `makeShuffledCells`}
+\item{randomcellslist}{list of lists of randomly shuffled cell type labels produced from \code{makeShuffledCells}}
 
 \item{trueNeighCells}{Simple feature collection of real cells for a given reference cell type, with geometries of a given dist (from sf::st_buffer)}
 
 \item{cellBuffer}{Simple feature collection of the neighbor cells that are within "dist" of the ref cells (from sf::intersection)}
 
-\item{ncores}{numeric; number of cores for parallelization (default 1)}
+\item{ncores}{number of cores for parallelization (default 1)}
 }
 \description{
-Compute significant different between real and randomly shuffled cell neighbor proportions.
+compute significant different between real and randomly shuffled cell neighbor proportions
 }

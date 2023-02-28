@@ -5,56 +5,36 @@
 \title{Compute trends of cell type colocalization for each cell type combination across specified resolutions}
 \usage{
 findTrends(
-  pos,
-  celltypes,
-  resolutions = c(50, 100, 200, 300),
+  cells,
   dist = 50,
-  sub.dist = 100,
-  sub.type = c("pairwise", "near", "away"),
-  sub.thresh = 0.05,
   perms = 1,
   seed = 0,
   ncores = 1,
-  loadShuffleFile = NA,
-  saveShuffleFilePath = NA,
-  loadSubsetFile = NA,
-  saveSubsetFile = NA,
+  shuffle.list,
+  subset.list = NULL,
   plot = FALSE,
-  verbose = TRUE
+  verbose = TRUE,
+  removeDups = TRUE
 )
 }
 \arguments{
-\item{pos}{data frame; x and y coordinates of each cell}
+\item{cells}{sp::SpatialPointsDataFrame object, with celltypes features and point geometries}
 
-\item{celltypes}{character vector; the cell type of each cell provided in pos}
+\item{dist}{numeric distance to define neighbor cells with respect to each reference cell (default: 50)}
 
-\item{resolutions}{numeric vector; the different resolutions to shuffle at and subsequently compute significance at}
+\item{perms}{number of permutations to shuffle for each resolution (default = 1)}
 
-\item{dist}{numeric; distance to define neighbor cells with respect to each reference cell (default = 50)}
+\item{seed}{set seed for shuffling (if more than 1 permutation, then seed equals permutation number)}
 
-\item{sub.dist}{numeric; distance to define subsets relative to a neighbor cell type (default = 100)}
+\item{ncores}{number of cores for parallelization (default 1)}
 
-\item{sub.type}{character; subset type, either "pairwise", to not use subsets, or subsets of ref cells "near" (ie localized) a neighbor cell type, or "away" (ie separated) from a neighbor cell type}
+\item{shuffle.list}{a list of cell type labels shuffled at different resolutions (output from \code{makeShuffledCells()})}
 
-\item{sub.thresh}{numeric; significance threshold for the binomial test (default = 0.05)}
+\item{subset.list}{a subset list (output from \code{selectSubsets()}). Required if computing trends for subsets (default NULL)}
 
-\item{perms}{numeric; number of permutations to shuffle for each resolution (default = 1)}
+\item{plot}{Boolean to return plots (default TRUE)}
 
-\item{seed}{numeric; set seed for shuffling (if more than 1 permutation, then seed equals permutation number)}
-
-\item{ncores}{numeric; number of cores for parallelization (default 1)}
-
-\item{loadShuffleFile}{character; path to a preshuffled randomcellslist rds object (default NA)}
-
-\item{saveShuffleFilePath}{character; can save the shuffled cell labels to speed things up later (default NA)}
-
-\item{loadSubsetFile}{character; path to a premade subset list rds object (default NA)}
-
-\item{saveSubsetFile}{character; can save the subset cell list to speed things up later, or use for subsequent plotting (default NA)}
-
-\item{plot}{Boolean; return plots (default TRUE)}
-
-\item{verbose}{Boolean; verbosity (default TRUE)}
+\item{verbose}{Boolean for verbosity (default TRUE)}
 }
 \value{
 A list that contains a dataframe for each reference cell type, where the dataframe contains the significance values for each neighbor cell type at each resolution

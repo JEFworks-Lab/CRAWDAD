@@ -31,12 +31,12 @@ pvalues for each patient
 }
 \description{
 Computes summed distance between z scores at each resolution for two given trends.
-    Gets summed distances for combinations of intra patient trends, and inter patient trends.
-    T-test between intra and inter distances to test for significant difference.
-    Also can return heatmap matrix of distances between each dataset and distributions.
-    The idea is that if inter trends are similar, then their distances will be small like the intra trends.
-    But if the inter trends are different, their distances should be larger than the intra trends.
-    Likewise, if the intra trends are highly variable, then might be expected to also have large differences between inter as well.
+Gets summed distances for combinations of intra patient trends, and inter patient trends.
+T-test between intra and inter distances to test for significant difference.
+Also can return heatmap matrix of distances between each dataset and distributions.
+The idea is that if inter trends are similar, then their distances will be small like the intra trends.
+But if the inter trends are different, their distances should be larger than the intra trends.
+Likewise, if the intra trends are highly variable, then might be expected to also have large differences between inter as well.
 }
 \examples{
 \dontrun{

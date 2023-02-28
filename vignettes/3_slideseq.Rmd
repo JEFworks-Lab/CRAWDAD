@@ -1,0 +1,575 @@
+---
+title: "2_slideseq"
+author: "Brendan F. Miller"
+date: "2/15/2023"
+output: html_document
+---
+
+```{r}
+
+repoPath <- "/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/multiscale_celltype_colocalization_analysis/"
+
+```
+
+```{r}
+
+library(parallel)
+library(sf)
+library(sp)
+library(ggplot2)
+library(assertthat)
+library(reshape2)
+library(MASS)
+library(stats)
+library(dplyr)
+
+source(paste0(repoPath, "R/functions.R"))
+
+```
+
+# visualize clusters
+
+```{r}
+
+path_to_slideseq <- paste0(repoPath, "data/slideseq/slideseq.puck190926_08.rctd.meta.csv.gz")
+
+meta <- read.csv2(file = path_to_slideseq, row.names = 1, sep=',')
+meta <- meta[,c("x", "y", "class")]
+## make sure the coordinates are numeric
+meta <- meta %>% 
+  dplyr::mutate_at(vars(x, y), as.numeric)
+
+head(meta)
+
+```
+
+```{r, fig.height=24, fig.width=24}
+
+vizEachCluster(object = meta[,c("x", "y")], clusters = as.factor(meta$class), s = 2)
+
+```
+
+# find pairwise trends
+
+input files and parameters for `findTrends()`
+
+```{r}
+
+## full path to the shuffled data rds
+## if it exists, it will be loaded into the function, if not, will be created and saved at this location
+shuffledDataPath <- paste0(repoPath, "data/slideseq/slideseqPuck.190926_08.rctd.shuffled_res30-6000.rds")
+outfile <- paste0(repoPath, "data/slideseq/slideseqPuck.190926_08.rctd.pairwise.30-300.results.removeDups.rds")
+
+## number of cores
+ncs <- 7 
+
+## number of permutations
+prms <- 1 
+
+## seed
+sd <- 1 
+
+## don't count neighbor cells more than once
+removedups <- TRUE
+
+## for pairwise, can assess as several different neighbor distances, which will be combined at the end
+distances <- c(30, 50,100,200,300)
+## shuffling resolutions
+resolutions <- c(30, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000, 6000)
+
+## the `pos` data.frame, but these lines load it back in properly
+meta <- read.csv2(file = path_to_slideseq, row.names = 1, sep=',')
+meta <- meta[,c("x", "y", "class")]
+## make sure the coordinates are numeric
+meta <- meta %>% 
+  dplyr::mutate_at(vars(x, y), as.numeric)
+
+head(meta)
+
+```
+
+```{r}
+
+pairwise_results <- lapply(distances, function(d){
+  
+  if(file.exists(shuffledDataPath)){
+    
+    results <- findTrendsv2(pos = meta[,c("x", "y")],
+                             celltypes = meta[,3],
+                             resolutions,
+                             dist = d,
+                             sub.type = "pairwise",
+                             perms = prms,
+                             ncores = ncs,
+                             verbose = TRUE,
+                             loadShuffleFile = shuffledDataPath,
+                             seed = sd,
+                             removeDups = removedups)
+  } else {
+    results <- findTrendsv2(pos = meta[,c("x", "y")],
+                             celltypes = meta[,3],
+                             resolutions,
+                             dist = d,
+                             sub.type = "pairwise",
+                             perms = prms,
+                             ncores = ncs,
+                             verbose = TRUE,
+                             saveShuffleFilePath = shuffledDataPath,
+                             seed = sd,
+                             removeDups = removedups)
+  }
+  # print(results)
+  return(results)
+  
+})
+
+names(pairwise_results) <- distances
+
+saveRDS(object = pairwise_results, file = outfile)
+
+```
+
+notes when running on RockFish cluster:
+1 node
+14 CPUs
+8G per CPU
+
+50 micron resolution
+7161 tiles to shuffle...
+shuffling permutation 1 using seed 1
+100 micron resolution
+1833 tiles to shuffle...
+shuffling permutation 1 using seed 1
+200 micron resolution
+480 tiles to shuffle...
+shuffling permutation 1 using seed 1
+300 micron resolution
+208 tiles to shuffle...
+shuffling permutation 1 using seed 1
+500 micron resolution
+80 tiles to shuffle...
+shuffling permutation 1 using seed 1
+600 micron resolution
+56 tiles to shuffle...
+shuffling permutation 1 using seed 1
+700 micron resolution
+42 tiles to shuffle...
+shuffling permutation 1 using seed 1
+800 micron resolution
+30 tiles to shuffle...
+shuffling permutation 1 using seed 1
+900 micron resolution
+30 tiles to shuffle...
+shuffling permutation 1 using seed 1
+1000 micron resolution
+20 tiles to shuffle...
+shuffling permutation 1 using seed 1
+1200 micron resolution
+16 tiles to shuffle...
+shuffling permutation 1 using seed 1
+1500 micron resolution
+12 tiles to shuffle...
+shuffling permutation 1 using seed 1
+3000 micron resolution
+4 tiles to shuffle...
+6000 micron resolution
+1 tiles to shuffle...
+
+Shuffling just took approximately a minute or two
+
+(these times were done )
+Times for evaluating significance at each resolution:
+using neighbor distance of 30
+Calculating for pairwise combinations
+Time was 0.24 mins
+using neighbor distance of 50
+Time was 0.31 mins
+using neighbor distance of 100
+Time was 0.57 mins
+using neighbor distance of 200
+Time was 1.58 mins
+using neighbor distance of 300
+Time was 2.98 mins
+
+
+For the pairwise trends portion (distances 30-300)
+seff:
+Nodes: 1
+Cores per node: 14
+CPU Utilized: 00:29:42
+CPU Efficiency: 43.29% of 01:08:36 core-walltime
+Job Wall-clock time: 00:04:54
+Memory Utilized: 22.55 GB
+Memory Efficiency: 20.13% of 112.00 GB
+
+
+## visualize
+
+```{r}
+
+figPath <- paste0(repoPath, "plots/slideseq/")
+
+```
+
+```{r}
+
+dat <- readRDS(outfile)
+
+dat <- meltResultsList(resultsList = dat, id = NA)
+colnames(dat) <- c("resolution", "neighbor", "Z", "reference", "dist", "id")
+
+head(dat)
+
+```
+
+```{r}
+
+## visualize the trends with neighbor distance of 100
+d <- dat[dat$dist == "100",]
+plotTrends(results = d, idcol = "dist", legend = FALSE,
+           figPath = paste0(figPath, "slideseq.pairwise.d100.trends.pdf"),
+           width = 50, height = 50)
+
+```
+
+# find subset trends
+
+## define the cell type subsets
+
+input files and parameters for `getSubsets()`
+
+```{r}
+
+## full path to the subset dataset list rds
+subsetDataPath <- paste0(repoPath, "data/slideseq/slideseqPuck.190926_08.rctd.subsets.near.subdist100.rds")
+
+## test if a cell is "near" or "away" a given cell type
+## by testing if it's neighbors are significantly enriched or depleted in a cell type via binomial test
+subsetType <- "near"
+
+## distance to define subsets; ie the distance to define neighbors for this test
+subdist <- 100
+
+
+## for "away", loosely test for enrichment, then take the cells that still fail this test
+## so assume that they must be highly depleted
+if(subsetType == "near"){
+  subThresh <- 0.05
+} else if(subsetType == "away"){
+  subThresh <- 0.5
+} else (
+  stop("subsetType must be either 'near' or 'away'")
+)
+
+## number of cores
+ncs <- 7 
+
+## the `pos` data.frame, but these lines load it back in properly
+meta <- read.csv2(file = path_to_slideseq, row.names = 1, sep=',')
+meta <- meta[,c("x", "y", "class")]
+## make sure the coordinates are numeric
+meta <- meta %>% 
+  dplyr::mutate_at(vars(x, y), as.numeric)
+
+
+## create the spatial dataframe:
+pos <- meta[,c("x", "y")]
+celltypes <- meta[,3]
+
+if(length(levels(celltypes)) == 0){
+  message("Warning: `celltypes` does not have levels. Creating levels from values")
+  celltypes <- factor(celltypes)
+  names(celltypes) <- rownames(pos)
+}
+
+cells <- sp::SpatialPointsDataFrame(
+    coords = as.data.frame(pos),
+    data = data.frame(
+        celltypes = celltypes
+        #name=rownames(pos)
+))
+cells <- sf::st_as_sf(cells)
+
+## Change rowname assignments of cells to integers.
+## Solution to keep rows in same order later on when
+## randomly shuffling cell labels
+rownames(cells) <- as.character(1:dim(cells)[1])
+
+# make assumption that cell type attribute is constant throughout the geometries of each cell
+## it removed the warning that keep popping up, which says this assumption is made anyways
+sf::st_agr(cells) <- "constant"
+
+```
+
+```{r}
+
+## if subset data exists, set up parameters to load it in, otherwise set them up to save it once made
+if(file.exists(subsetDataPath)){
+  loadSubset <- subsetDataPath
+  saveSubset <- NA
+} else {
+  loadSubset <- NA
+  saveSubset <- subsetDataPath
+}
+
+if(assertthat::is.string(loadSubset)){
+    subset.list <- readRDS(file = loadSubset)
+} else {
+    
+    ## parallel shuffling of the grids in each resolution
+    subset.list <- getSubsets(cells = cells,
+                            sub.dist = subdist,
+                            sub.type = subsetType,
+                            sub.thresh = subThresh,
+                            ncores = ncs,
+                            verbose = TRUE,
+                            removeDups = FALSE)
+    if(assertthat::is.string(saveSubset)){
+        saveRDS(object = subset.list, file = saveSubset)
+    }
+}
+
+```
+
+notes from RockFish:
+Identifying subsets of cells that are near a given neighbor cell type based on distance of 100
+
+for subset neighbor distance of 100, took about 4 minutes
+
+longest combination:
+computing subsets for Granule_near_Granule
+Time to compute was 0.18mins
+
+seff:
+Nodes: 1
+Cores per node: 32
+CPU Utilized: 01:30:49
+CPU Efficiency: 72.15% of 02:05:52 core-walltime
+Job Wall-clock time: 00:03:56
+Memory Utilized: 7.54 GB
+Memory Efficiency: 11.78% of 64.00 GB
+
+Memory not too bad
+
+about 10K cells in this dataset
+19 cell types, so 361 subset combos
+
+Granule by far the largest:
+Astrocytes         Bergmann      Candelabrum          Choroid 
+             823              933               17               11 
+     Endothelial        Ependymal       Fibroblast         Globular 
+              39               10              126                4 
+           Golgi          Granule           Lugaro      Macrophages 
+              92             5643               30                3 
+       Microglia             MLI1             MLI2 Oligodendrocytes 
+              29              446              353              886 
+ Polydendrocytes         Purkinje             UBCs 
+              53              571               29 
+
+
+## visualize subsets
+
+```{r}
+
+subsets <- readRDS(subsetDataPath)
+
+id <- "subset dist 100"
+pos <- meta[,c("x", "y")]
+com <- as.factor(meta$class)
+names(com) <- rownames(pos)
+
+
+# ----------------------------------------
+
+annots_temp <- selectLabels(com = com,
+                             pos = pos,
+                             subset_list = subsets,
+                             cellIDs = c("Golgi", "UBCs", "Bergmann", "Purkinje"),
+                             subsetIDs = NA)
+plt <- vizAllClusters(object = pos,
+               clusters = annots_temp,
+               title = id,
+               axisAdj = 1, s = 4, a = 0.5) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
+  # ggplot2::theme(legend.position="none") +
+  ggplot2::labs(x = "x",
+                y = "y")
+plt
+
+# ggplot2::ggsave(filename ="sim_circSubset.v2.AnearB.pdf",
+#                 path = figpath, device = "pdf",
+#                 plot = plt,
+#                 dpi = 600, width = 4, height = 3, units = "in")
+
+```
+
+## subset trends
+
+note that we can reuse the same shuffled dataset that was made in the pairwise analysis
+
+```{r}
+
+## full path to the shuffled data rds
+## if it exists, it will be loaded into the function, if not, will be created and saved at this location
+shuffledDataPath <- paste0(repoPath, "data/slideseq/slideseqPuck.190926_08.rctd.shuffled_res30-6000.rds")
+outfile_subsets_triplet <- paste0(repoPath, "data/slideseq/slideseqPuck.190926_08.rctd.near.binom.subdist100.dist100.results.removeDups.rds")
+
+
+## full path to the subset dataset list rds
+subsetDataPath <- paste0(repoPath, "data/slideseq/slideseqPuck.190926_08.rctd.subsets.near.subdist100.rds")
+
+## test if a cell is "near" or "away" a given cell type
+## by testing if it's neighbors are significantly enriched or depleted in a cell type via binomial test
+subsetType <- "near"
+
+## distance to define subsets; ie the distance to define neighbors for this test
+subdist <- 100
+
+
+## for "away", loosely test for enrichment, then take the cells that still fail this test
+## so assume that they must be highly depleted
+if(subsetType == "near"){
+  subThresh <- 0.05
+} else if(subsetType == "away"){
+  subThresh <- 0.5
+} else (
+  stop("subsetType must be either 'near' or 'away'")
+)
+
+
+## number of cores
+ncs <- 7 
+
+## number of permutations
+prms <- 1 
+
+## seed
+sd <- 1 
+
+## don't count neighbor cells more than once
+removedups <- TRUE
+
+## for subset, use one neighbor distance
+distances <- c(100)
+## shuffling resolutions
+resolutions <- c(30, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000, 6000)
+
+## the `pos` data.frame, but these lines load it back in properly
+meta <- read.csv2(file = path_to_slideseq, row.names = 1, sep=',')
+meta <- meta[,c("x", "y", "class")]
+## make sure the coordinates are numeric
+meta <- meta %>% 
+  dplyr::mutate_at(vars(x, y), as.numeric)
+
+head(meta)
+
+```
+
+```{r}
+
+## if subset data exists, set up parameters to load it in, otherwise set them up to save it once made
+if(file.exists(subsetDataPath)){
+  loadSubset <- subsetDataPath
+  saveSubset <- NA
+} else {
+  loadSubset <- NA
+  saveSubset <- subsetDataPath
+}
+
+triplet_results <- lapply(distances, function(d){
+  
+  if(file.exists(shuffledDataPath)){
+    
+    results <- findTrendsv2(pos = meta[,c("x", "y")],
+                             celltypes = meta[,3],
+                             resolutions,
+                             dist = d,
+                             sub.dist = subdist,
+                             sub.type = subsetType,
+                             sub.thresh = subThresh,
+                             perms = prms,
+                             ncores = ncs,
+                             verbose = TRUE,
+                             loadShuffleFile = shuffledDataPath,
+                             loadSubsetFile = loadSubset,
+                             saveSubsetFile = saveSubset,
+                             seed = sd,
+                             removeDups = removedups)
+  } else {
+    results <- findTrendsv2(pos = meta[,c("x", "y")],
+                             celltypes = meta[,3],
+                             resolutions,
+                             dist = d,
+                             sub.dist = subdist,
+                             sub.type = subsetType,
+                             sub.thresh = subThresh,
+                             perms = prms,
+                             ncores = ncs,
+                             verbose = TRUE,
+                             saveShuffleFilePath = shuffledDataPath,
+                             loadSubsetFile = loadSubset,
+                             saveSubsetFile = saveSubset,
+                             seed = sd,
+                             removeDups = removedups)
+  }
+  return(results)
+  
+})
+
+names(triplet_results) <- distances
+
+saveRDS(object = triplet_results, file = outfile_subsets_triplet)
+
+```
+
+notes when running on RockFish cluster:
+1 node
+14 CPUs
+8G per CPU (overkill for this)
+
+seff:
+Nodes: 1
+Cores per node: 14
+CPU Utilized: 00:15:28
+CPU Efficiency: 39.93% of 00:38:44 core-walltime
+Job Wall-clock time: 00:02:46
+Memory Utilized: 2.32 GB
+Memory Efficiency: 2.07% of 112.00 GB
+
+## visualize subset trends
+
+```{r}
+
+figPath <- paste0(repoPath, "plots/slideseq/")
+
+```
+
+```{r}
+
+dat <- readRDS(outfile_subsets_triplet)
+
+dat <- meltResultsList(resultsList = dat, id = NA)
+colnames(dat) <- c("resolution", "neighbor", "Z", "reference", "dist", "subdist")
+
+dat$subdist = "100"
+
+head(dat)
+
+```
+
+```{r}
+
+## visualize the trends with neighbor distance of 100
+d <- dat[dat$dist == "100",]
+plotTrends(results = d, idcol = "dist", legend = FALSE,
+           figPath = paste0(figPath, "slideseq.triplet.d100.sd100.trends.pdf"),
+           width = 20, height = 8)
+
+```
+
+
+
+
+
+
+

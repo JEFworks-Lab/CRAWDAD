@@ -1,28 +1,53 @@
 Package: crawdad
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Cell Relationship Analysis Workflow Done Across Distances 
 Version: 0.1.0
-Author: Who wrote it
+Authors@R:
+  c(person(given = "Brendan",
+           family = "Miller",
+           role = c("aut", "cre"),
+           email = "bmille79@jh.edu",
+           comment = c(ORCID = "0000-0002-9559-4045")),
+    person(given = "Rafael",
+           family = "dos Santos Peixoto",
+           role = c("aut"),
+           email = "",
+           comment = c(ORCID = "")),
+    person(given = "Jean",
+           family = "Fan",
+           role = c("aut"),
+           email = "jeanfan@jhu.edu",
+           comment = c(ORCID = "0000-0002-0212-5451"))
+  )
 Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+URL: 
+BugReports: 
+Description: 
+biocViews: Visualization, Spatial, Software
+License: GPL-3
 Encoding: UTF-8
-LazyData: true
-Imports: 
-    assertthat,
-    BiocParallel,
-    gganimate,
-    ggplot2,
-    grDevices,
-    MASS,
-    parallel,
-    reshape2,
-    scattermore,
-    sf,
-    sp
+LazyData: FALSE
+Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
-Suggests: 
-    knitr,
-    rmarkdown
-VignetteBuilder: knitr
+Imports: 
+  assertthat,
+  testthat,
+  BiocParallel,
+  parallel,
+  ggplot2,
+  scattermore,
+  grDevices,
+  MASS,
+  reshape2,
+  stats,
+  sf,
+  sp,
+  dplyr
+Depends:
+    R (>= 4.2)
+Suggests:
+  gganimate,
+  knitr,
+  rmarkdown
+VignetteBuilder:
+  knitr
