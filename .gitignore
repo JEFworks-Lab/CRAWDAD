@@ -8,8 +8,8 @@ plots/joint_meeting_figs/
 plots/squidpy/
 plots/
 *.RData
-data/temp/
-data/squidpy/
+data/temp
+data/squidpy
 data/Xenium
 misc/
 rockfish_hpc/
