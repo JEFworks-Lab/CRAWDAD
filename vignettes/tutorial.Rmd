@@ -1,0 +1,477 @@
+---
+title: "CRAWDAD Tutorial"
+author: "Brendan F. Miller"
+output: BiocStyle::html_document
+vignette: >
+  %\VignetteIndexEntry{CRAWDAD Vignette}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, results = 'hide')
+```
+
+# Installation
+
+```{r, eval=FALSE}
+
+## for installation once the GitHub repo is public
+
+require(remotes)
+remotes::install_github('JEFworks-Lab/CRAWDAD')
+
+```
+
+```{r, eval=FALSE}
+
+## for bioconductor (once its been submitted and approved)
+
+if(!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+BiocManager::install("CRAWDAD")
+
+```
+
+```{r}
+
+library(crawdad)
+
+```
+
+# Tutorial
+
+```{r}
+
+ncores <- 7
+
+```
+
+## Make simulated dataset
+
+```{r}
+
+## cells
+set.seed(1)
+size <- 1000
+x <- runif(size, min = 0, max = 10000)
+y <- runif(size, min = 0, max = 10000)
+p <- data.frame(x = x, y = y, type='D')
+rownames(p) <- paste0('cell', 1:size)
+head(p)
+
+## structures
+set.seed(10)
+N <- 5 
+as <- sample(x, N)
+bs <- sample(y, N)
+invisible(sapply(1:N, function(i) {
+  a <- as[i]
+  b <- bs[i]
+  ro <- 1000
+  co <- 'A'
+  po <- 1
+  c1o <- rownames(p[((p$x-a)^2 + (p$y - b)^2 < ro^2),])
+  p[c1o,]$type <<- sample(co, size = length(c1o), replace = TRUE, prob = po)
+}))
+
+invisible(sapply(1:N, function(i) {
+  ro <- 500
+  co <- 'B'
+  po <- 1
+  
+  ## inside structure
+  a <- as[i]
+  b <- bs[i]
+  c1o <- rownames(p[((p$x-a)^2 + (p$y - b)^2 < ro^2),])
+  p[c1o,]$type <<- sample(co, size = length(c1o), replace = TRUE, prob = po)
+}))
+
+set.seed(1000)
+M <- N*2
+as2 <- sample(x, M)
+bs2 <- sample(y, M)
+
+invisible(sapply(1:M, function(i) {
+  ro <- 500
+  co <- 'B'
+  po <- 1
+  ## outside structure
+  a <- as2[i]
+  b <- bs2[i]
+  c1o <- rownames(p[((p$x-a)^2 + (p$y - b)^2 < ro^2),])
+  p[c1o,]$type <<- sample(co, size = length(c1o), replace = TRUE, prob = po)
+}))
+
+invisible(sapply(1:N, function(i) {
+  ro <- 400
+  co <- 'C'
+  po <- 1
+  
+  ## inside structure
+  a <- as[i]
+  b <- bs[i]
+  c1o <- rownames(p[((p$x-a)^2 + (p$y - b)^2 < ro^2),])
+  p[c1o,]$type <<- sample(co, size = length(c1o), replace = TRUE, prob = po)
+}))
+
+set.seed(10000)
+as3 <- sample(x, M)
+bs3 <- sample(y, M)
+invisible(sapply(1:M, function(i) {
+  ro <- 500
+  co <- 'C'
+  po <- 1
+  ## outside structure
+  a <- as3[i]
+  b <- bs3[i]
+  c1o <- rownames(p[((p$x-a)^2 + (p$y - b)^2 < ro^2),])
+  p[c1o,]$type <<- sample(co, size = length(c1o), replace = TRUE, prob = po)
+}))
+
+## visualize
+plt <- crawdad::vizAllClusters(cells = p,
+                               coms = p$type,
+                               title = "sim",
+                               axisAdj = 1, s = 6, a = 0.5) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
+  ggplot2::labs(x = "x",
+                y = "y")
+plt
+
+```
+
+Convert the data.frame of cells to an `sp::SpatialPointsDataFrame` object. This is because CRAWDAD builds upon the `sf` library in R.
+
+```{r}
+
+## convert to SP
+cells <- crawdad:::toSP(pos = p[,c("x", "y")],
+                        celltypes = p$type)
+cells
+
+```
+
+## 
+
+`CRAWDAD` identifies cell type spatial relationships by comparing cell type organizational patterns in the real data to a set of null distributions, which are a datasets in which cell labels have been shuffled at different scales, or resolutions. We can generate this list of shuffled datasets with the following code:
+
+```{r}
+## generate background
+shuffle.list <- crawdad:::makeShuffledCells(cells,
+                          resolutions = c(250, 500, 1000, 3000, 5000, 10000),
+                          perms = 1,
+                          ncores = ncores,
+                          seed = 1,
+                          verbose = TRUE)
+```
+
+## Run pairwise analysis
+
+We can identify trends that describe spatial relationships between pairwise combinations of cell types in our data using the following code:
+
+```{r}
+
+## find trends, passing background as parameter
+results <- crawdad::findTrends(cells,
+                        dist = 250,
+                        shuffle.list = shuffle.list,
+                        perms = 1,
+                        ncores = ncores,
+                        seed = 1, 
+                        verbose = TRUE)
+
+```
+
+## Visualizing trends
+
+We can now visualize trends for different pairwise cell type combinations using the following code:
+
+```{r}
+
+crawdad::plotTrends(results = results["A"], idcol = "dist")
+
+```
+
+We can also visualize all trends at once by first melting the results list into a data.frame. The extra `id` column we can label as the distance used to define neighbors.
+
+```{r, fig.width=12, fig.height=12}
+
+dat <- crawdad::meltResultsList(results, id = "dist_250")
+
+crawdad::plotTrends(results = dat, idcol = "id")
+
+```
+
+And we can also save the plot as a pdf.
+
+```{r, eval=FALSE}
+
+dat <- crawdad::meltResultsList(results, id = "dist_250")
+
+crawdad::plotTrends(results = dat, idcol = "id",
+                    figpath = "tutorial_pairwise_trends.pdf", width = 12, height = 12)
+
+```
+
+## Defining susbets
+
+We can also further subdivide cell types into subsets by looking for cell types whose neighbors are enriched in another particular cell type. We can do this by performing a binomial test to test if a cell's neighbors are significantly enriched in a particular cell type compared to the overall probability of observing a particular cell type.
+
+For this dataset, we define a neighbor distance of 1000 to characterize cells into subsets.
+
+First, we generate a probability matrix where rows are each cell in the dataset, columns are the cell type labels, and values are the probability of each cell being enriched in neighbors of a given cell type.
+
+```{r}
+
+binomMat <- crawdad::binomialTestMatrix(cells,
+                               neigh.dist = 1000,
+                               ncores = ncores,
+                               verbose = TRUE)
+
+head(binomMat)
+
+```
+
+We can now assign cells to subsets based on how significant their neighbors are enriched with a given cell type. For finding subsets of cells that are enriched, or "colozalized" with a given cell type, we can set the `sub.type` to "near", with a `sub.thresh` of 0.05 and sub-categorize cells of a given cell type if they are enriched with a given cell type at a p-value of 0.05 or less. 
+
+Conversely, we can also set `sub.type` to "away" and sub-categorize cells of a given cell type if they are depleted with a given cell type. In this case, setting the `sub.thresh` to above 0.5 would be advised, because in this way, cells above a p-value of 0.5 in terms of testing for enrichment would be selected. In other words, only the cells that couldn't even pass a p-value cutoff of 0.5 would be selected for, and these would be expected to be very much depleted or separated from the neighbor cell type they are being compared to.
+
+In this tutorial, we will define subsets of cell types whose neighbors are enriched in a given cell type, defining neighbors using a distance of 1000 and a p-value threshold of 0.05:
+
+```{r}
+
+subset.list <- crawdad::selectSubsets(binomMat,
+                             cells$celltypes,
+                             sub.type = "near",
+                             sub.thresh = 0.05,
+                             ncores = ncores,
+                             verbose = TRUE)
+
+subset.list["C_near_B"]
+
+```
+
+For example, these cell ids are the cells of cell type "C" that are enriched, or "near" cell type "B".
+
+## Visualize the subsets
+
+To visualize how the subsets are defined, let's first look at just the "C" cells and the "B" cells
+
+```{r}
+
+plt <- crawdad::vizAllClusters(cells = cells,
+                               coms = cells$celltypes,
+                               ofInterest = c("B", "C"),
+                               title = "sim",
+                               axisAdj = 1, s = 6, a = 0.5) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
+  # ggplot2::theme(legend.position="none") +
+  ggplot2::labs(x = "x",
+                y = "y")
+plt
+
+```
+
+Next, let's redefine the labels to labels cells that are part of the subset "C_near_B". Then, let's visualize cells of cell type "C", "B", and also the cells are are "C_near_B"
+
+```{r}
+
+## make a temporary annotation factor with annotations for cells that are of a specific subsets
+annots_temp <- crawdad::selectLabels(df = cells,
+                                     com = cells$celltypes,
+                                     subset_list = subset.list,
+                                     cellIDs = c("A", "B", "C", "D"),
+                                     subsetIDs = c("C_near_B"))
+
+## visualize the subset only
+plt <- crawdad::vizAllClusters(cells = cells,
+                               coms = annots_temp,
+                               ofInterest = c("B", "C", "C_near_B"),
+                               title = "sim",
+                               axisAdj = 1, s = 6, a = 0.5) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
+  # ggplot2::theme(legend.position="none") +
+  ggplot2::labs(x = "x",
+                y = "y")
+plt
+
+```
+
+To see the neighbors around our subset cells of interest and to get a visual sense of how these neighbors are influencing the subset assignment, we can first select cells that are neighbors with a set of reference cells. 
+
+We can define the `reference.ids` as the cells that are part of subset "C_near_B" but this can be any set of cell IDs we want to assess neighbors for. 
+
+```{r}
+
+neighCells <- crawdad::getNeighbors(cells = cells,
+                                   reference.ids = subset.list[["C_near_B"]],
+                                   removeRef = TRUE, ## whether to keep the reference cells in the output or to remove them and just look at the neighbors.
+                                   dist = 1000)
+neighCells
+
+```
+
+To visualize the neighbors, let's add a new column of cell labels to the `cells` object where we only keep labels for cells that are neighbors with the "C_near_B" subset:
+
+```{r}
+
+## make new column of cell type labels
+cells$neighs <- cells$celltypes
+## set the non neighbor cell labels to NA
+non_neighbors <- setdiff(rownames(cells), rownames(neighCells))
+cells[non_neighbors,]$neighs <- NA
+
+## now let's again label the cells that are the specific subset, but using the new "neigh" cell label column
+annots_temp <- crawdad::selectLabels(df = cells,
+                                     com = cells$neighs,
+                                     subset_list = subset.list,
+                                     cellIDs = c("A", "B", "C", "D"), ## original IDs in com of interest
+                                     subsetIDs = c("C_near_B") ## subsets in subset_list of interest
+                                     )
+
+## visualize the new data.frame with the temporary annotations that specifically labels the neighbor cells and the selected subset
+plt <- crawdad::vizAllClusters(cells = cells,
+                               coms = annots_temp,
+                               title = "sim",
+                               axisAdj = 1, s = 6, a = 0.5) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
+  # ggplot2::theme(legend.position="none") +
+  ggplot2::labs(x = "x",
+                y = "y")
+plt
+
+```
+
+## Run analysis on subsets
+
+We can also analyze cell type colocalization patterns for the defined subsets. For this, we just need to pass in the `subset.list` of subsets to `findTrends()`. (Note that within this list, we can define any set of cells for which we would like to compute colocalization trends with respect to the cell types in the `celltypes` column in `cells`. This also means that we have flexibility to assess relationships between any group of cells by changing the cell type labels in `celltypes` and/or creating a list of specific subsets of cells for the `subset.list`.) When using `subset.list` in `findTrends()`, the subset.list subsets are treated as the reference cell types and the cell types in the `celltypes` column are the neighbor cell types.
+
+```{r}
+
+results2 <- crawdad::findTrends(cells,
+                        dist = 250,
+                        shuffle.list = shuffle.list,
+                        subset.list = subset.list,
+                        perms = 1,
+                        ncores = ncores,
+                        seed = 1, 
+                        verbose = TRUE)
+
+```
+
+```{r}
+
+## plot just some
+crawdad::plotTrends(results = results2["C_near_B"], idcol = "dist")
+
+```
+
+## Visualizing cells at specific resolutions
+
+The trends generated by `CRAWDAD` allow us to observe how different cell types are organized with each other across different scales. For example, Two cell types may appear to be separated at small, micro-scale resolutions, but are significantly colocalized on a global scale. These relationships are determined by comapring the real data to a dataset where cell labels have been shuffled at differernt resolutions. This is primarily done by partitioning the dataset into regions of a given size, or resolution, and restricting the shuffling of labels between cells to those that are in the same region.
+
+To get a sense of the differences between the real data and the shuffled data, it can be useful to visualize the shuffled cells at a particular resolution. This can be done by extracting the shuffled cell labels at a given resolution:
+
+```{r}
+
+## order is: shuffle.list$resolution$permutation
+shuff <- shuffle.list$`3000`$`1`
+head(shuff)
+
+## for visualization purposes, we can also add the shuffled labels to a new column in `cells`
+cells$shuff_3000 <- shuffle.list$`3000`$`1`
+
+cells
+
+```
+
+Additionally, it may also be useful to visualize cells that are in a specific region of the dataset. For example, maybe a cell type colocalizes with another cell type at a more macro-scale resolution, but only in a particular location of the tissue.
+
+Because `cells` is an `sp::SpatialPointDataSet()`, it is compatible with functions from the `sf` library. One of these, `sf::st_make_grid()`, is utilized by `makeShuffledCells()` to define the regions for shuffling. We can apply this function here to get the grids.
+
+```{r}
+
+## shuffling grid
+grid <- sf::st_make_grid(cells, cellsize = 3000)
+grid_coords <- as.data.frame(sf::st_coordinates(grid))
+
+## centers of the grids to add the tile IDs
+grid_coords_centroids <- as.data.frame(sf::st_coordinates(sf::st_centroid(grid)))
+grid_coords_centroids$name <- as.character(rownames(grid_coords_centroids))
+
+```
+
+```{r}
+
+plt <- crawdad::vizAllClusters(cells = cells,
+                               coms = cells$celltypes,
+                               title = "sim",
+                               axisAdj = 1, s = 6, a = 0.5) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
+  # ggplot2::theme(legend.position="none") +
+  ggplot2::labs(x = "x",
+                y = "y") +
+  
+  ## add in the grid information on top of the plot
+  ggplot2::geom_sf(data = grid, fill = NA) +
+  ggplot2::geom_text(data = grid_coords_centroids, ggplot2::aes(X, Y, label = name))
+  
+plt
+
+
+## and here is the shuffled data:
+plt <- crawdad::vizAllClusters(cells = cells,
+                               coms = cells$shuff_3000,
+                               title = "sim shuffled at 3000",
+                               axisAdj = 1, s = 6, a = 0.5) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
+  # ggplot2::theme(legend.position="none") +
+  ggplot2::labs(x = "x",
+                y = "y") +
+  
+  ## add in the grid information on top of the plot
+  ggplot2::geom_sf(data = grid, fill = NA) +
+  ggplot2::geom_text(data = grid_coords_centroids, ggplot2::aes(X, Y, label = name))
+  
+plt
+
+```
+
+If we are interested in looking at a specific grid region, we can find the cells that specifically intersect with it:
+
+```{r}
+
+## pull out cells in specific grid regions
+int <- sf::st_intersection(cells, grid[[11]])
+cells2 <- cells[rownames(int),]
+
+## grid 11 real
+plt <- crawdad::vizAllClusters(cells = cells2,
+                               coms = cells2$celltypes,
+                               title = "grid 11",
+                               axisAdj = 1, s = 10, a = 0.5) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
+  # ggplot2::theme(legend.position="none") +
+  ggplot2::labs(x = "x",
+                y = "y")
+  
+plt
+
+## grid 11 shuffled
+plt <- crawdad::vizAllClusters(cells = cells2,
+                               coms = cells2$shuff_3000,
+                               title = "grid 11 shuffled at 3000",
+                               axisAdj = 1, s = 10, a = 0.5) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
+  # ggplot2::theme(legend.position="none") +
+  ggplot2::labs(x = "x",
+                y = "y")
+  
+plt
+
+
+```
+
+
+
