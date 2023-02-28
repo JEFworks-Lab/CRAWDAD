@@ -10,6 +10,7 @@ plots/
 *.RData
 data/temp/
 data/squidpy/
+data/Xenium
 misc/
 rockfish_hpc/
 squidpy/
