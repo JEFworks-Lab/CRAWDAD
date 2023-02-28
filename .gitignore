@@ -5,7 +5,3 @@
 .Rhistory
 .RDataTmp*
 *.RData
-plots/
-misc/
-rockfish_hpc/
-squidpy/
