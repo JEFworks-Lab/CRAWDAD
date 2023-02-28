@@ -1,0 +1,378 @@
+---
+title: "Untitled"
+author: "Brendan F. Miller"
+date: "2/21/2023"
+output: html_document
+---
+
+# get subset matrix
+
+get matrix where rows are cells and columns are the cell types and values are the p-values from performing a binomial test with a given neighbor distannce
+
+idea is to generate this matrix first, then can have a simpler function to threshold for neighbors
+
+
+I think I need to kind of rewrite code so instead of looping through combinations, it looks at each cell separately, then for that cell gets a vector of pvals for each neighbor cell type. Kind of like what is done when evaluating significance where the calculation is done on a table of all cell types at once.
+I take these vectors and row bind them to make matrix of p-vals
+
+Maybe if I parallelize this way, one cell at a time, and if it takes 1 second per cell, then with 8 cores and 150K cells, should be 18750 seconds = 312 minutes = 5 hours. Actually 5x faster than how it runs now. We will see...
+
+
+also make it so the cells "celltypes" is a factor
+
+
+```{r}
+
+#' Generate matrix of pvalues indicating if a cell is enriched in neighbors of a given cell type
+#' @description pvalues are based on a binomial test and neighbors are defined within a given distance from a cell
+#' @param cells sp::SpatialPointsDataFrame object, with celltypes features and point geometries
+#' @param sub.dist distance to define neighbors (default = 100)
+#' @param ncores number of cores for parallelization (default 1)
+#' @param verbose Boolean for verbosity (default TRUE)
+#' 
+#' @return matrix where rows are cells, columns are cell types and values are p-values whether or not a cell is enriched in neighbors of a given cell type based on a binomial test.
+#' 
+binomialTestMatrix <- function(cells,
+                               sub.dist = 100,
+                               ncores = 1,
+                               verbose = TRUE) {
+  
+  start_time <- Sys.time()
+  
+  if(verbose){
+    message("Binomial test for each cell testing if it is enriched in neighbors of a given cell type based on distance of ",
+            sub.dist)
+  }
+  
+  ## make sure celltypes are a factor with levels
+  cell.types <- cells$celltypes
+  names(cell.types) <- rownames(cells)
+  
+  if(length(levels(cell.types)) == 0){
+    message("Warning: `celltypes` does not have levels. Creating levels from values")
+    cell.types <- factor(cell.types)
+    names(cell.types) <- rownames(cells)
+  }
+  
+  ## get global fractions of each cell type (hypothesized probability of success)
+  p <- table(cell.types)/sum(table(cell.types))
+  
+  ## get buffer around each cell with diameter of sub.dist
+  refs.buffer <- sf::st_buffer(cells, sub.dist)
+  
+  ## define the binomial test to be performed and used in the mapply below
+  binom <- function(x, n, p){stats::binom.test(x, n, p, alternative="greater")$p.value}
+  
+  ## for each cell: (parallelize this)
+  ## get number of each cell type that are neighbors (x, ie number of successes)
+  ## and total number of neighbors (n, number of trials)
+  ## compute pvals for a binomial test for each cell type neighbor
+  ## As we loop through each cell, add the pvals for each cell type as a new row of a matrix
+  message("Performing tests...")
+  results <- do.call(rbind, parallel::mclapply(rownames(cells), function(c){
+    
+    cells.inbuffer <- sf::st_intersection(cells, refs.buffer[c,]$geometry)
+    x <- table(cells.inbuffer$celltypes)
+    n <- rep(sum(x), length(x))
+    
+    ## apply the binomial test across the vectors using mapply
+    pvals <- mapply(binom, x, n, p)
+    pvals
+    
+  }, mc.cores = ncores))
+  
+  rownames(results) <- rownames(cells)
+  colnames(results) <- names(p)
+  
+  if(verbose){
+    total_t <- round(difftime(Sys.time(), start_time, units = "mins"), 2)
+    message(sprintf("Time to compute was %smins", total_t))
+  }
+  
+  return(results)
+}
+
+```
+
+```{r}
+
+sim_binom_mat <- binomialTestMatrix(cells = cells,
+                                    sub.dist = 100,
+                                    ncores = 7,
+                                    verbose = TRUE
+                                    )
+
+```
+
+```{r}
+
+#' find subsets of cells
+#' @description assign cells to subsets based on whether they are enriched in a given neighbor cell type based on the pvalues in the input `binomMatrix`
+#'
+#' @param binomMatrix matrix where rows are cells, columns are cell types and values are p-values whether or not a cell is enriched in neighbors of a given cell type based on a binomial test. Output from `binomialTestMatrix()`
+#' @param celltypes named vector or factor of cell type labels of each cell in `binomMatrix` and in the same order.
+#' @param sub.type subset type, either ref cells "near" (ie localized) a neighbor cell type, or "away" (ie separated) from a neighbor cell type.
+#' @param sub.thresh significance threshold for the binomial test (default = 0.05)
+#' @param ncores number of cores for parallelization (default 1)
+#' @param verbose Boolean for verbosity (default TRUE)
+#' 
+#' @return list where each entry is a subset and the values are the cell ids determined to be in the subset
+#' 
+selectSubsets <- function(binomMatrix,
+                          celltypes,
+                          sub.type = c("near", "away"),
+                          sub.thresh = 0.05,
+                          ncores = 1,
+                          verbose = TRUE){
+  
+  start_time <- Sys.time()
+  sub.type <- match.arg(sub.type)
+  
+  if(!sub.type %in% c("near", "away")){
+    stop("`sub.type` must be either 'near' or 'away'")
+  }
+  
+  ## make sure cell types is a factor
+  cell.types <- factor(celltypes)
+  
+  ## setup possible subset combinations:
+  combos <- expand.grid(rep(list(1:length(levels(cell.types))),2))
+  colnames(combos) <- c("ref", "neighbors")
+  combo_ids <- unlist(lapply(rownames(combos), function(i){
+    cells.ref.ix <- levels(cell.types)[as.numeric(combos[i,1])]
+    cells.neighbors.ix <- levels(cell.types)[as.numeric(combos[i,2])]
+    id <- paste0(cells.ref.ix, "_", sub.type, "_", cells.neighbors.ix)
+    id
+  }))
+  
+  subsets <- parallel::mclapply(rownames(combos), function(i){
+    
+    cells.ref.ix <- levels(cell.types)[as.numeric(combos[i,1])]
+    cells.neighbors.ix <- levels(cell.types)[as.numeric(combos[i,2])]
+    id <- paste0(cells.ref.ix, "_", sub.type, "_", cells.neighbors.ix)
+    message("computing subsets for ", id)
+    
+    ## get reference cell rows
+    ref.cells <- binomMatrix[which(cell.types == cells.ref.ix),]
+    
+    ## subset reference cells whose pval is below thresh for given neighbor cell type
+    ## return cells that were significant
+    if(sub.type == "near"){
+      sub.cells <- rownames(ref.cells)[which(ref.cells[,cells.neighbors.ix] < sub.thresh)]
+    }
+    
+    ## return the cells that were not significant
+    if (sub.type == "away"){
+      ## recommend setting threshold very liberal, like 0.5,
+      ## that way, only the cells that couldn't even pass a p-val cutoff of 0.5 would be selected for,
+      ## and these would be expected to be very much depleted or separated from the neighbor cell type
+      sub.cells <- rownames(ref.cells)[which(ref.cells[,cells.neighbors.ix] < sub.thresh)]
+      sub.cells <- rownames(ref.cells)[which(!rownames(ref.cells) %in% sub.cells)]
+    }
+    
+    return(sub.cells)
+    
+  }, mc.cores = ncores)
+  
+  if(verbose){
+    total_t <- round(difftime(Sys.time(), start_time, units = "mins"), 2)
+    message(sprintf("Time to compute was %smins", total_t))
+  }
+  
+  names(subsets) <- combo_ids
+  return(subsets)
+  
+}
+
+```
+
+```{r}
+
+sim_subsets_near_test <- selectSubsets(binomMatrix = sim_binom_mat,
+                                  celltypes = cells$celltypes,
+                                  sub.type = "near",
+                                  sub.thresh = 0.05,
+                                  ncores = 7,
+                                  verbose = TRUE)
+
+```
+
+check against the original subsets for simulation at subdist 100:
+
+```{r}
+
+sim_subset <- readRDS(file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/multiscale_celltype_colocalization_analysis/data/sim/sim.subsets.near.subdist100.rds")
+
+```
+
+```{r}
+
+setequal(sim_subset, sim_subsets_near_test)
+
+```
+
+
+way to extract cells that are neighbors with cells of a given reference (could be any cell type, could be a subset, etc but just a way to select the cells that are neighbors)
+
+```{r}
+
+#' get neighbor cells defined as being a distance away from a set of reference cells
+#' @description get neighbor cells defined as being a distance away from a set of reference cells.
+#'      `reference.ids` can be selected by subsetting rownames from `cells`:
+#'       ex: rownames(cells)[which(cells$celltypes == "A")]
+#'       or can be an entry in a subset list from `selectSubsets()`
+#' 
+#' @param cells sp::SpatialPointsDataFrame object, with celltypes features and point geometries
+#' @param reference.ids vector of cell ids (rownames) in `cells` to be used as the reference cell set
+#' @param dist distance to define neighbors (default = 100)
+#'
+#' @return sp::SpatialPointsDataFrame object of the neighbor cells
+#' 
+getNeighbors <- function(cells,
+                         reference.ids,
+                         dist = 100){
+  
+  ## get the reference cells
+  ref.cells <- cells[reference.ids,]
+  
+  ## define the buffer around the reference cells with distance of
+  refs.buffer <- sf::st_buffer(ref.cells, dist)
+  
+  ## get the neighbor cells
+  cells.inbuffer <- sf::st_intersection(cells, refs.buffer$geometry)
+  ## remove duplicate neighbors
+  neigh.cells <- cells.inbuffer[intersect(rownames(cells.inbuffer), rownames(cells)),]
+  
+  return(neigh.cells)
+  
+}
+
+```
+
+```{r}
+
+#' convert an sp::SpatialPointsDataFrame object to a dataframe with x y coords and cell type labels
+#' @param cells sp::SpatialPointsDataFrame object, with celltypes features and point geometries
+#'
+#' @return datafame with columns: x, y, and celltype
+#'
+spToDF <- function(cells){
+  
+  pos <- data.frame(sf::st_coordinates(sf::st_cast(cells$geometry,"POINT")))
+  pos$type <- cells$celltypes
+  colnames(pos) <- c("x", "y", "celltypes")
+  return(pos)
+  
+}
+
+```
+
+```{r}
+
+b_neighbors <- getNeighbors(cells = cells,
+                            reference.ids = rownames(cells)[which(cells$celltypes == "B")],
+                            dist = 100)
+
+```
+
+```{r}
+
+pos <- spToDF(cells)
+
+pos$b_neighs <- pos$celltypes
+non_neighbors <- which(!rownames(pos) %in% rownames(b_neighbors))
+pos[non_neighbors, "b_neighs"] <- NA
+pos$b_neighs <- factor(pos$b_neighs)
+
+```
+
+```{r}
+
+plt <- vizAllClusters(object = pos[,c("x", "y")],
+              clusters = pos[,c("b_neighs")], s = 3)
+
+plt
+
+```
+
+
+functions to visualize shuffled datasets and zoom in on specific grids?
+
+```{r}
+
+grid <- sf::st_make_grid(cells, cellsize = 300)
+
+
+
+```
+
+
+```{r}
+
+ggplot2::ggplot(grid) +
+  ggplot2::stat_sf_coordinates()
+
+```
+
+```{r}
+
+grid_coords <- as.data.frame(sf::st_coordinates(grid))
+
+grid_coords_centroids <- as.data.frame(sf::st_coordinates(sf::st_centroid(grid)))
+grid_coords_centroids$name <- as.character(rownames(grid_coords_centroids))
+
+ggplot2::ggplot(grid) +
+  ggplot2::geom_sf(fill = NA) +
+  ggplot2::geom_text(data = grid_coords_centroids, ggplot2::aes(X, Y, label = name))
+  
+```
+
+throw the grid with labels on top to find tiles of interest
+
+then extract cells that intersect certain grids to highlight them or visualize them
+
+perhaps could also get some statistics of cells and their colocalization in each grid and color like a heat map?
+
+
+
+
+```{r}
+
+shuff <- readRDS(file = shuffledDataPath)
+
+```
+
+
+for visualizing shuffling resolutions:
+
+```{r}
+
+## add new column of labels, now just plot
+pos$shuff_200 <- shuff$`200`$`1`
+
+## and can overlay grid on top, too using above code
+
+```
+
+```{r}
+
+## grab cells that intersect a given tile
+int <- sf::st_intersection(cells, grid[[5]])
+
+## for multiple tiles
+int <- sf::st_intersection(cells, grid[c(1,2,3,4)])
+
+## transform to a df, plot
+
+```
+
+
+```{r}
+
+
+
+```
+
+
+
+
