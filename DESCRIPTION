@@ -44,7 +44,7 @@ Imports:
   sp,
   dplyr
 Depends:
-    R (>= 4.2)
+    R (>= 4.0)
 Suggests:
   gganimate,
   knitr,
