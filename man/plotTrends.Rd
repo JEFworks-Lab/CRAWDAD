@@ -4,12 +4,18 @@
 \alias{plotTrends}
 \title{Plot trends}
 \usage{
-plotTrends(results, idcol = "id", ...)
+plotTrends(results, idcol = "id", figpath = NULL, width = 4, height = 4, ...)
 }
 \arguments{
 \item{results}{list or data.frame; the information about the resolution, Z-score, reference and the neighbor cell. It can be the result directly obtained by the findTrends function or the melted version created by the \code{meltResultsList()} function.}
 
 \item{idcol}{character; if results are a data.frame, this is the column that contains the additional feature to plot multiple trend lines with}
+
+\item{figpath}{path to save plot to if desired, otherwise plot generated in R session (default: NULL)}
+
+\item{width}{param controlling size of plot if it is to be saved to a file (default: 4)}
+
+\item{height}{param controlling size of plot if it is to be saved to a file (default: 4)}
 
 \item{...}{additional plotting parameters for base R plotting. Fed into "lines()" in script}
 }

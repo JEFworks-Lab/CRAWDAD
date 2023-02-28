@@ -1,6 +1,6 @@
 Package: crawdad
 Type: Package
-Title: Cell Relationship Analysis Workflow Done Across Distances
+Title: Cell Relationship Analysis Workflow Done Across Distances 
 Version: 0.1.0
 Authors@R:
   c(person(given = "Brendan",

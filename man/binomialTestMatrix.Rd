@@ -4,12 +4,12 @@
 \alias{binomialTestMatrix}
 \title{Generate matrix of pvalues indicating if a cell is enriched in neighbors of a given cell type}
 \usage{
-binomialTestMatrix(cells, sub.dist = 100, ncores = 1, verbose = TRUE)
+binomialTestMatrix(cells, neigh.dist = 100, ncores = 1, verbose = TRUE)
 }
 \arguments{
 \item{cells}{sp::SpatialPointsDataFrame object, with celltypes features and point geometries}
 
-\item{sub.dist}{distance to define neighbors (default = 100)}
+\item{neigh.dist}{distance to define neighbors (default = 100)}
 
 \item{ncores}{number of cores for parallelization (default 1)}
 

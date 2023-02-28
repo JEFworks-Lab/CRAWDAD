@@ -22,6 +22,15 @@ makeShuffledCells <- function(cells,
   ## a list for each resolution that contains factors of shuffled cell labels for each permutation
   ## use the cell labels to reorder the labels of the `cells`
   
+  ## check if cells is an `sp::SpatialPointsDataFrame object`
+  if( !any(class(cells) == "sf") ){
+    stop("`cells` needs to be an `sf` object. You can make this using `toSP()`")
+  }
+  
+  if( !any(grepl("celltypes", colnames(cells))) ){
+    stop("`cells` needs a column named `celltypes`. You can make this using `toSP()`")
+  }
+  
   randomcellslist <- lapply(resolutions, function(r) {
     
     grid <- sf::st_make_grid(cells, cellsize = r)
@@ -190,7 +199,7 @@ evaluateSignificance <- function(cells,
 #' Generate matrix of pvalues indicating if a cell is enriched in neighbors of a given cell type
 #' @description pvalues are based on a binomial test and neighbors are defined within a given distance from a cell
 #' @param cells sp::SpatialPointsDataFrame object, with celltypes features and point geometries
-#' @param sub.dist distance to define neighbors (default = 100)
+#' @param neigh.dist distance to define neighbors (default = 100)
 #' @param ncores number of cores for parallelization (default 1)
 #' @param verbose Boolean for verbosity (default TRUE)
 #' 
@@ -198,15 +207,23 @@ evaluateSignificance <- function(cells,
 #' 
 #' @export
 binomialTestMatrix <- function(cells,
-                               sub.dist = 100,
+                               neigh.dist = 100,
                                ncores = 1,
                                verbose = TRUE) {
   
   start_time <- Sys.time()
   
+  ## check to make sure cells is a sp::SpatialPointsDataFrame object
+  if( !any(class(cells) == "sf") ){
+    stop("`cells` needs to be an `sf` object. You can make this using `toSP()`")
+  }
+  if( !any(grepl("celltypes", colnames(cells))) ){
+    stop("`cells` needs a column named `celltypes`. You can make this using `toSP()`")
+  }
+  
   if(verbose){
     message("Binomial test for each cell testing if it is enriched in neighbors of a given cell type based on distance of ",
-            sub.dist)
+            neigh.dist)
   }
   
   cell.types <- cells$celltypes
@@ -221,8 +238,8 @@ binomialTestMatrix <- function(cells,
   ## get global fractions of each cell type (hypothesized probability of success)
   p <- table(cell.types)/sum(table(cell.types))
   
-  ## get buffer around each cell with diameter of sub.dist
-  refs.buffer <- sf::st_buffer(cells, sub.dist)
+  ## get buffer around each cell with diameter of neigh.dist
+  refs.buffer <- sf::st_buffer(cells, neigh.dist)
   
   ## define the binomial test to be performed and used in the mapply below
   binom <- function(x, n, p){stats::binom.test(x, n, p, alternative="greater")$p.value}
@@ -346,12 +363,11 @@ selectSubsets <- function(binomMatrix,
 #'
 #' @param cells sp::SpatialPointsDataFrame object, with celltypes features and point geometries
 #' @param dist numeric distance to define neighbor cells with respect to each reference cell (default: 50)
-#' @param sub.dist distance to define subsets relative to a neighbor cell type (default = 100)
 #' @param perms number of permutations to shuffle for each resolution (default = 1)
 #' @param seed set seed for shuffling (if more than 1 permutation, then seed equals permutation number)
 #' @param ncores number of cores for parallelization (default 1)
 #' @param shuffle.list a list of cell type labels shuffled at different resolutions (output from `makeShuffledCells()`)
-#' @param subset.list a subset list (output from `selectSubsets()`). Required if computing trends for subsets (default NA)
+#' @param subset.list a subset list (output from `selectSubsets()`). Required if computing trends for subsets (default NULL)
 #' @param plot Boolean to return plots (default TRUE)
 #' @param verbose Boolean for verbosity (default TRUE)
 #'
@@ -362,21 +378,14 @@ selectSubsets <- function(binomMatrix,
 #' @export
 findTrends <- function(cells,
                        dist = 50,
-                       sub.type = c("pairwise", "near", "away"),
                        perms = 1,
                        seed = 0,
                        ncores = 1,
                        shuffle.list,
-                       subset.list = NA,
+                       subset.list = NULL,
                        plot = FALSE,
                        verbose = TRUE,
                        removeDups = TRUE){
-  
-  sub.type <- match.arg(sub.type)
-  
-  if(!sub.type %in% c("pairwise", "near", "away")){
-    stop("`sub.type` must be either 'pairwise', 'near' or 'away'")
-  }
   
   if(!is.list(shuffle.list)){
     stop("`shuffle.list` is not a list. You can make this using `makeShuffledCells()`")
@@ -396,11 +405,13 @@ findTrends <- function(cells,
     start_time <- Sys.time()
   }
   
+  sf::st_agr(cells) <- "constant"
+  
   ## load the real data
   # ============================================================
   
   if(verbose){
-    print(cells)
+    # print(cells)
   }
   
   if(verbose){
@@ -410,7 +421,7 @@ findTrends <- function(cells,
   
   ## Evaluate significance (pairwise)
   # ============================================================
-  if(sub.type == "pairwise"){
+  if(is.null(subset.list)){
     
     if(verbose){
       message("Calculating for pairwise combinations")
@@ -457,19 +468,21 @@ findTrends <- function(cells,
     
     ## Evaluate significance (cell type subsets)
     # ============================================================
-  } else if (sub.type %in% c("near", "away")){
+  }
+  
+  if(!is.null(subset.list)){
     
     ## load in the subset file if it exists, or make it and probably be a good
     ## idea to save it, too
     if(!is.list(subset.list)){
-      stop(paste0("`sub.type` selected as ", sub.type, " but `subset.list` is not a list. You can build this using: `binomialTestMatrix()` then `selectSubsets()`"))
+      stop(paste0("`subset.list` is not a list. You can build this using: `binomialTestMatrix()` then `selectSubsets()`"))
     }
     
     combo_ids <- names(subset.list)
     d <- dist
     
     if(verbose){
-      message("Calculating for subset type: ", sub.type)
+      message("Calculating trends for each subset in `subset.list` with respect to the cell types in `cells$celltypes`")
     }
     
     ## initialize list
@@ -515,8 +528,6 @@ findTrends <- function(cells,
       gc(verbose = FALSE, reset = TRUE)
     }
     
-  } else {
-    stop("`sub.type` must be either 'pairwise', 'near' or 'away'")
   }
   
   ## return results

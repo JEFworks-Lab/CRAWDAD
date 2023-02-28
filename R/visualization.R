@@ -4,6 +4,9 @@
 #'
 #' @param results list or data.frame; the information about the resolution, Z-score, reference and the neighbor cell. It can be the result directly obtained by the findTrends function or the melted version created by the `meltResultsList()` function.
 #' @param idcol character; if results are a data.frame, this is the column that contains the additional feature to plot multiple trend lines with
+#' @param figpath path to save plot to if desired, otherwise plot generated in R session (default: NULL)
+#' @param width param controlling size of plot if it is to be saved to a file (default: 4)
+#' @param height param controlling size of plot if it is to be saved to a file (default: 4)
 #' @param ... additional plotting parameters for base R plotting. Fed into "lines()" in script
 #'
 #' @return nothing
@@ -11,6 +14,9 @@
 #' @export
 plotTrends <- function(results,
                        idcol = "id",
+                       figpath = NULL,
+                       width = 4,
+                       height = 4,
                        ...){
   
   
@@ -21,7 +27,20 @@ plotTrends <- function(results,
   if(inherits(results, "list")){
     message("results detected to be a list")
     
-    # pdf(figPath, width=width, height=height)
+    if(assertthat::is.string(figpath)){
+      if(endsWith(x = figpath, "pdf")){
+        grDevices::pdf(file = figpath, width = width, height = height)
+      } else if(endsWith(x = figpath, "png")){
+        grDevices::png(file = figpath, width = width, height = height)
+      } else if(endsWith(x = figpath, "jpg")){
+        grDevices::jpeg(file = figpath, width = width, height = height)
+      } else if(endsWith(x = figpath, "jpeg")){
+        grDevices::jpeg(file = figpath, width = width, height = height)
+      } else {
+        stop("`figpath` needs to end with either `pdf, png, jpg, or jpeg`")
+      }
+    }
+    
     par(mfrow=c(length(names(results)), length(names(results))),
         mar=rep(4,4))
     
@@ -53,7 +72,10 @@ plotTrends <- function(results,
         abline(h = 2, col='red')
       })
     })
-    # dev.off()
+    
+    if(assertthat::is.string(figpath)){
+      dev.off()
+    }
     
     ## if a melted dataframe,
     ## will have an additional column that can serve to plot
@@ -68,9 +90,20 @@ plotTrends <- function(results,
     
     cl <- rainbow(length(ids))
     
-    # pdf(figPath, width=width, height=height)
-    # par(mfrow=c(length(refs), length(neighs)),
-    #     mar=rep(4,4))
+    if(assertthat::is.string(figpath)){
+      if(endsWith(x = figpath, "pdf")){
+        grDevices::pdf(file = figpath, width = width, height = height)
+      } else if(endsWith(x = figpath, "png")){
+        grDevices::png(file = figpath, width = width, height = height)
+      } else if(endsWith(x = figpath, "jpg")){
+        grDevices::jpeg(file = figpath, width = width, height = height)
+      } else if(endsWith(x = figpath, "jpeg")){
+        grDevices::jpeg(file = figpath, width = width, height = height)
+      } else {
+        stop("`figpath` needs to end with either `pdf, png, jpg, or jpeg`")
+      }
+    }
+
     par(mfrow=c(length(neighs), length(refs)),
         mar=c(4,4,4,6)) ## bot, top, left, right
     # par(mfrow=c(2, 6),
@@ -120,7 +153,9 @@ plotTrends <- function(results,
         # }
       })
     })
-    # dev.off()
+    if(assertthat::is.string(figpath)){
+      dev.off()
+    }
     
   } else {
     stop("`results` are neither a list from `findTrends()` or a melted data.frame from `meltResultsList()`")
@@ -132,12 +167,19 @@ plotTrends <- function(results,
 #' This one overlays each neighbor trend wrt the same reference cell type on the plot
 #' 
 #' @param results data.frame; the information about the resolution, Z-score, reference and the neighbor cell. It can be the result directly obtained by the melted `findTrends` output created by the `meltResultsList()` function.
+#' @param figpath path to save plot to if desired, otherwise plot generated in R session (default: NULL)
+#' @param width param controlling size of plot if it is to be saved to a file (default: 4)
+#' @param height param controlling size of plot if it is to be saved to a file (default: 4)
 #' @param ... additional plotting parameters for base R plotting. Fed into "lines()" in script
 #' 
 #' @return nothing
 #' 
 #' @export
-plotTrendsOverlay <- function(results, ...){
+plotTrendsOverlay <- function(results,
+                              figpath = NULL,
+                              width = 4,
+                              height = 4,
+                              ...){
   
   
   ## setup to check if original list output from `findTrends`, and plot one way
@@ -147,7 +189,20 @@ plotTrendsOverlay <- function(results, ...){
   if(inherits(results, "list")){
     message("results detected to be a list")
     
-    # pdf(figPath, width=width, height=height)
+    if(assertthat::is.string(figpath)){
+      if(endsWith(x = figpath, "pdf")){
+        grDevices::pdf(file = figpath, width = width, height = height)
+      } else if(endsWith(x = figpath, "png")){
+        grDevices::png(file = figpath, width = width, height = height)
+      } else if(endsWith(x = figpath, "jpg")){
+        grDevices::jpeg(file = figpath, width = width, height = height)
+      } else if(endsWith(x = figpath, "jpeg")){
+        grDevices::jpeg(file = figpath, width = width, height = height)
+      } else {
+        stop("`figpath` needs to end with either `pdf, png, jpg, or jpeg`")
+      }
+    }
+    
     par(mfrow=c(length(names(results)), length(names(results))),
         mar=rep(4,4))
     
@@ -175,7 +230,10 @@ plotTrendsOverlay <- function(results, ...){
         abline(h = 2, col='red')
       })
     })
-    # dev.off()
+    
+    if(assertthat::is.string(figpath)){
+      dev.off()
+    }
     
     ## if a melted dataframe,
     ## will have an additional column that can serve to plot
@@ -190,13 +248,22 @@ plotTrendsOverlay <- function(results, ...){
     neighs <- unique(results[,"neighbor"])
     cl <- rainbow(length(neighs))
     
-    # pdf(figPath, width=width, height=height)
-    # par(mfrow=c(length(refs), length(neighs)),
-    #     mar=rep(4,4))
+    if(assertthat::is.string(figpath)){
+      if(endsWith(x = figpath, "pdf")){
+        grDevices::pdf(file = figpath, width = width, height = height)
+      } else if(endsWith(x = figpath, "png")){
+        grDevices::png(file = figpath, width = width, height = height)
+      } else if(endsWith(x = figpath, "jpg")){
+        grDevices::jpeg(file = figpath, width = width, height = height)
+      } else if(endsWith(x = figpath, "jpeg")){
+        grDevices::jpeg(file = figpath, width = width, height = height)
+      } else {
+        stop("`figpath` needs to end with either `pdf, png, jpg, or jpeg`")
+      }
+    }
+    
     par(mfrow=c(length(refs),1),
         mar=c(4,4,4,8)) ## bot, top, left, right
-    # par(mfrow=c(2, 6),
-    #     mar=rep(4,4))
     
     ## for each reference cell type...(rows)
     sapply(refs, function(ct1) {
@@ -245,7 +312,11 @@ plotTrendsOverlay <- function(results, ...){
       }
       
     })
-    # dev.off()
+    
+    if(assertthat::is.string(figpath)){
+      dev.off()
+    }
+    
   } else {
     stop("`results` are neither a list from `findTrends` or a melted data.frame from `meltResultsList`")
   }

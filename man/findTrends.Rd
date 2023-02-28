@@ -7,12 +7,11 @@
 findTrends(
   cells,
   dist = 50,
-  sub.type = c("pairwise", "near", "away"),
   perms = 1,
   seed = 0,
   ncores = 1,
   shuffle.list,
-  subset.list = NA,
+  subset.list = NULL,
   plot = FALSE,
   verbose = TRUE,
   removeDups = TRUE
@@ -31,13 +30,11 @@ findTrends(
 
 \item{shuffle.list}{a list of cell type labels shuffled at different resolutions (output from \code{makeShuffledCells()})}
 
-\item{subset.list}{a subset list (output from \code{selectSubsets()}). Required if computing trends for subsets (default NA)}
+\item{subset.list}{a subset list (output from \code{selectSubsets()}). Required if computing trends for subsets (default NULL)}
 
 \item{plot}{Boolean to return plots (default TRUE)}
 
 \item{verbose}{Boolean for verbosity (default TRUE)}
-
-\item{sub.dist}{distance to define subsets relative to a neighbor cell type (default = 100)}
 }
 \value{
 A list that contains a dataframe for each reference cell type, where the dataframe contains the significance values for each neighbor cell type at each resolution
