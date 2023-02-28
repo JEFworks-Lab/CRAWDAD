@@ -6,7 +6,12 @@
 .RDataTmp*
 plots/joint_meeting_figs/
 plots/squidpy/
+plots/
 *.RData
 data/temp/
 data/squidpy/
 data/Xenium/
+data/CODEX/
+misc/
+rockfish_hpc/
+squidpy/
