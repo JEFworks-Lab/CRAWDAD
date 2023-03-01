@@ -1,7 +1,7 @@
 ---
 title: "CRAWDAD Tutorial"
-author: "Brendan F. Miller"
-output: BiocStyle::html_document
+author: "Brendan F. Miller, Jean Fan"
+output: html_document
 vignette: >
   %\VignetteIndexEntry{CRAWDAD Vignette}
   %\VignetteEncoding{UTF-8}
@@ -53,30 +53,27 @@ ncores <- 7
 
 ## cells
 set.seed(1)
-size <- 1000
-x <- runif(size, min = 0, max = 10000)
-y <- runif(size, min = 0, max = 10000)
+size <- 5000
+x <- runif(size, min = 0, max = 1000)
+y <- runif(size, min = 0, max = 1000)
 p <- data.frame(x = x, y = y, type='D')
 rownames(p) <- paste0('cell', 1:size)
-head(p)
 
 ## structures
-set.seed(10)
-N <- 5 
-as <- sample(x, N)
-bs <- sample(y, N)
-invisible(sapply(1:N, function(i) {
+as <- c(250, 250, 750, 750)
+bs <- c(250, 750, 250, 750)
+invisible(sapply(1:4, function(i) {
   a <- as[i]
   b <- bs[i]
-  ro <- 1000
+  ro <- 150
   co <- 'A'
   po <- 1
   c1o <- rownames(p[((p$x-a)^2 + (p$y - b)^2 < ro^2),])
   p[c1o,]$type <<- sample(co, size = length(c1o), replace = TRUE, prob = po)
 }))
 
-invisible(sapply(1:N, function(i) {
-  ro <- 500
+invisible(sapply(1:4, function(i) {
+  ro <- 80
   co <- 'B'
   po <- 1
   
@@ -87,13 +84,10 @@ invisible(sapply(1:N, function(i) {
   p[c1o,]$type <<- sample(co, size = length(c1o), replace = TRUE, prob = po)
 }))
 
-set.seed(1000)
-M <- N*2
-as2 <- sample(x, M)
-bs2 <- sample(y, M)
-
-invisible(sapply(1:M, function(i) {
-  ro <- 500
+as2 <- c(100, 100, 900, 900)
+bs2 <- c(100, 900, 100, 900)
+invisible(sapply(1:4, function(i) {
+  ro <- 50
   co <- 'B'
   po <- 1
   ## outside structure
@@ -103,8 +97,8 @@ invisible(sapply(1:M, function(i) {
   p[c1o,]$type <<- sample(co, size = length(c1o), replace = TRUE, prob = po)
 }))
 
-invisible(sapply(1:N, function(i) {
-  ro <- 400
+invisible(sapply(1:4, function(i) {
+  ro <- 40
   co <- 'C'
   po <- 1
   
@@ -115,11 +109,10 @@ invisible(sapply(1:N, function(i) {
   p[c1o,]$type <<- sample(co, size = length(c1o), replace = TRUE, prob = po)
 }))
 
-set.seed(10000)
-as3 <- sample(x, M)
-bs3 <- sample(y, M)
-invisible(sapply(1:M, function(i) {
-  ro <- 500
+as3 <- c(100, 500, 500, 900)
+bs3 <- c(500, 100, 900, 500)
+invisible(sapply(1:4, function(i) {
+  ro <- 50
   co <- 'C'
   po <- 1
   ## outside structure
@@ -152,14 +145,14 @@ cells
 
 ```
 
-## 
+## Make shuffled background
 
 `CRAWDAD` identifies cell type spatial relationships by comparing cell type organizational patterns in the real data to a set of null distributions, which are a datasets in which cell labels have been shuffled at different scales, or resolutions. We can generate this list of shuffled datasets with the following code:
 
 ```{r}
 ## generate background
 shuffle.list <- crawdad:::makeShuffledCells(cells,
-                          resolutions = c(250, 500, 1000, 3000, 5000, 10000),
+                          resolutions = c(100, 200, 500, 800, 1000),
                           perms = 1,
                           ncores = ncores,
                           seed = 1,
@@ -174,7 +167,7 @@ We can identify trends that describe spatial relationships between pairwise comb
 
 ## find trends, passing background as parameter
 results <- crawdad::findTrends(cells,
-                        dist = 250,
+                        dist = 100,
                         shuffle.list = shuffle.list,
                         perms = 1,
                         ncores = ncores,
@@ -197,7 +190,7 @@ We can also visualize all trends at once by first melting the results list into 
 
 ```{r, fig.width=12, fig.height=12}
 
-dat <- crawdad::meltResultsList(results, id = "dist_250")
+dat <- crawdad::meltResultsList(results, id = "dist_100")
 
 crawdad::plotTrends(results = dat, idcol = "id")
 
@@ -207,10 +200,11 @@ And we can also save the plot as a pdf.
 
 ```{r, eval=FALSE}
 
-dat <- crawdad::meltResultsList(results, id = "dist_250")
+dat <- crawdad::meltResultsList(results, id = "dist_100")
 
-crawdad::plotTrends(results = dat, idcol = "id",
-                    figpath = "tutorial_pairwise_trends.pdf", width = 12, height = 12)
+grDevices::pdf(file = "tutorial_pairwise_trends.pdf", width = 12, height = 12)
+crawdad::plotTrends(results = dat, idcol = "id")
+dev.off()
 
 ```
 
@@ -225,7 +219,7 @@ First, we generate a probability matrix where rows are each cell in the dataset,
 ```{r}
 
 binomMat <- crawdad::binomialTestMatrix(cells,
-                               neigh.dist = 1000,
+                               neigh.dist = 100,
                                ncores = ncores,
                                verbose = TRUE)
 
@@ -307,7 +301,7 @@ We can define the `reference.ids` as the cells that are part of subset "C_near_B
 neighCells <- crawdad::getNeighbors(cells = cells,
                                    reference.ids = subset.list[["C_near_B"]],
                                    removeRef = TRUE, ## whether to keep the reference cells in the output or to remove them and just look at the neighbors.
-                                   dist = 1000)
+                                   dist = 100)
 neighCells
 
 ```
@@ -350,7 +344,7 @@ We can also analyze cell type colocalization patterns for the defined subsets. F
 ```{r}
 
 results2 <- crawdad::findTrends(cells,
-                        dist = 250,
+                        dist = 100,
                         shuffle.list = shuffle.list,
                         subset.list = subset.list,
                         perms = 1,
@@ -369,18 +363,18 @@ crawdad::plotTrends(results = results2["C_near_B"], idcol = "dist")
 
 ## Visualizing cells at specific resolutions
 
-The trends generated by `CRAWDAD` allow us to observe how different cell types are organized with each other across different scales. For example, Two cell types may appear to be separated at small, micro-scale resolutions, but are significantly colocalized on a global scale. These relationships are determined by comapring the real data to a dataset where cell labels have been shuffled at differernt resolutions. This is primarily done by partitioning the dataset into regions of a given size, or resolution, and restricting the shuffling of labels between cells to those that are in the same region.
+The trends generated by `CRAWDAD` allow us to observe how different cell types are organized with each other across different scales. For example, Two cell types may appear to be separated at small, micro-scale resolutions, but are significantly colocalized on a global scale. These relationships are determined by comparing the real data to a dataset where cell labels have been shuffled at differernt resolutions. This is primarily done by partitioning the dataset into regions of a given size, or resolution, and restricting the shuffling of labels between cells to those that are in the same region.
 
 To get a sense of the differences between the real data and the shuffled data, it can be useful to visualize the shuffled cells at a particular resolution. This can be done by extracting the shuffled cell labels at a given resolution:
 
 ```{r}
 
 ## order is: shuffle.list$resolution$permutation
-shuff <- shuffle.list$`3000`$`1`
+shuff <- shuffle.list$`200`$`1`
 head(shuff)
 
 ## for visualization purposes, we can also add the shuffled labels to a new column in `cells`
-cells$shuff_3000 <- shuffle.list$`3000`$`1`
+cells$shuff_200 <- shuffle.list$`200`$`1`
 
 cells
 
@@ -393,7 +387,7 @@ Because `cells` is an `sp::SpatialPointDataSet()`, it is compatible with functio
 ```{r}
 
 ## shuffling grid
-grid <- sf::st_make_grid(cells, cellsize = 3000)
+grid <- sf::st_make_grid(cells, cellsize = 200)
 grid_coords <- as.data.frame(sf::st_coordinates(grid))
 
 ## centers of the grids to add the tile IDs
@@ -422,8 +416,8 @@ plt
 
 ## and here is the shuffled data:
 plt <- crawdad::vizAllClusters(cells = cells,
-                               coms = cells$shuff_3000,
-                               title = "sim shuffled at 3000",
+                               coms = cells$shuff_200,
+                               title = "sim shuffled at 200",
                                axisAdj = 1, s = 6, a = 0.5) +
   ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
   # ggplot2::theme(legend.position="none") +
@@ -460,8 +454,8 @@ plt
 
 ## grid 11 shuffled
 plt <- crawdad::vizAllClusters(cells = cells2,
-                               coms = cells2$shuff_3000,
-                               title = "grid 11 shuffled at 3000",
+                               coms = cells2$shuff_200,
+                               title = "grid 11 shuffled at 200",
                                axisAdj = 1, s = 10, a = 0.5) +
   ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
   # ggplot2::theme(legend.position="none") +

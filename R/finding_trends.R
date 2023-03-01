@@ -31,6 +31,10 @@ makeShuffledCells <- function(cells,
     stop("`cells` needs a column named `celltypes`. You can make this using `toSP()`")
   }
   
+  if(verbose){
+    start_time <- Sys.time()
+  }
+  
   randomcellslist <- lapply(resolutions, function(r) {
     
     grid <- sf::st_make_grid(cells, cellsize = r)
@@ -118,6 +122,11 @@ makeShuffledCells <- function(cells,
     names(permutations) <- 1:perms
     return(permutations)
   })
+  
+  if(verbose){
+    total_t <- round(difftime(Sys.time(), start_time, units="mins"), 2)
+    message(sprintf("Time was %s mins", total_t))
+  }
   
   names(randomcellslist) <- resolutions
   return(randomcellslist)

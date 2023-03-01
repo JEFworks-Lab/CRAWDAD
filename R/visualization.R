@@ -4,9 +4,6 @@
 #'
 #' @param results list or data.frame; the information about the resolution, Z-score, reference and the neighbor cell. It can be the result directly obtained by the findTrends function or the melted version created by the `meltResultsList()` function.
 #' @param idcol character; if results are a data.frame, this is the column that contains the additional feature to plot multiple trend lines with
-#' @param figpath path to save plot to if desired, otherwise plot generated in R session (default: NULL)
-#' @param width param controlling size of plot if it is to be saved to a file (default: 4)
-#' @param height param controlling size of plot if it is to be saved to a file (default: 4)
 #' @param ... additional plotting parameters for base R plotting. Fed into "lines()" in script
 #'
 #' @return nothing
@@ -14,9 +11,6 @@
 #' @export
 plotTrends <- function(results,
                        idcol = "id",
-                       figpath = NULL,
-                       width = 4,
-                       height = 4,
                        ...){
   
   
@@ -26,20 +20,6 @@ plotTrends <- function(results,
   ## if in original list format from `findTrends`:
   if(inherits(results, "list")){
     message("results detected to be a list")
-    
-    if(assertthat::is.string(figpath)){
-      if(endsWith(x = figpath, "pdf")){
-        grDevices::pdf(file = figpath, width = width, height = height)
-      } else if(endsWith(x = figpath, "png")){
-        grDevices::png(file = figpath, width = width, height = height)
-      } else if(endsWith(x = figpath, "jpg")){
-        grDevices::jpeg(file = figpath, width = width, height = height)
-      } else if(endsWith(x = figpath, "jpeg")){
-        grDevices::jpeg(file = figpath, width = width, height = height)
-      } else {
-        stop("`figpath` needs to end with either `pdf, png, jpg, or jpeg`")
-      }
-    }
     
     par(mfrow=c(length(names(results)), length(names(results))),
         mar=rep(4,4))
@@ -73,10 +53,6 @@ plotTrends <- function(results,
       })
     })
     
-    if(assertthat::is.string(figpath)){
-      dev.off()
-    }
-    
     ## if a melted dataframe,
     ## will have an additional column that can serve to plot
     ## several trend lines on the same plot instance
@@ -89,25 +65,9 @@ plotTrends <- function(results,
     ids <- unique(results[,idcol])
     
     cl <- rainbow(length(ids))
-    
-    if(assertthat::is.string(figpath)){
-      if(endsWith(x = figpath, "pdf")){
-        grDevices::pdf(file = figpath, width = width, height = height)
-      } else if(endsWith(x = figpath, "png")){
-        grDevices::png(file = figpath, width = width, height = height)
-      } else if(endsWith(x = figpath, "jpg")){
-        grDevices::jpeg(file = figpath, width = width, height = height)
-      } else if(endsWith(x = figpath, "jpeg")){
-        grDevices::jpeg(file = figpath, width = width, height = height)
-      } else {
-        stop("`figpath` needs to end with either `pdf, png, jpg, or jpeg`")
-      }
-    }
 
     par(mfrow=c(length(neighs), length(refs)),
         mar=c(4,4,4,6)) ## bot, top, left, right
-    # par(mfrow=c(2, 6),
-    #     mar=rep(4,4))
     
     ## for each reference cell type...(rows)
     sapply(refs, function(ct1) {
@@ -148,14 +108,8 @@ plotTrends <- function(results,
         ## threshold lines
         abline(h = -2, col='red')
         abline(h = 2, col='red')
-        # if(legend){
-        #   legend("topright", inset=c(-0.3,0), xpd=TRUE, legend = ids, col=cl, pch=20, cex=0.5, title = "ids")
-        # }
       })
     })
-    if(assertthat::is.string(figpath)){
-      dev.off()
-    }
     
   } else {
     stop("`results` are neither a list from `findTrends()` or a melted data.frame from `meltResultsList()`")
@@ -167,9 +121,6 @@ plotTrends <- function(results,
 #' This one overlays each neighbor trend wrt the same reference cell type on the plot
 #' 
 #' @param results data.frame; the information about the resolution, Z-score, reference and the neighbor cell. It can be the result directly obtained by the melted `findTrends` output created by the `meltResultsList()` function.
-#' @param figpath path to save plot to if desired, otherwise plot generated in R session (default: NULL)
-#' @param width param controlling size of plot if it is to be saved to a file (default: 4)
-#' @param height param controlling size of plot if it is to be saved to a file (default: 4)
 #' @param ... additional plotting parameters for base R plotting. Fed into "lines()" in script
 #' 
 #' @return nothing
@@ -188,20 +139,6 @@ plotTrendsOverlay <- function(results,
   ## if in original list format from `findTrends`:
   if(inherits(results, "list")){
     message("results detected to be a list")
-    
-    if(assertthat::is.string(figpath)){
-      if(endsWith(x = figpath, "pdf")){
-        grDevices::pdf(file = figpath, width = width, height = height)
-      } else if(endsWith(x = figpath, "png")){
-        grDevices::png(file = figpath, width = width, height = height)
-      } else if(endsWith(x = figpath, "jpg")){
-        grDevices::jpeg(file = figpath, width = width, height = height)
-      } else if(endsWith(x = figpath, "jpeg")){
-        grDevices::jpeg(file = figpath, width = width, height = height)
-      } else {
-        stop("`figpath` needs to end with either `pdf, png, jpg, or jpeg`")
-      }
-    }
     
     par(mfrow=c(length(names(results)), length(names(results))),
         mar=rep(4,4))
@@ -231,10 +168,6 @@ plotTrendsOverlay <- function(results,
       })
     })
     
-    if(assertthat::is.string(figpath)){
-      dev.off()
-    }
-    
     ## if a melted dataframe,
     ## will have an additional column that can serve to plot
     ## several trend lines on the same plot instance
@@ -247,20 +180,6 @@ plotTrendsOverlay <- function(results,
     refs <- unique(results[,"reference"])
     neighs <- unique(results[,"neighbor"])
     cl <- rainbow(length(neighs))
-    
-    if(assertthat::is.string(figpath)){
-      if(endsWith(x = figpath, "pdf")){
-        grDevices::pdf(file = figpath, width = width, height = height)
-      } else if(endsWith(x = figpath, "png")){
-        grDevices::png(file = figpath, width = width, height = height)
-      } else if(endsWith(x = figpath, "jpg")){
-        grDevices::jpeg(file = figpath, width = width, height = height)
-      } else if(endsWith(x = figpath, "jpeg")){
-        grDevices::jpeg(file = figpath, width = width, height = height)
-      } else {
-        stop("`figpath` needs to end with either `pdf, png, jpg, or jpeg`")
-      }
-    }
     
     par(mfrow=c(length(refs),1),
         mar=c(4,4,4,8)) ## bot, top, left, right
@@ -307,15 +226,10 @@ plotTrendsOverlay <- function(results,
       ## threshold lines
       abline(h = -1, col='black')
       abline(h = 1, col='black')
-      if(legend){
-        legend("topright", inset=c(-0.4,0), xpd=TRUE, legend = neighs, col=cl, pch=20, cex=0.5, title = "neighbors")
-      }
-      
+
+      legend("topright", inset=c(-0.4,0), xpd=TRUE, legend = neighs, col=cl, pch=20, cex=0.5, title = "neighbors")
+
     })
-    
-    if(assertthat::is.string(figpath)){
-      dev.off()
-    }
     
   } else {
     stop("`results` are neither a list from `findTrends` or a melted data.frame from `meltResultsList`")
@@ -391,14 +305,10 @@ vizAllClusters <- function(cells, coms, ofInterest = NULL,
     plt <- ggplot2::ggplot() +
       
       ## plot other cells
-      # ggplot2::geom_point(data = dat_other, ggplot2::aes(x = x, y = y,
-      #                                                    color = Clusters), size = s, alpha = a) +
       scattermore::geom_scattermore(data = dat_other, ggplot2::aes(x = x, y = y,
                                                                    color = Clusters), pointsize = s, alpha = a,
                                     pixels=c(1000,1000)) +
       ## cluster cells on top
-      # ggplot2::geom_point(data = dat_cluster, ggplot2::aes(x = x, y = y,
-      #                                                      color = Clusters), size = s, alpha = a) +
       scattermore::geom_scattermore(data = dat_cluster, ggplot2::aes(x = x, y = y,
                                                                      color = Clusters), pointsize = s, alpha = a,
                                     pixels=c(1000,1000)) +
@@ -413,8 +323,7 @@ vizAllClusters <- function(cells, coms, ofInterest = NULL,
                       "Clusters" = tempCom)
     
     plt <- ggplot2::ggplot(data = dat) +
-      # ggplot2::geom_point(ggplot2::aes(x = x, y = y,
-      #                                  color = Clusters), size = s, alpha = a) +
+
       scattermore::geom_scattermore(ggplot2::aes(x = x, y = y,
                                                  color = Clusters), pointsize = s, alpha = a,
                                     pixels=c(1000,1000)) +
@@ -452,6 +361,124 @@ vizAllClusters <- function(cells, coms, ofInterest = NULL,
   
   plt
   
+}
+
+
+#' Visualize each cluster separately
+#' 
+#' @description Returns a gridExtra of grobs.
+#'     A single plot where each panel is a different cluster highlighted on the tissue
+#' 
+#' @param cells either a data.frame or sp::SpatialPointsDataFrame object with cell spatial coordinates
+#' @param coms a factor of cell type labels for the cells
+#' @param axisAdj how much to increase axis ranges. If tissue, 100 okay, if embedding, 1 ok (default: 100)
+#' @param size size of points (default: 0.01)
+#' @param a alpha of points (default: 1; no transparency)
+#' @param nacol color of the NA values for cells of "other" cluster (default: (transparentCol(color = "gray", percent = 50)))
+#' @param clustcol color of the cells of the given cluster (default: red)
+#' 
+#' @return plot where each panel is a different cluster
+#' 
+#' @examples 
+#' vizEachCluster(obj, clusters = "com_nn50_VolnormExpr_data")
+#' 
+#' @export
+vizEachCluster <- function(cells, coms, axisAdj = 100, s = 0, a = 1,
+                           nacol = transparentCol(color = "gray", percent = 50),
+                           clustcol = "red"){
+  
+  ## if cells are a data.frame with "x" and "y" cell coordinate columns
+  if( class(cells)[1] == "data.frame" ){
+    pos <- cells[,c("x", "y")]
+    ctemp <- factor(coms)
+    names(ctemp) <- rownames(cells)
+  }
+  
+  ## if cells are the sp::SpatialPointsDataFrame() object
+  if( any(class(cells) == "sf") ){
+    p <- spToDF(cells)
+    pos <- p[,c("x", "y")]
+    ctemp <- factor(coms)
+    names(ctemp) <- rownames(cells)
+  }
+  
+  ps <- lapply(levels(ctemp), function(c) {
+    
+    tempCom <- ctemp
+    tempCom[which(!tempCom %in% c(c))] <- NA
+    tempCom <- droplevels(tempCom)
+    
+    cluster_cell_id <- which(tempCom == c)
+    other_cells_id <- as.vector(which(is.na(tempCom)))
+    
+    dat <- data.frame("x" = pos[,"x"],
+                      "y" = pos[,"y"])
+    
+    dat_cluster <- data.frame("x" = pos[cluster_cell_id,"x"],
+                              "y" = pos[cluster_cell_id,"y"],
+                              "Clusters" = c)
+    
+    dat_other <- data.frame("x" = pos[other_cells_id,"x"],
+                            "y" = pos[other_cells_id,"y"],
+                            "Clusters" = NA)
+    
+    plt <- ggplot2::ggplot() +
+      
+      ## plot other cells
+      scattermore::geom_scattermore(data = dat_other, ggplot2::aes(x = x, y = y,
+                                                                   color = Clusters), pointsize = s, alpha = a,
+                                    pixels=c(1000,1000)) +
+      ## cluster cells on top
+      scattermore::geom_scattermore(data = dat_cluster, ggplot2::aes(x = x, y = y,
+                                                                     color = Clusters), pointsize = s, alpha = a,
+                                    pixels=c(1000,1000)) +
+      
+      ggplot2::scale_color_manual(values = c("red"), na.value = nacol) +
+      
+      ggplot2::scale_y_continuous(expand = c(0, 0), limits = c( min(dat$y)-axisAdj, max(dat$y)+axisAdj)) +
+      ggplot2::scale_x_continuous(expand = c(0, 0), limits = c( min(dat$x)-axisAdj, max(dat$x)+axisAdj) ) +
+      
+      ggplot2::labs(title = c, #paste0("c", c, ", volume normalized"),
+                    x = "x",
+                    y = "y") +
+      
+      ggplot2::theme_classic() +
+      ggplot2::theme(axis.text.x = ggplot2::element_text(size=15, color = "black"),
+                     axis.text.y = ggplot2::element_text(size=15, color = "black"),
+                     axis.title.y = ggplot2::element_text(size=15),
+                     axis.title.x = ggplot2::element_text(size=15),
+                     axis.ticks.x = ggplot2::element_blank(),
+                     plot.title = ggplot2::element_text(size=15),
+                     legend.text = ggplot2::element_blank(),
+                     legend.title = ggplot2::element_blank(),
+                     legend.background = ggplot2::element_blank(),
+                     panel.background = ggplot2::element_blank(),
+                     plot.background = ggplot2::element_blank(),
+                     panel.grid.major.y =  ggplot2::element_blank(),
+                     axis.line = ggplot2::element_line(size = 1, colour = "black"),
+                     plot.margin = ggplot2::unit(c(1,1,1,1), "pt"), # change default margins around each plot
+                     legend.position="none"
+      ) +
+      
+      ggplot2::coord_equal()
+    
+    plt
+    
+  })
+  
+  numplots <- length(levels(ctemp))
+  numcols <- 4
+  numrows <- ceiling(numplots/numcols)
+  numpanels <- numcols * numrows
+  
+  panel_layout <- t(matrix(data = 1:numpanels, nrow = numrows, ncol = numcols))
+  
+  p <- gridExtra::grid.arrange(
+    grobs = ps,
+    layout_matrix = panel_layout
+  )
+  
+  p
 }
 
 
