@@ -68,8 +68,6 @@ plotTrends <- function(results,
 
     par(mfrow=c(length(neighs), length(refs)),
         mar=c(4,4,4,6)) ## bot, top, left, right
-    # par(mfrow=c(2, 6),
-    #     mar=rep(4,4))
     
     ## for each reference cell type...(rows)
     sapply(refs, function(ct1) {
@@ -110,9 +108,6 @@ plotTrends <- function(results,
         ## threshold lines
         abline(h = -2, col='red')
         abline(h = 2, col='red')
-        # if(legend){
-        #   legend("topright", inset=c(-0.3,0), xpd=TRUE, legend = ids, col=cl, pch=20, cex=0.5, title = "ids")
-        # }
       })
     })
     
@@ -231,10 +226,9 @@ plotTrendsOverlay <- function(results,
       ## threshold lines
       abline(h = -1, col='black')
       abline(h = 1, col='black')
-      if(legend){
-        legend("topright", inset=c(-0.4,0), xpd=TRUE, legend = neighs, col=cl, pch=20, cex=0.5, title = "neighbors")
-      }
-      
+
+      legend("topright", inset=c(-0.4,0), xpd=TRUE, legend = neighs, col=cl, pch=20, cex=0.5, title = "neighbors")
+
     })
     
   } else {
@@ -311,14 +305,10 @@ vizAllClusters <- function(cells, coms, ofInterest = NULL,
     plt <- ggplot2::ggplot() +
       
       ## plot other cells
-      # ggplot2::geom_point(data = dat_other, ggplot2::aes(x = x, y = y,
-      #                                                    color = Clusters), size = s, alpha = a) +
       scattermore::geom_scattermore(data = dat_other, ggplot2::aes(x = x, y = y,
                                                                    color = Clusters), pointsize = s, alpha = a,
                                     pixels=c(1000,1000)) +
       ## cluster cells on top
-      # ggplot2::geom_point(data = dat_cluster, ggplot2::aes(x = x, y = y,
-      #                                                      color = Clusters), size = s, alpha = a) +
       scattermore::geom_scattermore(data = dat_cluster, ggplot2::aes(x = x, y = y,
                                                                      color = Clusters), pointsize = s, alpha = a,
                                     pixels=c(1000,1000)) +
@@ -333,8 +323,7 @@ vizAllClusters <- function(cells, coms, ofInterest = NULL,
                       "Clusters" = tempCom)
     
     plt <- ggplot2::ggplot(data = dat) +
-      # ggplot2::geom_point(ggplot2::aes(x = x, y = y,
-      #                                  color = Clusters), size = s, alpha = a) +
+
       scattermore::geom_scattermore(ggplot2::aes(x = x, y = y,
                                                  color = Clusters), pointsize = s, alpha = a,
                                     pixels=c(1000,1000)) +
@@ -436,14 +425,10 @@ vizEachCluster <- function(cells, coms, axisAdj = 100, s = 0, a = 1,
     plt <- ggplot2::ggplot() +
       
       ## plot other cells
-      # ggplot2::geom_point(data = dat_other, ggplot2::aes(x = x, y = y,
-      #                                                    color = Clusters), size = s, alpha = a) +
       scattermore::geom_scattermore(data = dat_other, ggplot2::aes(x = x, y = y,
                                                                    color = Clusters), pointsize = s, alpha = a,
                                     pixels=c(1000,1000)) +
       ## cluster cells on top
-      # ggplot2::geom_point(data = dat_cluster, ggplot2::aes(x = x, y = y,
-      #                                                      color = Clusters), size = s, alpha = a) +
       scattermore::geom_scattermore(data = dat_cluster, ggplot2::aes(x = x, y = y,
                                                                      color = Clusters), pointsize = s, alpha = a,
                                     pixels=c(1000,1000)) +
@@ -464,8 +449,6 @@ vizEachCluster <- function(cells, coms, axisAdj = 100, s = 0, a = 1,
                      axis.title.x = ggplot2::element_text(size=15),
                      axis.ticks.x = ggplot2::element_blank(),
                      plot.title = ggplot2::element_text(size=15),
-                     # legend.text = ggplot2::element_text(size = 12, colour = "black"),
-                     # legend.title = ggplot2::element_text(size = 15, colour = "black", angle = 0, hjust = 0.5),
                      legend.text = ggplot2::element_blank(),
                      legend.title = ggplot2::element_blank(),
                      legend.background = ggplot2::element_blank(),

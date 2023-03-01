@@ -1,8 +1,15 @@
 ---
-title: "2_seqfish"
+title: "seqFISH Analysis"
 author: "Brendan F. Miller"
 date: "2/15/2023"
-output: html_document
+output: rmarkdown::html_document
+# output:
+#   md_document:
+#     variant: markdown_github
+vignette: >
+  %\VignetteIndexEntry{seqFISH analysis}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
 ---
 
 This vignette will go through analyses to reproduce the results and figures of the SeqFISH dataset.
@@ -22,7 +29,7 @@ ncores = 7
 
 # Load data
 
-```{r}
+```{r, eval=FALSE}
 
 seq <- read.csv2(file = paste0(here::here(), "/data/seqfish/seqfish.meta.csv.gz"), row.names = 1, sep = ",")
 seq <- seq[,c("x", "y", "cluster")]
@@ -33,6 +40,17 @@ seq <- seq %>%
 ## convert to SP
 seq <- crawdad:::toSP(pos = seq[,c("x", "y")],
                         celltypes = seq$cluster)
+seq
+
+```
+
+```{r}
+## the above dataset has been saved as an rda file and able to load here:
+data(seq)
+
+## convert to SP
+seq <- crawdad:::toSP(pos = seq[,c("x", "y")],
+                        celltypes = seq$celltypes)
 seq
 
 ```
@@ -66,6 +84,7 @@ shuffle.list <- crawdad:::makeShuffledCells(seq,
 
 ## note: 0.77 minutes with 7 cores, 2.3 GHz Quad-Core Intel Core i7
 ```
+
 save shuffled object
 ```{r, eval=FALSE}
 
@@ -129,6 +148,13 @@ head(binomMat)
 
 ```
 
+save the binomial matrix
+```{r, eval=FALSE}
+
+saveRDS(binomMat, paste0(here::here(), "/data/seqfish/sp.seqfish.binomMat.near.subdist100.rds"))
+
+```
+
 ```{r}
 
 subset.list <- crawdad::selectSubsets(binomMat,
@@ -176,6 +202,19 @@ saveRDS(results.subsets, paste0(here::here(), "/data/seqfish/sp.seqfish.subset.r
 # ---------------------------------
 # Figures
 
+## load data
+
+```{r, eval=FALSE}
+
+shuffle.list <- readRDS(paste0(here::here(), "/data/seqfish/sp.seqfish.shuffled_res100-6000.rds"))
+
+binomMat <- readRDS(paste0(here::here(), "/data/seqfish/sp.seqfish.binomMat.near.subdist100.rds"))
+subset.list <- readRDS(paste0(here::here(), "/data/seqfish/sp.seqfish.subsets.near.subdist100.rds"))
+
+results <- readRDS(paste0(here::here(), "/data/seqfish/sp.seqfish.pairwise.results.dist100.res100-6000.rds"))
+results.subsets <- readRDS(paste0(here::here(), "/data/seqfish/sp.seqfish.subset.results.dist100.res100-6000.rds"))
+
+```
 
 
 

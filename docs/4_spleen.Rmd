@@ -1,0 +1,413 @@
+---
+title: "CODEX Spleen"
+author: "Brendan F. Miller"
+date: "2/15/2023"
+output: rmarkdown::html_document
+# output:
+#   md_document:
+#     variant: markdown_github
+vignette: >
+  %\VignetteIndexEntry{CODEX spleen analysis}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+---
+
+This vignette will go through analyses to reproduce the results and figures of the CODEX spleen datasets.
+
+```{r}
+
+library(crawdad)
+library(dplyr)
+
+```
+
+```{r}
+
+ncores = 7
+
+```
+
+# PKHL
+
+## Load data
+
+```{r, eval=FALSE}
+
+pkhl <- read.csv2(file = paste0(here::here(), "/data/spleen/PKHL.meta.csv.gz"), row.names = 1)
+pkhl <- pkhl[,c("x", "y", "celltypes_folBcombined")]
+## make sure the coordinates are numeric
+pkhl <- pkhl %>%
+  dplyr::mutate_at(vars(x, y), as.numeric)
+
+## convert to SP
+pkhl <- crawdad:::toSP(pos = pkhl[,c("x", "y")],
+                        celltypes = pkhl$celltypes_folBcombined)
+pkhl
+
+```
+
+```{r}
+## the above dataset has been saved as an rda file and able to load here:
+data(pkhl)
+
+## convert to SP
+pkhl <- crawdad:::toSP(pos = pkhl[,c("x", "y")],
+                        celltypes = pkhl$celltypes)
+pkhl
+
+```
+
+## Visualize celltypes
+
+```{r, fig.height=24, fig.width=24}
+
+crawdad::vizEachCluster(cells = pkhl,
+                        coms = as.factor(pkhl$celltypes),
+                        s = 2)
+
+```
+
+## Make shuffled background
+
+```{r}
+
+resolutions <- c(100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000, 6000)
+
+```
+
+```{r, eval=FALSE}
+## generate background
+shuffle.list.pkhl <- crawdad:::makeShuffledCells(pkhl,
+                          resolutions = resolutions,
+                          perms = 1,
+                          ncores = ncores,
+                          seed = 1,
+                          verbose = TRUE)
+
+## note: 13.29 minutes with 7 cores, 2.3 GHz Quad-Core Intel Core i7
+```
+
+save shuffled object
+```{r, eval=FALSE}
+
+saveRDS(shuffle.list.pkhl, paste0(here::here(), "/data/spleen/PKHL/pkhl.folBcombined.shuffled_res100-6000.rds"))
+
+```
+
+## Run pairwise analysis
+
+```{r, eval=FALSE}
+
+## find trends, passing background as parameter
+results.pkhl <- crawdad::findTrends(pkhl,
+                        dist = 100,
+                        shuffle.list = shuffle.list.pkhl,
+                        perms = 1,
+                        ncores = ncores,
+                        seed = 1, 
+                        verbose = TRUE)
+
+## note: 9.92 minutes with 7 cores, 2.3 GHz Quad-Core Intel Core i7
+
+```
+
+save pairwise results object
+```{r, eval=FALSE}
+
+saveRDS(results.pkhl, paste0(here::here(), "/data/spleen/PKHL/pkhl.folBcombined.pairwise.results.dist100.res100-6000.rds"))
+
+## object with distances 100-200: pkhl.pairwise.100-200.folBcombined.results.res100-6000.removeDups.rds
+
+```
+
+## Visualizing trends
+
+```{r, eval=FALSE}
+
+crawdad::plotTrends(results = results.pkhl["CD4 Memory T cells"], idcol = "dist")
+
+```
+
+```{r, eval=FALSE}
+
+crawdad::plotTrends(results = results.pkhl["Podoplanin"], idcol = "dist")
+
+```
+
+## Defining susbets
+
+```{r, eval=FALSE}
+
+binomMat.pkhl <- crawdad::binomialTestMatrix(pkhl,
+                               neigh.dist = 100,
+                               ncores = ncores,
+                               verbose = TRUE)
+
+head(binomMat.pkhl)
+
+## note: 143.72 minutes with 7 cores, 2.3 GHz Quad-Core Intel Core i7
+## previous code iteration on rockfish took 15:09:48 hours with 32 cores! much better now 
+
+```
+
+save the binomial matrix
+```{r, eval=FALSE}
+
+saveRDS(binomMat.pkhl, paste0(here::here(), "/data/spleen/PKHL/pkhl.folBcombined.binomMat.near.subdist100.rds"))
+
+```
+
+```{r, eval=FALSE}
+
+subset.list.pkhl <- crawdad::selectSubsets(binomMat.pkhl,
+                             pkhl$celltypes,
+                             sub.type = "near",
+                             sub.thresh = 0.05,
+                             ncores = ncores,
+                             verbose = TRUE)
+
+```
+
+save the subsets
+```{r, eval=FALSE}
+
+saveRDS(subset.list.pkhl, paste0(here::here(), "/data/spleen/PKHL/pkhl.folBcombined.subsets.near.subdist100.rds"))
+
+```
+
+## Run analysis on subsets
+
+```{r}
+
+results.subsets.pkhl <- crawdad::findTrends(pkhl,
+                        dist = 100,
+                        shuffle.list = shuffle.list.pkhl,
+                        subset.list = subset.list.pkhl,
+                        perms = 1,
+                        ncores = ncores,
+                        seed = 1, 
+                        verbose = TRUE)
+
+## note: 22.36 minutes with 7 cores, 2.3 GHz Quad-Core Intel Core i7; vs 12:23 minutes 14 cores on rockfish
+
+```
+
+save the results
+```{r, eval=FALSE}
+
+saveRDS(results.subsets.pkhl, paste0(here::here(), "/data/spleen/PKHL/pkhl.folBcombined.subset.results.dist100.res100-6000.rds"))
+
+## pkhl.triplet.near.binom.subdist100.dist100.folBcombined.results.res100-6000.removeDups.rds
+
+```
+
+# KSFB
+
+## Load data
+
+```{r, eval=TRUE}
+
+ksfb <- read.csv2(file = paste0(here::here(), "/data/spleen/KSFB.meta.csv.gz"), row.names = 1)
+ksfb <- ksfb[,c("x", "y", "celltypes_folBcombined")]
+## make sure the coordinates are numeric
+ksfb <- ksfb %>%
+  dplyr::mutate_at(vars(x, y), as.numeric)
+
+## convert to SP
+ksfb <- crawdad:::toSP(pos = ksfb[,c("x", "y")],
+                        celltypes = ksfb$celltypes_folBcombined)
+ksfb
+
+```
+
+```{r, eval=FALSE}
+## the above dataset has been saved as an rda file and able to load here:
+# data(pkhl)
+
+## convert to SP
+# pkhl <- crawdad:::toSP(pos = pkhl[,c("x", "y")],
+#                         celltypes = pkhl$celltypes)
+
+```
+
+## Visualize celltypes
+
+```{r, fig.height=24, fig.width=24}
+
+crawdad::vizEachCluster(cells = ksfb,
+                        coms = as.factor(ksfb$celltypes),
+                        s = 2)
+
+```
+
+## Make shuffled background
+
+```{r}
+
+resolutions <- c(100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000, 6000)
+
+```
+
+```{r, eval=FALSE}
+## generate background
+shuffle.list.ksfb <- crawdad:::makeShuffledCells(ksfb,
+                          resolutions = resolutions,
+                          perms = 1,
+                          ncores = ncores,
+                          seed = 1,
+                          verbose = TRUE)
+
+## note:  minutes with 7 cores, 2.3 GHz Quad-Core Intel Core i7
+```
+
+save shuffled object
+```{r, eval=FALSE}
+
+saveRDS(shuffle.list.ksfb, paste0(here::here(), "/data/spleen/KSFB/ksfb.folBcombined.shuffled_res100-6000.rds"))
+
+```
+
+## Run pairwise analysis
+
+```{r, eval=FALSE}
+
+## find trends, passing background as parameter
+results.ksfb <- crawdad::findTrends(ksfb,
+                        dist = 100,
+                        shuffle.list = shuffle.list.ksfb,
+                        perms = 1,
+                        ncores = ncores,
+                        seed = 1, 
+                        verbose = TRUE)
+
+## note:  minutes with 7 cores, 2.3 GHz Quad-Core Intel Core i7
+
+```
+
+save pairwise results object
+```{r, eval=FALSE}
+
+saveRDS(results.ksfb, paste0(here::here(), "/data/spleen/KSFB/ksfb.folBcombined.pairwise.results.dist100.res100-6000.rds"))
+
+## object with distances 100-200: ksfb.pairwise.100-200.folBcombined.results.res100-6000.removeDups.rds
+
+```
+
+## Visualizing trends
+
+```{r, eval=FALSE}
+
+crawdad::plotTrends(results = results.ksfb["CD4 Memory T cells"], idcol = "dist")
+
+```
+
+```{r, eval=FALSE}
+
+crawdad::plotTrends(results = results.ksfb["Podoplanin"], idcol = "dist")
+
+```
+
+## Defining susbets
+
+```{r, eval=FALSE}
+
+binomMat.ksfb <- crawdad::binomialTestMatrix(ksfb,
+                               neigh.dist = 100,
+                               ncores = ncores,
+                               verbose = TRUE)
+
+head(binomMat.ksfb)
+
+## note:  minutes with 7 cores, 2.3 GHz Quad-Core Intel Core i7
+
+```
+
+save the binomial matrix
+```{r, eval=FALSE}
+
+saveRDS(binomMat.ksfb, paste0(here::here(), "/data/spleen/KSFB/ksfb.folBcombined.binomMat.near.subdist100.rds"))
+
+```
+
+```{r, eval=FALSE}
+
+subset.list.ksfb <- crawdad::selectSubsets(binomMat.ksfb,
+                             ksfb$celltypes,
+                             sub.type = "near",
+                             sub.thresh = 0.05,
+                             ncores = ncores,
+                             verbose = TRUE)
+
+```
+
+save the subsets
+```{r, eval=FALSE}
+
+saveRDS(subset.list.ksfb, paste0(here::here(), "/data/spleen/KSFB/ksfb.folBcombined.subsets.near.subdist100.rds"))
+
+```
+
+## Run analysis on subsets
+
+```{r, eval=FALSE}
+
+results.subsets.ksfb <- crawdad::findTrends(ksfb,
+                        dist = 100,
+                        shuffle.list = shuffle.list.ksfb,
+                        subset.list = subset.list.ksfb,
+                        perms = 1,
+                        ncores = ncores,
+                        seed = 1, 
+                        verbose = TRUE)
+
+## note:  minutes with 7 cores, 2.3 GHz Quad-Core Intel Core i7; vs 12:23 minutes 14 cores on rockfish
+
+```
+
+save the results
+```{r, eval=FALSE}
+
+saveRDS(results.subsets.ksfb, paste0(here::here(), "/data/spleen/KSFB/ksfb.folBcombined.subset.results.dist100.res100-6000.rds"))
+
+## ksfb.triplet.near.binom.subdist100.dist100.folBcombined.results.res100-6000.removeDups.rds
+
+```
+
+# ---------------------------------
+# Figures
+
+## load data
+
+```{r, eval=FALSE}
+
+shuffle.list.pkhl <- readRDS(paste0(here::here(), "/data/spleen/PKHL/pkhl.folBcombined.shuffled_res100-6000.rds"))
+
+binomMat.pkhl <- readRDS(paste0(here::here(), "/data/spleen/PKHL/pkhl.folBcombined.binomMat.near.subdist100.rds"))
+subset.list.pkhl <- readRDS(paste0(here::here(), "/data/spleen/PKHL/pkhl.folBcombined.subsets.near.subdist100.rds"))
+
+results.pkhl <- readRDS(paste0(here::here(), "/data/spleen/PKHL/pkhl.folBcombined.pairwise.results.dist100.res100-6000.rds")) ## newest
+# results.pkhl <- readRDS(paste0(here::here(), "/data/spleen/PKHL/pkhl.pairwise.100-200.folBcombined.results.res100-6000.removeDups.rds")) ## old file, but should be equal
+
+results.subsets.pkhl <- readRDS(paste0(here::here(), "/data/spleen/PKHL/pkhl.folBcombined.subset.results.dist100.res100-6000.rds")) ## newest
+# results.subsets.pkhl <- readRDS(paste0(here::here(), "/data/spleen/PKHL/pkhl.triplet.near.binom.subdist100.dist100.folBcombined.results.res100-6000.removeDups.rds")) ## old file but, but should be equal
+
+```
+
+```{r, eval=FALSE}
+
+shuffle.list.ksfb <- readRDS(paste0(here::here(), "/data/spleen/KSFB/ksfb.folBcombined.shuffled_res100-6000.rds"))
+
+# binomMat.ksfb <- readRDS(paste0(here::here(), "/data/spleen/KSFB/ksfb.folBcombined.binomMat.near.subdist100.rds"))
+subset.list.ksfb <- readRDS(paste0(here::here(), "/data/spleen/KSFB/ksfb.folBcombined.subsets.near.subdist100.rds"))
+
+# results.ksfb <- readRDS(paste0(here::here(), "/data/spleen/KSFB/ksfb.folBcombined.pairwise.results.dist100.res100-6000.rds")) ## newest
+results.ksfb <- readRDS(paste0(here::here(), "/data/spleen/KSFB/ksfb.pairwise.100-200.folBcombined.results.res100-6000.removeDups.rds")) ## old file, but should be equal
+
+# results.subsets.ksfb <- readRDS(paste0(here::here(), "/data/spleen/KSFB/ksfb.folBcombined.subset.results.dist100.res100-6000.rds")) ## newest
+results.subsets.ksfb <- readRDS(paste0(here::here(), "/data/spleen/KSFB/ksfb.triplet.near.binom.subdist100.dist100.folBcombined.results.res100-6000.removeDups.rds")) ## old file, but should be equal
+
+```
+
+
+
+
