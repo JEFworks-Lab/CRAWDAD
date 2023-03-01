@@ -31,7 +31,6 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
 Imports: 
   assertthat,
-  testthat,
   BiocParallel,
   parallel,
   ggplot2,
@@ -41,13 +40,15 @@ Imports:
   reshape2,
   stats,
   sf,
-  sp,
-  dplyr
+  sp
 Depends:
     R (>= 4.0)
 Suggests:
   gganimate,
   knitr,
-  rmarkdown
+  rmarkdown,
+  testthat,
+  here,
+  dplyr
 VignetteBuilder:
   knitr
