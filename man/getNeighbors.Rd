@@ -4,7 +4,13 @@
 \alias{getNeighbors}
 \title{get neighbor cells defined as being a distance away from a set of reference cells}
 \usage{
-getNeighbors(cells, reference.ids, removeRef = TRUE, dist = 100)
+getNeighbors(
+  cells,
+  reference.ids,
+  removeRef = TRUE,
+  dist = 100,
+  returnSP = FALSE
+)
 }
 \arguments{
 \item{cells}{sp::SpatialPointsDataFrame object, with celltypes features and point geometries}
@@ -12,9 +18,12 @@ getNeighbors(cells, reference.ids, removeRef = TRUE, dist = 100)
 \item{reference.ids}{vector of cell ids (rownames) in \code{cells} to be used as the reference cell set}
 
 \item{dist}{distance to define neighbors (default = 100)}
+
+\item{returnSP}{boolean to return either an sp::SpatialPointsDataFrame object of just the neighbors
+otherwise returns factor where non neighbor cells are NAs. (default: FALSE)}
 }
 \value{
-sp::SpatialPointsDataFrame object of the neighbor cells
+sp::SpatialPointsDataFrame object of the neighbor cells or factor of neighbor cells
 }
 \description{
 get neighbor cells defined as being a distance away from a set of reference cells.

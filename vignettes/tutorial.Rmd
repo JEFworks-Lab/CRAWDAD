@@ -208,6 +208,56 @@ dev.off()
 
 ```
 
+The function `vizTrends()` is another plotting function that is built around `ggplot2`. This requires the results list from `findTrends()` to be melted via `meltResultsList` but provides additional functionality. 
+
+By default, `vizTrends()` is setup to facet wrap reference and neighbor cell type trends. Reference cell types are column headers and neighbor cell types are row headers.
+
+```{r}
+
+dat <- crawdad::meltResultsList(results)
+
+plt <- vizTrends(dat = dat)
+plt 
+
+## because the output is a `ggplot2` object, we can perform additional manipulations, like log-transformation of the x-axis:
+plt <- vizTrends(dat = dat) +
+  ggplot2::scale_x_log10()
+plt 
+
+```
+
+We can also turn off the facet wrapping, and then choose to plot multiple trend lines in the same plot using the `id` column (or another column) in the melted results data.frame. This can be useful if we want to compare the overlay of two trends:
+
+```{r}
+
+## melt the results into a data.frame
+dat <- crawdad::meltResultsList(results)
+
+## select different trend combinations
+d1 <- dat[dat$reference == "A" & dat$neighbor == "A",]
+plt <- vizTrends(dat = d1) +
+  ggplot2::scale_x_log10()
+plt 
+
+d2 <- dat[dat$reference == "A" & dat$neighbor == "B",]
+plt <- vizTrends(dat = d2) +
+  ggplot2::scale_x_log10()
+plt 
+
+## combine the trends into one data.frame, and have the "id" column label the combo, plot both lines on same plot
+## turn off the facet wrap so just coloring the two trends, which are labeled using the "id" column
+
+d1$id <- "A vs A"
+d2$id <- "A vs B"
+
+d <- dplyr::bind_rows(list(d1, d2))
+
+plt <- vizTrends(dat = d, facet = FALSE) +
+  ggplot2::scale_x_log10()
+plt 
+
+```
+
 ## Defining susbets
 
 We can also further subdivide cell types into subsets by looking for cell types whose neighbors are enriched in another particular cell type. We can do this by performing a binomial test to test if a cell's neighbors are significantly enriched in a particular cell type compared to the overall probability of observing a particular cell type.
@@ -259,10 +309,8 @@ plt <- crawdad::vizAllClusters(cells = cells,
                                ofInterest = c("B", "C"),
                                title = "sim",
                                axisAdj = 1, s = 6, a = 0.5) +
-  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
-  # ggplot2::theme(legend.position="none") +
-  ggplot2::labs(x = "x",
-                y = "y")
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
+
 plt
 
 ```
@@ -284,13 +332,13 @@ plt <- crawdad::vizAllClusters(cells = cells,
                                ofInterest = c("B", "C", "C_near_B"),
                                title = "sim",
                                axisAdj = 1, s = 6, a = 0.5) +
-  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
-  # ggplot2::theme(legend.position="none") +
-  ggplot2::labs(x = "x",
-                y = "y")
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
+
 plt
 
 ```
+
+## Visualize neighboring cells
 
 To see the neighbors around our subset cells of interest and to get a visual sense of how these neighbors are influencing the subset assignment, we can first select cells that are neighbors with a set of reference cells. 
 
@@ -301,24 +349,21 @@ We can define the `reference.ids` as the cells that are part of subset "C_near_B
 neighCells <- crawdad::getNeighbors(cells = cells,
                                    reference.ids = subset.list[["C_near_B"]],
                                    removeRef = TRUE, ## whether to keep the reference cells in the output or to remove them and just look at the neighbors.
-                                   dist = 100)
-neighCells
+                                   dist = 100,
+                                   returnSP = FALSE)
+
+## setting `returnSP = FALSE` returns a factor of all the cells, but non-neighbors are now labeled as NA
+head(neighCells)
 
 ```
 
-To visualize the neighbors, let's add a new column of cell labels to the `cells` object where we only keep labels for cells that are neighbors with the "C_near_B" subset:
+Now lets use this new factor of celltype labels to visualize the neighbors and the subset cells of interest:
 
 ```{r}
 
-## make new column of cell type labels
-cells$neighs <- cells$celltypes
-## set the non neighbor cell labels to NA
-non_neighbors <- setdiff(rownames(cells), rownames(neighCells))
-cells[non_neighbors,]$neighs <- NA
-
-## now let's again label the cells that are the specific subset, but using the new "neigh" cell label column
+## now let's again label the cells that are the specific subset, but using the new "neighCells" factor of celltype labels
 annots_temp <- crawdad::selectLabels(df = cells,
-                                     com = cells$neighs,
+                                     com = neighCells,
                                      subset_list = subset.list,
                                      cellIDs = c("A", "B", "C", "D"), ## original IDs in com of interest
                                      subsetIDs = c("C_near_B") ## subsets in subset_list of interest
@@ -329,11 +374,44 @@ plt <- crawdad::vizAllClusters(cells = cells,
                                coms = annots_temp,
                                title = "sim",
                                axisAdj = 1, s = 6, a = 0.5) +
-  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
-  # ggplot2::theme(legend.position="none") +
-  ggplot2::labs(x = "x",
-                y = "y")
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
+
 plt
+
+```
+
+Alternatively, we can choose to skip `crawdad::selectLabels` and just visualize the neighbor cells using the new factor of celltype labels instead of making a temporary `annots_temp` factor like what was done above.
+
+```{r}
+
+plt <- crawdad::vizAllClusters(cells = cells,
+                               coms = neighCells,
+                               title = "sim",
+                               axisAdj = 1, s = 6, a = 0.5) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
+
+plt
+
+```
+
+This can speed up the process of finding a neighbor distance that might be appropriate. For example, continuing to use the "C_near_B" subset as our reference:
+
+```{r}
+
+## control this variable `neigh.dist` to see what type of neighbor distance is appropriate
+neigh.dist <- 50
+neighCells <- crawdad::getNeighbors(cells = cells,
+                                   reference.ids = subset.list[["C_near_B"]],
+                                   dist = neigh.dist)
+
+plt <- crawdad::vizAllClusters(cells = cells,
+                               coms = neighCells,
+                               title = paste0("neigh.dist = ", neigh.dist),
+                               axisAdj = 1, s = 6, a = 0.5) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
+
+plt
+
 
 ```
 
@@ -419,10 +497,7 @@ plt <- crawdad::vizAllClusters(cells = cells,
                                coms = cells$shuff_200,
                                title = "sim shuffled at 200",
                                axisAdj = 1, s = 6, a = 0.5) +
-  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
-  # ggplot2::theme(legend.position="none") +
-  ggplot2::labs(x = "x",
-                y = "y") +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
   
   ## add in the grid information on top of the plot
   ggplot2::geom_sf(data = grid, fill = NA) +
@@ -445,11 +520,8 @@ plt <- crawdad::vizAllClusters(cells = cells2,
                                coms = cells2$celltypes,
                                title = "grid 11",
                                axisAdj = 1, s = 10, a = 0.5) +
-  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
-  # ggplot2::theme(legend.position="none") +
-  ggplot2::labs(x = "x",
-                y = "y")
-  
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
+
 plt
 
 ## grid 11 shuffled
@@ -457,10 +529,7 @@ plt <- crawdad::vizAllClusters(cells = cells2,
                                coms = cells2$shuff_200,
                                title = "grid 11 shuffled at 200",
                                axisAdj = 1, s = 10, a = 0.5) +
-  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
-  # ggplot2::theme(legend.position="none") +
-  ggplot2::labs(x = "x",
-                y = "y")
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
   
 plt
 
