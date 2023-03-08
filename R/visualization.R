@@ -127,9 +127,6 @@ plotTrends <- function(results,
 #' 
 #' @export
 plotTrendsOverlay <- function(results,
-                              figpath = NULL,
-                              width = 4,
-                              height = 4,
                               ...){
   
   
@@ -251,10 +248,11 @@ plotTrendsOverlay <- function(results,
 #' @param a alpha of points (default: 1; no transparency)
 #' @param nacol color of the NA values for cells of "other" cluster (default: (transparentCol(color = "gray", percent = 50)))
 #' 
-#' @return plot of clusters
+#' @return plot
 #' 
-#' @examples 
-#' vizAllClusters(obj, clusters = "com_nn50_VolnormExpr_data", ofInterest = c("1", "2"))
+#' @examples
+#' data(slide)
+#' vizAllClusters(slide, coms = slide$celltypes)
 #' 
 #' @export
 vizAllClusters <- function(cells, coms, ofInterest = NULL,
@@ -349,7 +347,8 @@ vizAllClusters <- function(cells, coms, ofInterest = NULL,
                    legend.title = ggplot2::element_text(size = 15, colour = "black", angle = 0, hjust = 0.5),
                    panel.background = ggplot2::element_blank(),
                    plot.background = ggplot2::element_blank(),
-                   panel.grid.major.y =  ggplot2::element_blank(),
+                   legend.background = ggplot2::element_blank(),
+                   panel.grid.major.y = ggplot2::element_blank(),
                    axis.line = ggplot2::element_line(size = 1, colour = "black")
                    # legend.position="none"
     ) +
@@ -377,10 +376,11 @@ vizAllClusters <- function(cells, coms, ofInterest = NULL,
 #' @param nacol color of the NA values for cells of "other" cluster (default: (transparentCol(color = "gray", percent = 50)))
 #' @param clustcol color of the cells of the given cluster (default: red)
 #' 
-#' @return plot where each panel is a different cluster
+#' @return plot where each panel is a different celltype
 #' 
 #' @examples 
-#' vizEachCluster(obj, clusters = "com_nn50_VolnormExpr_data")
+#' data(slide)
+#' vizEachCluster(slide, coms = slide$celltypes, ofInterest = c("Bergmann", "Purkinje"))
 #' 
 #' @export
 vizEachCluster <- function(cells, coms, axisAdj = 100, s = 0, a = 1,
@@ -493,26 +493,36 @@ vizEachCluster <- function(cells, coms, axisAdj = 100, s = 0, a = 1,
 ## colors = by default used rainbow(nc), but can specifically change to vector 
 ## to be used in scale_color_manual
 
-vizTrends <- function(dat, clusters, yaxis = "zscore",
-                      sig = -log10(0.05/nrow(dat)), ## sig thresh for num tests
-                      nc = length(unique(dat[[clusters]])),
+#' Plot trends with ggplot2
+#' 
+#' @description The input data.frame should be the results list from `findTrends()` that has been melted into a data.frame using `meltResultsList()`.
+#' 
+#' @param dat data.frame; the information about the resolution, Z-score, reference and the neighbor cell.
+#' @param id column name that contains an additional feature to color trend lines (default: "id")
+#' @param yaxis column that has significance value across resolutions (default: "Z")
+#' @param sig.thresh threshold for significance, ie Z score significance threshold (default: 2).
+#' @param nc number of colors to use for labeling features in id column
+#' @param colors color assignment for each of the features in id column
+#' @param title plot title (default: NA)
+#' 
+#' @export
+vizTrends <- function(dat, id = "id", yaxis = "Z",
+                      sig.thresh = 2, # -log10(0.05/nrow(dat)), ## sig thresh for num tests
+                      nc = length(unique(dat[[id]])),
                       colors = rainbow(nc),
                       title = NA){
   
   plt <- ggplot2::ggplot(data = dat) +
-    ggplot2::geom_point(ggplot2::aes(x = resolution, y = .data[[yaxis]], color = .data[[clusters]]), size = 1.5) +
-    ggplot2::geom_path(ggplot2::aes(x = resolution, y = .data[[yaxis]], color = .data[[clusters]]), size = 1.5) +
+    ggplot2::geom_point(ggplot2::aes(x = resolution, y = .data[[yaxis]], color = .data[[id]]), size = 1.5) +
+    ggplot2::geom_path(ggplot2::aes(x = resolution, y = .data[[yaxis]], color = .data[[id]]), size = 1.5) +
     ggplot2::scale_color_manual(values = colors) +
     ggplot2::geom_hline(yintercept = 0, color = "black", size = 1) +
-    ggplot2::geom_hline(yintercept = sig, color = "red", size = 0.6) +
-    ggplot2::geom_hline(yintercept = -sig, color = "red", size = 0.6) +
+    ggplot2::geom_hline(yintercept = sig.thresh, color = "black", size = 0.6) +
+    ggplot2::geom_hline(yintercept = -sig.thresh, color = "black", size = 0.6) +
     ggplot2::facet_grid(neighbor ~ reference) +
-    ggplot2::scale_x_log10() +
-    # ggplot2::scale_y_continuous(trans = ggallin::pseudolog10_trans) +
-    # ggplot2::scale_y_continuous(expand = c(0, 0), limits = c( min(dat$y)-axisAdj, max(dat$y)+axisAdj)) +
-    # ggplot2::scale_y_log10() +
     ggplot2::ggtitle(title) +
-    
+    # ggplot2::scale_x_log10() +
+    # ggplot2::scale_y_continuous(trans = ggallin::pseudolog10_trans) +
     ggplot2::theme_classic() +
     ggplot2::theme(axis.text.x = ggplot2::element_text(size=12, color = "black", angle = -90, vjust = 0.5, hjust = 0),
                    axis.text.y = ggplot2::element_text(size=12, color = "black"),
@@ -521,14 +531,17 @@ vizTrends <- function(dat, clusters, yaxis = "zscore",
                    axis.ticks.x = ggplot2::element_blank(),
                    plot.title = ggplot2::element_text(size=15),
                    plot.background = ggplot2::element_blank(),
+                   legend.background = ggplot2::element_blank(),
+                   panel.background = ggplot2::element_blank(),
                    panel.grid.major =  ggplot2::element_line(size = 0.1, colour = "black"),
                    panel.border = ggplot2::element_rect(colour = "black", fill=NA, size=1),
                    axis.line = ggplot2::element_line(size = 0, colour = "black"),
                    panel.spacing = ggplot2::unit(0.1, "lines"),
                    strip.text = ggplot2::element_text(size = 12),
-                   legend.title = ggplot2::element_blank()
+                   legend.title = ggplot2::element_blank(),
                    # legend.position="none"
     )
+  
   plt
   
 }
