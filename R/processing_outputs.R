@@ -8,14 +8,17 @@
 #' @param cells sp::SpatialPointsDataFrame object, with celltypes features and point geometries
 #' @param reference.ids vector of cell ids (rownames) in `cells` to be used as the reference cell set
 #' @param dist distance to define neighbors (default = 100)
+#' @param returnSP boolean to return either an sp::SpatialPointsDataFrame object of just the neighbors
+#' otherwise returns factor where non neighbor cells are NAs. (default: FALSE)
 #'
-#' @return sp::SpatialPointsDataFrame object of the neighbor cells
+#' @return sp::SpatialPointsDataFrame object of the neighbor cells or factor of neighbor cells
 #' 
 #' @export
 getNeighbors <- function(cells,
                          reference.ids,
                          removeRef = TRUE,
-                         dist = 100){
+                         dist = 100,
+                         returnSP = FALSE){
   
   ## get the reference cells
   ref.cells <- cells[reference.ids,]
@@ -33,8 +36,21 @@ getNeighbors <- function(cells,
     neigh.cells <- neigh.cells[setdiff(rownames(neigh.cells), reference.ids),]
   }
   
-  return(neigh.cells)
+  ## get the new com factor of neighbor cells only
+  neigh_coms <- cells$celltypes
+  names(neigh_coms) <- rownames(cells)
+  ## set the non neighbor cell labels to NA
+  non_neighbors <- setdiff(rownames(cells), rownames(neigh.cells))
+  neigh_coms[non_neighbors] <- NA
   
+  ## if true, the output is sp::SpatialPointsDataFrame of just the neighbor cells
+  ## otherwise, the output is a new com factor of all the cells in `cells` but
+  ## non neighbors are NAs
+  if(returnSP){
+    return(neigh.cells)
+  } else {
+    return(neigh_coms)
+  }
 }
 
 
