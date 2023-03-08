@@ -231,7 +231,8 @@ plt <- crawdad::vizAllClusters(cells = slide,
                         coms = as.factor(slide$celltypes),
                         ofInterest = c("Bergmann", "Purkinje"),
                         s = 2) +
-  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
+  ggplot2::theme(legend.position="none")
+  # ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
 
 ggplot2::ggsave(filename = "3A_purk_berg_tissue.pdf",
                 plot = plt,
@@ -288,8 +289,8 @@ plt <- crawdad::vizAllClusters(cells = cells2,
                                ofInterest = c("Bergmann", "Purkinje"),
                                title = "grid14",
                                axisAdj = 1, s = 10, a = 0.5) +
-  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
-  # ggplot2::theme(legend.position="none") +
+  # ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
+  ggplot2::theme(legend.position="none") +
   ggplot2::labs(x = "x",
                 y = "y")
 
@@ -331,6 +332,45 @@ crawdad::plotTrendsOverlay(results = d)
 
 ```
 
+```{r}
+
+dat <- crawdad::meltResultsList(results)
+
+d1 <- dat[dat$reference == "Purkinje" & dat$neighbor == "Bergmann",]
+plt <- vizTrends(dat = d1) +
+  ggplot2::scale_x_log10()
+plt 
+
+d2 <- dat[dat$reference == "Bergmann" & dat$neighbor == "Purkinje",]
+plt <- vizTrends(dat = d2) +
+  ggplot2::scale_x_log10()
+plt 
+
+## combine the trends into one data.frame, and have the "id" column label the combo, plot both lines on same plot
+## turn off the facet wrap so just coloring the two trends, which are labeled using the "id" column
+
+d1$id <- "Purkinje vs Bergmann"
+d2$id <- "Bergmann vs Purkinje"
+
+d <- dplyr::bind_rows(list(d1, d2))
+
+plt <- vizTrends(dat = d, facet = FALSE) +
+  ggplot2::scale_x_log10() +
+  ggplot2::theme(legend.position="none")
+plt 
+
+ggplot2::ggsave(filename = "3B_purkinje_bergmann_trends.pdf",
+                plot = plt,
+                device = "pdf",
+                path = figpath,
+                scale = 1,
+                width = 4,
+                height = 4,
+                units = c("in"))
+
+
+```
+
 ## Fig 3 - ubc on tissue
 
 ```{r, fig.height=4, fig.width=4}
@@ -339,7 +379,8 @@ plt <- crawdad::vizAllClusters(cells = slide,
                         coms = as.factor(slide$celltypes),
                         ofInterest = c("UBCs", "Granule"),
                         s = 2) +
-  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
+  ggplot2::theme(legend.position="none")
+  # ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
 
 ggplot2::ggsave(filename = "3A_UBCs_tissue.pdf",
                 plot = plt,
@@ -396,8 +437,8 @@ plt <- crawdad::vizAllClusters(cells = cells2,
                                ofInterest = c("UBCs", "Granule"),
                                title = "grid14",
                                axisAdj = 1, s = 10, a = 0.5) +
-  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
-  # ggplot2::theme(legend.position="none") +
+  # ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
+  ggplot2::theme(legend.position="none") +
   ggplot2::labs(x = "x",
                 y = "y")
 
@@ -439,4 +480,41 @@ crawdad::plotTrendsOverlay(results = d)
 
 ```
 
+```{r}
 
+dat <- crawdad::meltResultsList(results)
+
+d1 <- dat[dat$reference == "UBCs" & dat$neighbor == "Granule",]
+plt <- vizTrends(dat = d1) +
+  ggplot2::scale_x_log10()
+plt 
+
+d2 <- dat[dat$reference == "Granule" & dat$neighbor == "UBCs",]
+plt <- vizTrends(dat = d2) +
+  ggplot2::scale_x_log10()
+plt 
+
+## combine the trends into one data.frame, and have the "id" column label the combo, plot both lines on same plot
+## turn off the facet wrap so just coloring the two trends, which are labeled using the "id" column
+
+d1$id <- "UBCs vs Granule"
+d2$id <- "Granule vs UBCs"
+
+d <- dplyr::bind_rows(list(d1, d2))
+
+plt <- vizTrends(dat = d, facet = FALSE) +
+  ggplot2::scale_x_log10() +
+  ggplot2::theme(legend.position="none")
+plt 
+
+ggplot2::ggsave(filename = "3B_ubc_granule_trends.pdf",
+                plot = plt,
+                device = "pdf",
+                path = figpath,
+                scale = 1,
+                width = 4,
+                height = 4,
+                units = c("in"))
+
+
+```

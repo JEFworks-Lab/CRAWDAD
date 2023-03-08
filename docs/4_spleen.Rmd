@@ -417,7 +417,7 @@ results.subsets.ksfb <- readRDS(paste0(here::here(), "/data/spleen/KSFB/ksfb.tri
 
 ## PKHL
 
-## Fig 4 - cd4, folB, podo on tissue
+## Fig 4 - tissue
 
 ```{r, fig.height=4, fig.width=4}
 
@@ -425,9 +425,63 @@ plt <- crawdad::vizAllClusters(cells = pkhl,
                         coms = as.factor(pkhl$celltypes),
                         ofInterest = c("CD4 Memory T cells", "Fol B cells", "Podoplanin"),
                         s = 2) +
-  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
+  ggplot2::theme(legend.position="none")
+  # ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
 
 ggplot2::ggsave(filename = "4A_pkhl_tissue.pdf",
+                plot = plt,
+                device = "pdf",
+                path = figpath,
+                scale = 1,
+                width = 6,
+                height = 6,
+                units = c("in"))
+plt
+
+```
+
+### subsets
+
+```{r}
+
+## make a temporary annotation factor with annotations for cells that are of a specific subsets
+annots_temp <- crawdad::selectLabels(df = pkhl,
+                                     com = pkhl$celltypes,
+                                     subset_list = subset.list.pkhl,
+                                     cellIDs = c("CD4 Memory T cells", "Neutrophils/Monocytes"),
+                                     subsetIDs = c("CD4 Memory T cells_near_Neutrophils/Monocytes"))
+
+## visualize the subset only
+plt <- crawdad::vizAllClusters(cells = pkhl,
+                               coms = annots_temp,
+                               ofInterest = NULL,
+                               title = "PKHL",
+                               axisAdj = 1, s = 2, a = 0.5) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
+  # ggplot2::theme(legend.position="none")
+plt
+
+ggplot2::ggsave(filename = "4A_pkhl_cd4_near_neutro_tissue.pdf",
+                plot = plt,
+                device = "pdf",
+                path = figpath,
+                scale = 1,
+                width = 10,
+                height = 7,
+                units = c("in"))
+
+```
+
+```{r, fig.height=4, fig.width=4}
+
+plt <- crawdad::vizAllClusters(cells = pkhl,
+                        coms = as.factor(pkhl$celltypes),
+                        ofInterest = c("CD4 Memory T cells", "Neutrophils/Monocytes"),
+                        s = 2) +
+  ggplot2::theme(legend.position="none")
+  # ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
+
+ggplot2::ggsave(filename = "4A_pkhl_cd4_neutro_tissue.pdf",
                 plot = plt,
                 device = "pdf",
                 path = figpath,
@@ -482,8 +536,8 @@ plt <- crawdad::vizAllClusters(cells = cells2,
                                ofInterest = c("CD4 Memory T cells", "Fol B cells", "Podoplanin"),
                                title = "grid 38,39",
                                axisAdj = 1, s = 10, a = 0.5) +
-  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
-  # ggplot2::theme(legend.position="none") +
+  # ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
+  ggplot2::theme(legend.position="none") +
   ggplot2::labs(x = "x",
                 y = "y")
 
@@ -493,7 +547,7 @@ ggplot2::ggsave(filename = "4A_pkhl_grid_38_39_tissue_zoom.pdf",
                 path = figpath,
                 scale = 1,
                 width = 6,
-                height = 6,
+                height = 3,
                 units = c("in"))
 
 plt
@@ -512,8 +566,8 @@ plt <- crawdad::vizAllClusters(cells = cells2,
                                ofInterest = c("CD4 Memory T cells", "Fol B cells", "Podoplanin"),
                                title = "grid 66,77",
                                axisAdj = 1, s = 10, a = 0.5) +
-  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
-  # ggplot2::theme(legend.position="none") +
+  # ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
+  ggplot2::theme(legend.position="none") +
   ggplot2::labs(x = "x",
                 y = "y")
 
@@ -522,7 +576,7 @@ ggplot2::ggsave(filename = "4A_pkhl_grid_66_77_tissue_zoom.pdf",
                 device = "pdf",
                 path = figpath,
                 scale = 1,
-                width = 6,
+                width = 3,
                 height = 6,
                 units = c("in"))
 
@@ -553,7 +607,53 @@ dev.off()
 
 ```
 
-## Fig 4 triplets
+```{r}
+
+dat <- crawdad::meltResultsList(results.pkhl)
+
+d1 <- dat[dat$reference == "CD4 Memory T cells" & dat$neighbor == "Fol B cells",]
+plt <- vizTrends(dat = d1) +
+  ggplot2::scale_x_log10()
+plt
+
+d2 <- dat[dat$reference == "CD4 Memory T cells" & dat$neighbor == "Podoplanin",]
+plt <- vizTrends(dat = d2) +
+  ggplot2::scale_x_log10()
+plt
+
+d3 <- dat[dat$reference == "Fol B cells" & dat$neighbor == "CD4 Memory T cells",]
+plt <- vizTrends(dat = d3) +
+  ggplot2::scale_x_log10()
+plt
+
+## combine the trends into one data.frame, and have the "id" column label the combo, plot both lines on same plot
+## turn off the facet wrap so just coloring the two trends, which are labeled using the "id" column
+
+d1$id <- "CD4 Memory T cells vs Fol B cells"
+d2$id <- "CD4 Memory T cells vs Podoplanin"
+d3$id <- "Fol B cells vs CD4 Memory T cells"
+
+d <- dplyr::bind_rows(list(d1, d2, d3))
+
+plt <- vizTrends(dat = d, facet = FALSE) +
+  ggplot2::scale_x_log10()
+  # ggplot2::theme(legend.position="none")
+plt 
+
+ggplot2::ggsave(filename = "4B_pkhl_cd4_folB_podo_trends.pdf",
+                plot = plt,
+                device = "pdf",
+                path = figpath,
+                scale = 1,
+                width = 6,
+                height = 4,
+                units = c("in"))
+
+
+```
+
+
+### triplet trends
 
 ```{r}
 
@@ -576,53 +676,42 @@ dev.off()
 
 ```
 
-## KSFB
+```{r}
 
-## Fig 4 - cd4, folB, podo on tissue
+dat <- crawdad::meltResultsList(results.subsets.pkhl)
 
-```{r, fig.height=4, fig.width=4}
+d <- dat[grepl(pattern = "CD4 Memory T cells_near_Fol B cells", dat$reference) & dat$neighbor %in% c("CD4 Memory T cells", "Fol B cells", "Podoplanin"),]
+plt <- vizTrends(dat = d, facet = FALSE, id = "neighbor", title = "CD4 Memory T cells near Fol B cells") +
+  ggplot2::scale_x_log10()
+  # ggplot2::theme(legend.position="none")
+plt
 
-plt <- crawdad::vizAllClusters(cells = ksfb,
-                        coms = as.factor(ksfb$celltypes),
-                        ofInterest = c("CD4 Memory T cells", "Fol B cells", "Podoplanin"),
-                        s = 2) +
-  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
-
-ggplot2::ggsave(filename = "4A_ksfb_tissue.pdf",
+ggplot2::ggsave(filename = "4B_cd4_near_folB_trends.pdf",
                 plot = plt,
                 device = "pdf",
                 path = figpath,
                 scale = 1,
                 width = 6,
-                height = 6,
+                height = 4,
                 units = c("in"))
+
+
+d <- dat[grepl(pattern = "CD4 Memory T cells_near_Neutrophils/Monocytes", dat$reference) & dat$neighbor %in% c("CD4 Memory T cells", "Fol B cells", "Podoplanin"),]
+plt <- vizTrends(dat = d, facet = FALSE, id = "neighbor", title = "CD4 Memory T cells near Neutrophils/Monocytes") +
+  ggplot2::scale_x_log10()
+  # ggplot2::theme(legend.position="none")
 plt
 
-```
-
-## Fig 4 - cd4,folB,podo trends
-
-```{r}
-
-dat <- crawdad::meltResultsList(results.ksfb$`100`, id = "dist100")
-
-grDevices::pdf(file = paste0(figpath, "/4B_ksfb_cd4_trends.pdf"), width = 6, height = 4)
-d <- dat[dat$reference == "CD4 Memory T cells" & dat$neighbor %in% c("CD4 Memory T cells", "Fol B cells", "Podoplanin"),]
-crawdad::plotTrendsOverlay(results = d)
-dev.off()
-
-grDevices::pdf(file = paste0(figpath, "/4B_ksfb_folB_trends.pdf"), width = 6, height = 4)
-d <- dat[dat$reference == "Fol B cells" & dat$neighbor %in% c("CD4 Memory T cells", "Fol B cells", "Podoplanin"),]
-crawdad::plotTrendsOverlay(results = d)
-dev.off()
-
-grDevices::pdf(file = paste0(figpath, "/4B_ksfb_podo_trends.pdf"), width = 6, height = 4)
-d <- dat[dat$reference == "Podoplanin" & dat$neighbor %in% c("CD4 Memory T cells", "Fol B cells", "Podoplanin"),]
-crawdad::plotTrendsOverlay(results = d)
-dev.off()
+ggplot2::ggsave(filename = "4B_cd4_near_neutro_trends.pdf",
+                plot = plt,
+                device = "pdf",
+                path = figpath,
+                scale = 1,
+                width = 6,
+                height = 4,
+                units = c("in"))
 
 ```
-
 
 
 

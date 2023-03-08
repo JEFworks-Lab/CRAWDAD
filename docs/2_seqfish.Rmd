@@ -328,7 +328,6 @@ dev.off()
 
 dat <- crawdad::meltResultsList(results)
 
-
 d1 <- dat[dat$reference == "Lateral plate mesoderm" & dat$neighbor == "Intermediate mesoderm",]
 plt <- vizTrends(dat = d1) +
   ggplot2::scale_x_log10()
@@ -348,8 +347,19 @@ d2$id <- "Endothelium vs Haematoendothelial progenitors"
 d <- dplyr::bind_rows(list(d1, d2))
 
 plt <- vizTrends(dat = d, facet = FALSE) +
-  ggplot2::scale_x_log10()
+  ggplot2::scale_x_log10() +
+  ggplot2::theme(legend.position="none")
 plt 
+
+ggplot2::ggsave(filename = "2B_mesoderm_endo_trends.pdf",
+                plot = plt,
+                device = "pdf",
+                path = figpath,
+                scale = 1,
+                width = 4,
+                height = 4,
+                units = c("in"))
+
 
 ```
 
@@ -365,7 +375,8 @@ plt <- crawdad::vizAllClusters(cells = seq,
                         coms = as.factor(seq$celltypes),
                         ofInterest = c("Endothelium", "Haematoendothelial progenitors"),
                         s = 2) +
-  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
+  # ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
+  ggplot2::theme(legend.position="none")
 
 ggplot2::ggsave(filename = "2A_endothelium_tissue.pdf",
                 plot = plt,
@@ -422,7 +433,8 @@ plt <- crawdad::vizAllClusters(cells = cells2,
                                ofInterest = c("Endothelium", "Haematoendothelial progenitors"),
                                title = "grid 22,23,28,29",
                                axisAdj = 1, s = 10, a = 0.5) +
-  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
+  # ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
+  ggplot2::theme(legend.position="none")
   # ggplot2::theme(legend.position="none") +
   ggplot2::labs(x = "x",
                 y = "y")
