@@ -11,7 +11,8 @@ vizTrends(
   sig.thresh = 2,
   nc = length(unique(dat[[id]])),
   colors = rainbow(nc),
-  title = NA
+  title = NULL,
+  facet = TRUE
 )
 }
 \arguments{
@@ -27,7 +28,9 @@ vizTrends(
 
 \item{colors}{color assignment for each of the features in id column}
 
-\item{title}{plot title (default: NA)}
+\item{title}{plot title (default: NULL)}
+
+\item{facet}{boolean to facet wrap on reference and neighbor cell types. (default: TRUE)}
 }
 \description{
 The input data.frame should be the results list from \code{findTrends()} that has been melted into a data.frame using \code{meltResultsList()}.

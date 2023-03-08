@@ -503,24 +503,26 @@ vizEachCluster <- function(cells, coms, axisAdj = 100, s = 0, a = 1,
 #' @param sig.thresh threshold for significance, ie Z score significance threshold (default: 2).
 #' @param nc number of colors to use for labeling features in id column
 #' @param colors color assignment for each of the features in id column
-#' @param title plot title (default: NA)
+#' @param title plot title (default: NULL)
+#' @param facet boolean to facet wrap on reference and neighbor cell types. (default: TRUE)
 #' 
 #' @export
 vizTrends <- function(dat, id = "id", yaxis = "Z",
                       sig.thresh = 2, # -log10(0.05/nrow(dat)), ## sig thresh for num tests
                       nc = length(unique(dat[[id]])),
                       colors = rainbow(nc),
-                      title = NA){
+                      title = NULL,
+                      facet = TRUE){
   
   plt <- ggplot2::ggplot(data = dat) +
     ggplot2::geom_point(ggplot2::aes(x = resolution, y = .data[[yaxis]], color = .data[[id]]), size = 1.5) +
     ggplot2::geom_path(ggplot2::aes(x = resolution, y = .data[[yaxis]], color = .data[[id]]), size = 1.5) +
-    ggplot2::scale_color_manual(values = colors) +
+    ggplot2::scale_color_manual(values = colors, na.value = "black") +
     ggplot2::geom_hline(yintercept = 0, color = "black", size = 1) +
-    ggplot2::geom_hline(yintercept = sig.thresh, color = "black", size = 0.6) +
-    ggplot2::geom_hline(yintercept = -sig.thresh, color = "black", size = 0.6) +
-    ggplot2::facet_grid(neighbor ~ reference) +
-    ggplot2::ggtitle(title) +
+    ggplot2::geom_hline(yintercept = sig.thresh, color = "black", size = 0.6, linetype = "dotted") +
+    ggplot2::geom_hline(yintercept = -sig.thresh, color = "black", size = 0.6, linetype = "dotted") +
+    # ggplot2::facet_grid(neighbor ~ reference) +
+    ggplot2::labs(title = title) +
     # ggplot2::scale_x_log10() +
     # ggplot2::scale_y_continuous(trans = ggallin::pseudolog10_trans) +
     ggplot2::theme_classic() +
@@ -541,6 +543,10 @@ vizTrends <- function(dat, id = "id", yaxis = "Z",
                    legend.title = ggplot2::element_blank(),
                    # legend.position="none"
     )
+  
+  if(facet){
+    plt <- plt + ggplot2::facet_grid(neighbor ~ reference)
+  }
   
   plt
   

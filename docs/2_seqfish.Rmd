@@ -326,8 +326,30 @@ dev.off()
 
 ```{r}
 
-plt <- vizTrends(dat = dat)
-plt
+dat <- crawdad::meltResultsList(results)
+
+
+d1 <- dat[dat$reference == "Lateral plate mesoderm" & dat$neighbor == "Intermediate mesoderm",]
+plt <- vizTrends(dat = d1) +
+  ggplot2::scale_x_log10()
+plt 
+
+d2 <- dat[dat$reference == "Endothelium" & dat$neighbor == "Haematoendothelial progenitors",]
+plt <- vizTrends(dat = d2) +
+  ggplot2::scale_x_log10()
+plt 
+
+## combine the trends into one data.frame, and have the "id" column label the combo, plot both lines on same plot
+## turn off the facet wrap so just coloring the two trends, which are labeled using the "id" column
+
+d1$id <- "Lateral plate mesoderm vs Intermediate mesoderm"
+d2$id <- "Endothelium vs Haematoendothelial progenitors"
+
+d <- dplyr::bind_rows(list(d1, d2))
+
+plt <- vizTrends(dat = d, facet = FALSE) +
+  ggplot2::scale_x_log10()
+plt 
 
 ```
 
