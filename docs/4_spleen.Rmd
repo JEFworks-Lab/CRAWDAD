@@ -378,7 +378,12 @@ saveRDS(results.subsets.ksfb, paste0(here::here(), "/data/spleen/KSFB/ksfb.folBc
 
 ## load data
 
+primary spleen dataset (PKHL):
+
 ```{r, eval=FALSE}
+
+## folder on `brendan` branch
+figpath <- paste0(here::here(), "/plots/spleen")
 
 shuffle.list.pkhl <- readRDS(paste0(here::here(), "/data/spleen/PKHL/pkhl.folBcombined.shuffled_res100-6000.rds"))
 
@@ -393,6 +398,8 @@ results.subsets.pkhl <- readRDS(paste0(here::here(), "/data/spleen/PKHL/pkhl.fol
 
 ```
 
+other spleen datasets:
+
 ```{r, eval=FALSE}
 
 shuffle.list.ksfb <- readRDS(paste0(here::here(), "/data/spleen/KSFB/ksfb.folBcombined.shuffled_res100-6000.rds"))
@@ -405,6 +412,214 @@ results.ksfb <- readRDS(paste0(here::here(), "/data/spleen/KSFB/ksfb.pairwise.10
 
 # results.subsets.ksfb <- readRDS(paste0(here::here(), "/data/spleen/KSFB/ksfb.folBcombined.subset.results.dist100.res100-6000.rds")) ## newest
 results.subsets.ksfb <- readRDS(paste0(here::here(), "/data/spleen/KSFB/ksfb.triplet.near.binom.subdist100.dist100.folBcombined.results.res100-6000.removeDups.rds")) ## old file, but should be equal
+
+```
+
+## PKHL
+
+## Fig 4 - cd4, folB, podo on tissue
+
+```{r, fig.height=4, fig.width=4}
+
+plt <- crawdad::vizAllClusters(cells = pkhl,
+                        coms = as.factor(pkhl$celltypes),
+                        ofInterest = c("CD4 Memory T cells", "Fol B cells", "Podoplanin"),
+                        s = 2) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
+
+ggplot2::ggsave(filename = "4A_pkhl_tissue.pdf",
+                plot = plt,
+                device = "pdf",
+                path = figpath,
+                scale = 1,
+                width = 6,
+                height = 6,
+                units = c("in"))
+plt
+
+```
+
+### zoom in
+
+```{r}
+
+## shuffling grid
+grid <- sf::st_make_grid(pkhl, cellsize = 1000)
+grid_coords <- as.data.frame(sf::st_coordinates(grid))
+
+## centers of the grids to add the tile IDs
+grid_coords_centroids <- as.data.frame(sf::st_coordinates(sf::st_centroid(grid)))
+grid_coords_centroids$name <- as.character(rownames(grid_coords_centroids))
+
+
+plt <- crawdad::vizAllClusters(cells = pkhl,
+                               coms = pkhl$celltypes,
+                               ofInterest = c("CD4 Memory T cells", "Fol B cells", "Podoplanin"),
+                               title = "pkhl",
+                               axisAdj = 1, s = 6, a = 0.5) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
+  # ggplot2::theme(legend.position="none") +
+  ggplot2::labs(x = "x",
+                y = "y") +
+  
+  ## add in the grid information on top of the plot
+  ggplot2::geom_sf(data = grid, fill = NA) +
+  ggplot2::geom_text(data = grid_coords_centroids, ggplot2::aes(X, Y, label = name))
+  
+plt
+
+```
+
+```{r}
+
+## pull out cells in specific grid regions
+int <- sf::st_intersection(pkhl, grid[c(38,39)])
+cells2 <- pkhl[rownames(int),]
+
+## grid 11 real
+plt <- crawdad::vizAllClusters(cells = cells2,
+                               coms = cells2$celltypes,
+                               ofInterest = c("CD4 Memory T cells", "Fol B cells", "Podoplanin"),
+                               title = "grid 38,39",
+                               axisAdj = 1, s = 10, a = 0.5) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
+  # ggplot2::theme(legend.position="none") +
+  ggplot2::labs(x = "x",
+                y = "y")
+
+ggplot2::ggsave(filename = "4A_pkhl_grid_38_39_tissue_zoom.pdf",
+                plot = plt,
+                device = "pdf",
+                path = figpath,
+                scale = 1,
+                width = 6,
+                height = 6,
+                units = c("in"))
+
+plt
+
+```
+
+```{r}
+
+## pull out cells in specific grid regions
+int <- sf::st_intersection(pkhl, grid[c(67,77)])
+cells2 <- pkhl[rownames(int),]
+
+## grid 11 real
+plt <- crawdad::vizAllClusters(cells = cells2,
+                               coms = cells2$celltypes,
+                               ofInterest = c("CD4 Memory T cells", "Fol B cells", "Podoplanin"),
+                               title = "grid 66,77",
+                               axisAdj = 1, s = 10, a = 0.5) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
+  # ggplot2::theme(legend.position="none") +
+  ggplot2::labs(x = "x",
+                y = "y")
+
+ggplot2::ggsave(filename = "4A_pkhl_grid_66_77_tissue_zoom.pdf",
+                plot = plt,
+                device = "pdf",
+                path = figpath,
+                scale = 1,
+                width = 6,
+                height = 6,
+                units = c("in"))
+
+plt
+
+```
+
+## Fig 4 - cd4,folB,podo trends
+
+```{r}
+
+dat <- crawdad::meltResultsList(results.pkhl, id = "dist100")
+
+grDevices::pdf(file = paste0(figpath, "/4B_cd4_trends.pdf"), width = 6, height = 4)
+d <- dat[dat$reference == "CD4 Memory T cells" & dat$neighbor %in% c("CD4 Memory T cells", "Fol B cells", "Podoplanin"),]
+crawdad::plotTrendsOverlay(results = d)
+dev.off()
+
+grDevices::pdf(file = paste0(figpath, "/4B_folB_trends.pdf"), width = 6, height = 4)
+d <- dat[dat$reference == "Fol B cells" & dat$neighbor %in% c("CD4 Memory T cells", "Fol B cells", "Podoplanin"),]
+crawdad::plotTrendsOverlay(results = d)
+dev.off()
+
+grDevices::pdf(file = paste0(figpath, "/4B_podo_trends.pdf"), width = 6, height = 4)
+d <- dat[dat$reference == "Podoplanin" & dat$neighbor %in% c("CD4 Memory T cells", "Fol B cells", "Podoplanin"),]
+crawdad::plotTrendsOverlay(results = d)
+dev.off()
+
+```
+
+## Fig 4 triplets
+
+```{r}
+
+dat <- crawdad::meltResultsList(results.subsets.pkhl, id = "dist100")
+
+grDevices::pdf(file = paste0(figpath, "/4B_podo_subsets_trends.pdf"), width = 4, height = 24)
+d <- dat[grepl(pattern = "Podoplanin_near_", dat$reference) & dat$neighbor %in% c("CD4 Memory T cells", "Fol B cells", "Podoplanin"),]
+crawdad::plotTrendsOverlay(results = d)
+dev.off()
+
+grDevices::pdf(file = paste0(figpath, "/4B_cd4_subsets_trends.pdf"), width = 4, height = 24)
+d <- dat[grepl(pattern = "CD4 Memory T cells_near_", dat$reference) & dat$neighbor %in% c("CD4 Memory T cells", "Fol B cells", "Podoplanin"),]
+crawdad::plotTrendsOverlay(results = d)
+dev.off()
+
+grDevices::pdf(file = paste0(figpath, "/4B_folB_subsets_trends.pdf"), width = 4, height = 24)
+d <- dat[grepl(pattern = "Fol B cells_near_", dat$reference) & dat$neighbor %in% c("CD4 Memory T cells", "Fol B cells", "Podoplanin"),]
+crawdad::plotTrendsOverlay(results = d)
+dev.off()
+
+```
+
+## KSFB
+
+## Fig 4 - cd4, folB, podo on tissue
+
+```{r, fig.height=4, fig.width=4}
+
+plt <- crawdad::vizAllClusters(cells = ksfb,
+                        coms = as.factor(ksfb$celltypes),
+                        ofInterest = c("CD4 Memory T cells", "Fol B cells", "Podoplanin"),
+                        s = 2) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
+
+ggplot2::ggsave(filename = "4A_ksfb_tissue.pdf",
+                plot = plt,
+                device = "pdf",
+                path = figpath,
+                scale = 1,
+                width = 6,
+                height = 6,
+                units = c("in"))
+plt
+
+```
+
+## Fig 4 - cd4,folB,podo trends
+
+```{r}
+
+dat <- crawdad::meltResultsList(results.ksfb$`100`, id = "dist100")
+
+grDevices::pdf(file = paste0(figpath, "/4B_ksfb_cd4_trends.pdf"), width = 6, height = 4)
+d <- dat[dat$reference == "CD4 Memory T cells" & dat$neighbor %in% c("CD4 Memory T cells", "Fol B cells", "Podoplanin"),]
+crawdad::plotTrendsOverlay(results = d)
+dev.off()
+
+grDevices::pdf(file = paste0(figpath, "/4B_ksfb_folB_trends.pdf"), width = 6, height = 4)
+d <- dat[dat$reference == "Fol B cells" & dat$neighbor %in% c("CD4 Memory T cells", "Fol B cells", "Podoplanin"),]
+crawdad::plotTrendsOverlay(results = d)
+dev.off()
+
+grDevices::pdf(file = paste0(figpath, "/4B_ksfb_podo_trends.pdf"), width = 6, height = 4)
+d <- dat[dat$reference == "Podoplanin" & dat$neighbor %in% c("CD4 Memory T cells", "Fol B cells", "Podoplanin"),]
+crawdad::plotTrendsOverlay(results = d)
+dev.off()
 
 ```
 

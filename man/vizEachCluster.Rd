@@ -30,13 +30,14 @@ vizEachCluster(
 \item{size}{size of points (default: 0.01)}
 }
 \value{
-plot where each panel is a different cluster
+plot where each panel is a different celltype
 }
 \description{
 Returns a gridExtra of grobs.
 A single plot where each panel is a different cluster highlighted on the tissue
 }
 \examples{
-vizEachCluster(obj, clusters = "com_nn50_VolnormExpr_data")
+data(slide)
+vizEachCluster(slide, coms = slide$celltypes, ofInterest = c("Bergmann", "Purkinje"))
 
 }

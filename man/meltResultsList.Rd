@@ -2,23 +2,24 @@
 % Please edit documentation in R/processing_outputs.R
 \name{meltResultsList}
 \alias{meltResultsList}
-\title{Melt the output list of findTrendsv2 into a dataframe}
+\title{Melt the output list of \code{findTrends()} into a dataframe}
 \usage{
 meltResultsList(resultsList, id = NA)
 }
 \arguments{
 \item{resultsList}{list output from findTrendsv2}
 
-\item{id}{id desired, can add a column that contains an additional identifier for the results.
-For example, you melted a resultsList that was generated from a simulation using 2 circles.
-Then you generate another one that was done with 1 circle. The id column for each dataframe
-can be set to "2" and "1". Then both dataframes can be combined into one final dataframe
-Now you have identifiers that include: resolution, neighbor, reference, and simulation type.
-Can use these for plotting and comparing different things}
+\item{id}{id desired, can add a column that contains an additional identifier for the results. Can use these for plotting and comparing different things}
 }
 \description{
-idea is that the output is a list of dataframes, where each dataframe
-is for a reference cell type and contains the Z scores at each resolution for the neighbor cells.
+idea is that the output of \code{findTrends()} is a list of dataframes, where each dataframe
+is for a reference cell type and contains the Z scores at each resolution for the neighbor cell types.
 So melt this list of dataframes into a single dataframe. Idea is to get a single dataframe setup for plotting with
-ggplot2 and tidyverse functions
+ggplot2 and tidyverse functions. \code{id} parameter allows adding a specific identifier for the given melted results so that
+one can combine multiple results dataframes and compare downstream.
+For example, you melt a results list from \code{findTrends()} that was generated from an analysis using a neighbor distance of 100.
+Then you generate another one that was done with neighbor distance of 200.
+The id column for each dataframe can be set to "100" and "200", respectively.
+Then both dataframes can be combined into one final dataframe.
+Now you have identifiers that include: resolution, neighbor, reference, and "id" (ie neighbor distance).
 }
