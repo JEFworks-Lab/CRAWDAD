@@ -33,12 +33,13 @@ vizAllClusters(
 \item{size}{size of points (default: 0.01)}
 }
 \value{
-plot of clusters
+plot
 }
 \description{
 uses the x and y position information and a chosen set of communities
 }
 \examples{
-vizAllClusters(obj, clusters = "com_nn50_VolnormExpr_data", ofInterest = c("1", "2"))
+data(slide)
+vizAllClusters(slide, coms = slide$celltypes)
 
 }
