@@ -652,7 +652,6 @@ ggplot2::ggsave(filename = "4B_pkhl_cd4_folB_podo_trends.pdf",
 
 ```
 
-
 ### triplet trends
 
 ```{r}

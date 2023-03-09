@@ -12,7 +12,7 @@ vignette: >
   %\VignetteEngine{knitr::rmarkdown}
 ---
 
-This vignette will go through analyses to reproduce the results and figures of the SeqFISH dataset.
+This vignette will go through analyses to reproduce the results and figures of the Slide-seq dataset.
 
 ```{r}
 
