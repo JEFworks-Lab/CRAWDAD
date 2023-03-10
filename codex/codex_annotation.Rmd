@@ -1,0 +1,888 @@
+---
+title: "Processing and annotating cell types in CODEX"
+author: "Brendan F. Miller"
+date: "3/9/2023"
+output: html_document
+---
+
+# Summary
+
+The following code will describe:
+
+1.  preprocessing of the CODEX spleen datasets
+2.  clustering of the cells into communities
+3.  annotation of the clusters based on average protein expression
+4.  transfer of cell type labels across spleen datasets
+
+# Preprocessing
+
+The data for the spleen samples was obtained from:
+
+[https://portal.hubmapconsortium.org/search?entity_type[0]=Dataset](https://portal.hubmapconsortium.org/search?entity_type%5B0%5D=Dataset){.uri}
+
+Note that the files were accessed via Bulk Data Transfer using Globus.
+
+The compensated Akoya outputs were used. The paths to these files can be viewed in the `/data/CODEX/akoya_output_paths.csv` file on the `brendan` branch.
+
+Each CODEX dataset was converted into a Seurat Object, with the following slots:
+
+`obj@assays$RawExpr@counts` is the original protein expression data
+
+`obj@assays$RawExpr@data` is the original log10 + 1 transformed protein expression data
+
+`obj@assays$VolnormExpr@counts` is the cell area normalized protein expression data
+
+`obj@assays$VolnormExpr@data` is the cell area normalized log10 + 1 transformed protein expression data
+
+`obj@meta.data` contains the following columns:
+
+-   `cell ids`
+-   `cell area`
+-   `x position`
+-   `y position`
+
+These objects can be built using the function `buildObject()` in `/codex/codex_akoya_data_functions.R`
+
+```{r}
+
+library(crawdad)
+source(file = paste0(here::here(), "/codex/codex_akoya_data_functions.R")) ## file on the `brendan` branch.
+
+```
+
+```{r, eval=FALSE}
+
+## example:
+dat_path <- "/path/to/compensated.csv" ## not a real path, just an example of where the path to this file should be written
+HBM389.PKHL.936 <- buildObject(path = dat_path, name = "HBM389.PKHL.936", volNorm = "log") ## log10(cell area) is used to normalize
+
+```
+
+```{r, eval=FALSE}
+
+## files on my computer:
+
+HBM556.KSFB.592 <- readRDS(file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/data/datasets/spleen/HBM556.KSFB.592.RDS")
+HBM389.PKHL.936 <- readRDS(file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/data/datasets/spleen/HBM389.PKHL.936.RDS")
+HBM825.PBVN.284 <- readRDS(file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/data/datasets/spleen/HBM825.PBVN.284.RDS")
+HBM342.FSLD.938 <- readRDS(file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/data/datasets/spleen/HBM342.FSLD.938.RDS")
+HBM772.XXCD.697 <- readRDS(file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/data/datasets/spleen/HBM772.XXCD.697.RDS")
+HBM568.NGPL.345 <- readRDS(file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/data/datasets/spleen/HBM568.NGPL.345.RDS")
+
+```
+
+# Clustering
+
+Next, we would like to cluster the cells into communities based on their protein expression. We'll use the log10(cell area) normalized log10 + 1 transformed protein expression data
+
+For example, with respect to PKHL:
+
+```{r, eval=FALSE}
+
+## this will add a metadata column to the Seurat object that contains the community assignment for each cell
+## performs louvian graph based clustering using k=50 nearest neighbors
+HBM389.PKHL.936 <- getCommunities(HBM389.PKHL.936,
+                                  assay = "VolnormExpr", mat.name = "data", ## the expression data to use
+                                  numneigh = 50) ## k
+
+```
+
+```{r, eval=FALSE}
+
+## the communities:
+head(HBM389.PKHL.936@meta.data$com_nn50_VolnormExpr_data)
+
+```
+
+# Annotation of cells
+
+To assign cell type annotations to the communities, we can compute the scaled expression of each protein across clusters and visualize using a heatmap
+
+```{r}
+
+clusterExpressions(object = HBM389.PKHL.936, clusters = "com_nn50_VolnormExpr_data",
+                   assay = "VolnormExpr", mat = "counts", # cell area normalized protein expression data
+                   ave = FALSE,
+                   scaled = TRUE, ## expression of each protein scaled across clusters
+                   plot = TRUE)
+
+```
+
+We can manually inspect the protein expression of each cluster and it's spatial pattern to annotate it is a particular cell type in the spleen data.
+
+A list of proposed annotations can be found: `/data/CODEX/ProposedAnnotations.xlsx` on the `brendan` branch.
+
+We can append these to another column in the `meta.data` as a factor of cell type annotations. We will also combine the "follicle B Cell, outer" and "follicle B Cell, inner" cell types into one "follicle B cell" cluster.
+
+```{r}
+
+spleen1_coms <- as.character(HBM389.PKHL.936@meta.data$com_nn50_VolnormExpr_data)
+
+spleen1_coms[which(spleen1_coms %in% c("1"))] <- "CD4 Memory T cells"
+spleen1_coms[which(spleen1_coms %in% c("2", "4"))] <- "Neutrophils/Monocytes"
+spleen1_coms[which(spleen1_coms %in% c("3"))] <- "Macrophages"
+spleen1_coms[which(spleen1_coms %in% c("5"))] <- "Fol B cells, ctr"
+spleen1_coms[which(spleen1_coms %in% c("6"))] <- "B cells, red pulp"
+spleen1_coms[which(spleen1_coms %in% c("7"))] <- "Fol B cells, out"
+spleen1_coms[which(spleen1_coms %in% c("8"))] <- "CD8 Memory T cells"
+spleen1_coms[which(spleen1_coms %in% c("9"))] <- "Blood endothelial"
+spleen1_coms[which(spleen1_coms %in% c("15"))] <- "Podoplanin"
+spleen1_coms[which(spleen1_coms %in% c("13"))] <- "Myeloid cells"
+spleen1_coms[which(spleen1_coms %in% c("10"))] <- "Sinusoidal cells"
+spleen1_coms[which(spleen1_coms %in% c("11", "12"))] <- "indistinct"
+spleen1_coms[which(spleen1_coms %in% c("16"))] <- "Ki67 proliferating"
+spleen1_coms[which(spleen1_coms %in% c("14", "17"))] <- "indistinct"
+
+spleen1_cluster_annots <- c(
+  "1" = "CD4 Memory T cells",
+  "2" = "Neutrophils/Monocytes",
+  "3" = "Macrophages",
+  "4" = "Neutrophils/Monocytes",
+  "5" = "Fol B cells, ctr",
+  "6" = "B cells, red pulp",
+  "7" = "Fol B cells, out",
+  "8" = "CD8 Memory T cells",
+  "9" = "Blood endothelial",
+  "10" = "Sinusoidal cells",
+  "11" = "indistinct",
+  "12" = "indistinct",
+  "13" = "Myeloid cells",
+  "14" = "indistinct",
+  "15" = "Podoplanin",
+  "16" = "Ki67 proliferating",
+  "17" = "indistinct"
+)
+level_order <- unique(as.vector(spleen1_cluster_annots[order(spleen1_cluster_annots)]))
+
+# HBM389.PKHL.936[["com_nn50_VolnormExpr_data_annots"]] <- factor(spleen1_coms, levels = level_order, ordered = TRUE)
+
+```
+
+```{r}
+
+head(HBM389.PKHL.936@meta.data$com_nn50_VolnormExpr_data_annots)
+head(HBM389.PKHL.936@meta.data$com_nn50_VolnormExpr_data_annots_bcombn)
+
+```
+
+Visualize the clusters, and the cell type annotations:
+
+```{r}
+
+crawdad::vizAllClusters(cells = HBM389.PKHL.936@meta.data[,c("x", "y")],
+                        coms = HBM389.PKHL.936@meta.data$com_nn50_VolnormExpr_data, s = 1.5)
+
+crawdad::vizAllClusters(cells = HBM389.PKHL.936@meta.data[,c("x", "y")],
+                        coms = HBM389.PKHL.936@meta.data$com_nn50_VolnormExpr_data_annots, s = 1.5) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
+
+crawdad::vizAllClusters(cells = HBM389.PKHL.936@meta.data[,c("x", "y")],
+                        coms = HBM389.PKHL.936@meta.data$com_nn50_VolnormExpr_data_annots_bcombn, s = 1.5) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
+
+```
+
+# Transfer cell type labels
+
+Now that we have a spleen dataset annotated, we can transfer the cell type annotations to cells in other spleen datasets that have similar protein expression. We can use Linear Discriminant analysis (LDA) to construct a model of cell type annotations and protein expression using the PKHL spleen dataset, and apply it to predict cell type annotations of cell in other spleen datasets that have the same 28 marker panel of proteins.
+
+But first, we should check if we need to harmonize the protein expression of any of the datasets. To see if this might be the case, lets visualize the datasets on a t-SNE embedding.
+
+## scale expression
+
+To visualize the different datasets together, let's first scale the protein expression for each dataset separately.
+
+```{r}
+
+library(Seurat)
+library(dplyr)
+
+```
+
+```{r}
+
+## SPLEEN
+
+dat3 <- t(as.matrix(HBM556.KSFB.592@assays$VolnormExpr@data))
+rownames(dat3) <- paste0(HBM556.KSFB.592@project.name, "_", rownames(dat3))
+dat3 <- as.data.frame(dat3)
+
+dat5 <- t(as.matrix(HBM389.PKHL.936@assays$VolnormExpr@data))
+rownames(dat5) <- paste0(HBM389.PKHL.936@project.name, "_", rownames(dat5))
+dat5 <- as.data.frame(dat5)
+
+dat8 <- t(as.matrix(HBM825.PBVN.284@assays$VolnormExpr@data))
+rownames(dat8) <- paste0(HBM825.PBVN.284@project.name, "_", rownames(dat8))
+dat8 <- as.data.frame(dat8)
+
+dat9 <- t(as.matrix(HBM342.FSLD.938@assays$VolnormExpr@data))
+rownames(dat9) <- paste0(HBM342.FSLD.938@project.name, "_", rownames(dat9))
+dat9 <- as.data.frame(dat9)
+
+dat10 <- t(as.matrix(HBM772.XXCD.697@assays$VolnormExpr@data))
+rownames(dat10) <- paste0(HBM772.XXCD.697@project.name, "_", rownames(dat10))
+dat10 <- as.data.frame(dat10)
+
+dat14 <- t(as.matrix(HBM568.NGPL.345@assays$VolnormExpr@data))
+rownames(dat14) <- paste0(HBM568.NGPL.345@project.name, "_", rownames(dat14))
+dat14 <- as.data.frame(dat14)
+
+```
+
+```{r}
+
+## dat8, # HBM825.PBVN.284
+Seurat::DefaultAssay(object = HBM825.PBVN.284) <- "VolnormExpr"
+Seurat::VariableFeatures(object = HBM825.PBVN.284) <- colnames(dat8)
+HBM825.PBVN.284 <- Seurat::ScaleData(HBM825.PBVN.284, do.center = TRUE, do.scale = TRUE, verbose = TRUE)
+
+## dat9, # HBM342.FSLD.938
+Seurat::DefaultAssay(object = HBM342.FSLD.938) <- "VolnormExpr"
+Seurat::VariableFeatures(object = HBM342.FSLD.938) <- colnames(dat9)
+HBM342.FSLD.938 <- Seurat::ScaleData(HBM342.FSLD.938, do.center = TRUE, do.scale = TRUE, verbose = TRUE)
+
+## dat3, # HBM556.KSFB.592
+Seurat::DefaultAssay(object = HBM556.KSFB.592) <- "VolnormExpr"
+Seurat::VariableFeatures(object = HBM556.KSFB.592) <- colnames(dat3)
+HBM556.KSFB.592 <- Seurat::ScaleData(HBM556.KSFB.592, do.center = TRUE, do.scale = TRUE, verbose = TRUE)
+
+## dat14, # HBM568.NGPL.345
+Seurat::DefaultAssay(object = HBM568.NGPL.345) <- "VolnormExpr"
+Seurat::VariableFeatures(object = HBM568.NGPL.345) <- colnames(dat14)
+HBM568.NGPL.345 <- Seurat::ScaleData(HBM568.NGPL.345, do.center = TRUE, do.scale = TRUE, verbose = TRUE)
+
+## dat5, # HBM389.PKHL.936
+Seurat::DefaultAssay(object = HBM389.PKHL.936) <- "VolnormExpr"
+Seurat::VariableFeatures(object = HBM389.PKHL.936) <- colnames(dat5)
+HBM389.PKHL.936 <- Seurat::ScaleData(HBM389.PKHL.936, do.center = TRUE, do.scale = TRUE, verbose = TRUE)
+
+## dat10 # HBM772.XXCD.697
+Seurat::DefaultAssay(object = HBM772.XXCD.697) <- "VolnormExpr"
+Seurat::VariableFeatures(object = HBM772.XXCD.697) <- colnames(dat10)
+HBM772.XXCD.697 <- Seurat::ScaleData(HBM772.XXCD.697, do.center = TRUE, do.scale = TRUE, verbose = TRUE)
+
+```
+
+```{r}
+
+dat3_scale <- t(as.matrix(HBM556.KSFB.592@assays$VolnormExpr@scale.data))
+rownames(dat3_scale) <- paste0(HBM556.KSFB.592@project.name, "_", rownames(dat3_scale))
+dat3_scale <- as.data.frame(dat3_scale)
+
+dat5_scale <- t(as.matrix(HBM389.PKHL.936@assays$VolnormExpr@scale.data))
+rownames(dat5_scale) <- paste0(HBM389.PKHL.936@project.name, "_", rownames(dat5_scale))
+dat5_scale <- as.data.frame(dat5_scale)
+
+dat8_scale <- t(as.matrix(HBM825.PBVN.284@assays$VolnormExpr@scale.data))
+rownames(dat8_scale) <- paste0(HBM825.PBVN.284@project.name, "_", rownames(dat8_scale))
+dat8_scale <- as.data.frame(dat8_scale)
+
+dat9_scale <- t(as.matrix(HBM342.FSLD.938@assays$VolnormExpr@scale.data))
+rownames(dat9_scale) <- paste0(HBM342.FSLD.938@project.name, "_", rownames(dat9_scale))
+dat9_scale <- as.data.frame(dat9_scale)
+
+dat10_scale <- t(as.matrix(HBM772.XXCD.697@assays$VolnormExpr@scale.data))
+rownames(dat10_scale) <- paste0(HBM772.XXCD.697@project.name, "_", rownames(dat10_scale))
+dat10_scale <- as.data.frame(dat10_scale)
+
+dat14_scale <- t(as.matrix(HBM568.NGPL.345@assays$VolnormExpr@scale.data))
+rownames(dat14_scale) <- paste0(HBM568.NGPL.345@project.name, "_", rownames(dat14_scale))
+dat14_scale <- as.data.frame(dat14_scale)
+
+```
+
+```{r}
+
+# @assays$VolnormExpr@data
+
+## 28 marker panels:
+df_all_28_scale_sep <- dplyr::bind_rows(list(dat8_scale, # HBM825.PBVN.284
+                                            dat9_scale, # HBM342.FSLD.938
+                                            dat3_scale, # HBM556.KSFB.592
+                                            dat14_scale, # HBM568.NGPL.345
+                                            dat5_scale, # HBM389.PKHL.936
+                                            dat10_scale # HBM772.XXCD.697
+                                   ))
+
+```
+
+## compute the t-SNE embedding
+
+(this takes a long time, so ran on HPC)
+
+```{r, eval=FALSE}
+
+library(Rtsne)
+library(uwot)
+cores <- 7
+
+pcs <- df_all_28_scale_sep
+
+tsne_emb_28_scale_sep <- Rtsne::Rtsne(pcs, 
+                                      is_distance=FALSE, 
+                                      perplexity=30, 
+                                      num_threads=cores,
+                                      verbose=FALSE)$Y 
+rownames(emb) <- rownames(pcs)
+
+```
+
+```{r}
+
+tsne_emb_28_scale_sep <- readRDS(file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/data/datasets/spleen/spleen_combined_volNorm_log10_mat_28markersets_scale_sep_tsneEmb.RDS")
+colnames(tsne_emb_28_scale_sep) <- c("x", "y")
+
+```
+
+## visualize embedding
+
+get dataset assignments for each cell for labeling purposes on plot:
+
+```{r}
+
+dataset_assign_28_scale_sep <- vapply(strsplit(rownames(tsne_emb_28_scale_sep), "_"), `[`, 1, FUN.VALUE=character(1))
+names(dataset_assign_28_scale_sep) <- rownames(tsne_emb_28_scale_sep)
+dataset_assign_28_scale_sep <- as.factor(dataset_assign_28_scale_sep)
+head(dataset_assign_28_scale_sep)
+
+```
+
+```{r, fig.width=10, fig.height=10}
+
+crawdad::vizAllClusters(cells = tsne_emb_28_scale_sep,
+                        coms = dataset_assign_28_scale_sep, a = 0.5)
+
+crawdad::vizEachCluster(cells = tsne_emb_28_scale_sep,
+                        coms = dataset_assign_28_scale_sep)
+
+```
+
+There are 6 spleen datasets, 2 pairs from 3 different patients:
+
+HBM389.PKHL.936 and HBM772.XXCD.697; HBM556.KSFB.592 and HBM568.NGPL.345; HBM825.PBVN.284 and HBM342.FSLD.938.
+
+From the embedding, it looks like HBM389.PKHL.936, HBM772.XXCD.697, HBM556.KSFB.592, and HBM825.PBVN.284 overlap well whereas HBM568.NGPL.345 and HBM342.FSLD.938 have some differences.
+
+So we will transfer labels directly from our annotated reference:
+
+HBM389.PKHL.936 -\> HBM772.XXCD.697
+
+HBM389.PKHL.936 -\> HBM556.KSFB.592
+
+HBM389.PKHL.936 -\> HBM825.PBVN.284
+
+Then we will harmonize HBM556.KSFB.592 and HBM568.NGPL.345, and then transfer:
+
+HBM556.KSFB.592 -\> HBM568.NGPL.345
+
+Likewise, we will also harmonize HBM825.PBVN.284 and HBM342.FSLD.938, and then transfer:
+
+HBM825.PBVN.284 -\> HBM342.FSLD.938
+
+## harmonize datasets
+
+### KSFB and NGPL
+
+the separately scaled combined datasets for the two samples of interest:
+
+```{r}
+
+df_all_28_scale_sep_KSFB_NGPL <- dplyr::bind_rows(
+                              list(
+                                     dat3_scale, # HBM556.KSFB.592
+                                     dat14_scale # HBM568.NGPL.345
+                                   ))
+
+```
+
+factor of which dataset a cell belongs to:
+
+```{r}
+
+dataset_assign_28_scale_sep_KSFB_NGPL <- vapply(strsplit(rownames(df_all_28_scale_sep_KSFB_NGPL), "_"), `[`, 1, FUN.VALUE=character(1))
+names(dataset_assign_28_scale_sep_KSFB_NGPL) <- rownames(df_all_28_scale_sep_KSFB_NGPL)
+dataset_assign_28_scale_sep_KSFB_NGPL <- as.factor(dataset_assign_28_scale_sep_KSFB_NGPL)
+head(dataset_assign_28_scale_sep_KSFB_NGPL)
+
+```
+
+harmonize:
+
+```{r}
+
+library(harmony)
+
+## "gene by cell matrix"
+pcs <- t(df_all_28_scale_sep_KSFB_NGPL)
+
+df_all_28_scale_sep_KSFB_NGPL_harmonized <- harmony::HarmonyMatrix(pcs, dataset_assign_28_scale_sep_KSFB_NGPL, do_pca = FALSE, verbose = TRUE)
+
+## back to cell x protein matrix
+df_all_28_scale_sep_KSFB_NGPL_harmonized <- t(df_all_28_scale_sep_KSFB_NGPL_harmonized)
+
+```
+
+```{r}
+
+df_all_28_scale_sep_KSFB_NGPL_harmonized <- readRDS(file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/data/datasets/spleen/spleen_combined_volNorm_log10_df_28_scale_sep_KSFB_NGPL_harm.RDS")
+
+```
+
+get new embedding to check harmonization
+
+```{r, eval=FALSE}
+
+library(Rtsne)
+library(uwot)
+cores <- 7
+
+pcs <- df_all_28_scale_sep_KSFB_NGPL_harmonized
+
+tsne_emb_28_scale_sep_KSFB_NGPL_harmonized <- Rtsne::Rtsne(pcs, 
+                                      is_distance=FALSE, 
+                                      perplexity=30, 
+                                      num_threads=cores,
+                                      verbose=FALSE)$Y 
+rownames(tsne_emb_28_scale_sep_KSFB_NGPL_harmonized) <- rownames(pcs)
+
+
+```
+
+```{r}
+
+tsne_emb_28_scale_sep_KSFB_NGPL_harmonized <- readRDS(file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/data/datasets/spleen/spleen_combined_volNorm_log10_mat_28markersets_scale_sep_tsneEmb_KSFB_NGPL_harm.RDS")
+colnames(tsne_emb_28_scale_sep_KSFB_NGPL_harmonized) <- c("x", "y")
+
+```
+
+### PBVN and FSLD
+
+the separately scaled combined datasets for the two samples of interest:
+
+```{r}
+
+df_all_28_scale_sep_PBVN_FSLD <- dplyr::bind_rows(
+                              list(
+                                    dat8_scale, # HBM825.PBVN.284
+                                    dat9_scale # HBM342.FSLD.938
+                                   ))
+
+```
+
+factor of which dataset a cell belongs to:
+
+```{r}
+
+dataset_assign_28_scale_sep_PBVN_FSLD <- vapply(strsplit(rownames(df_all_28_scale_sep_PBVN_FSLD), "_"), `[`, 1, FUN.VALUE=character(1))
+names(dataset_assign_28_scale_sep_PBVN_FSLD) <- rownames(df_all_28_scale_sep_PBVN_FSLD)
+dataset_assign_28_scale_sep_PBVN_FSLD <- as.factor(dataset_assign_28_scale_sep_PBVN_FSLD)
+head(dataset_assign_28_scale_sep_PBVN_FSLD)
+
+```
+
+harmonize:
+
+```{r}
+
+library(harmony)
+
+## "gene by cell matrix"
+pcs <- t(df_all_28_scale_sep_PBVN_FSLD)
+
+df_all_28_scale_sep_PBVN_FSLD_harmonized <- harmony::HarmonyMatrix(pcs, dataset_assign_28_scale_sep_PBVN_FSLD, do_pca = FALSE, verbose = TRUE)
+
+## back to cell x protein matrix
+df_all_28_scale_sep_PBVN_FSLD_harmonized <- t(df_all_28_scale_sep_PBVN_FSLD_harmonized)
+
+```
+
+```{r}
+
+df_all_28_scale_sep_PBVN_FSLD_harmonized <- readRDS(file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/data/datasets/spleen/spleen_combined_volNorm_log10_df_28_scale_sep_PBVN_FSLD_harm.RDS")
+
+```
+
+get new embedding to check harmonization
+
+```{r, eval=FALSE}
+
+library(Rtsne)
+library(uwot)
+cores <- 7
+
+pcs <- df_all_28_scale_sep_PBVN_FSLD_harmonized
+
+tsne_emb_28_scale_sep_PBVN_FSLD_harmonized <- Rtsne::Rtsne(pcs, 
+                                      is_distance=FALSE, 
+                                      perplexity=30, 
+                                      num_threads=cores,
+                                      verbose=FALSE)$Y 
+rownames(tsne_emb_28_scale_sep_PBVN_FSLD_harmonized) <- rownames(pcs)
+
+
+```
+
+```{r}
+
+tsne_emb_28_scale_sep_PBVN_FSLD_harmonized <- readRDS(file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/data/datasets/spleen/spleen_combined_volNorm_log10_mat_28markersets_scale_sep_tsneEmb_PBVN_FSLD_harm.RDS")
+colnames(tsne_emb_28_scale_sep_PBVN_FSLD_harmonized) <- c("x", "y")
+
+```
+
+## Linear Discriminant analysis
+
+```{r}
+
+library(MASS)
+
+```
+
+
+### PKHL to KSFB (between patients)
+
+Use the scaled data
+
+```{r}
+
+dat5_scale <- t(as.matrix(HBM389.PKHL.936@assays$VolnormExpr@scale.data))
+rownames(dat5_scale) <- paste0(HBM389.PKHL.936@project.name, "_", rownames(dat5_scale))
+dat5_scale <- as.data.frame(dat5_scale)
+
+dat3_scale <- t(as.matrix(HBM556.KSFB.592@assays$VolnormExpr@scale.data))
+rownames(dat3_scale) <- paste0(HBM556.KSFB.592@project.name, "_", rownames(dat3_scale))
+dat3_scale <- as.data.frame(dat3_scale)
+
+```
+
+```{r}
+
+com <- HBM389.PKHL.936$com_nn50_VolnormExpr_data_annots ## spleen1_coms
+pcs <- dat5_scale ## vol norm, log-transformed, scaled expression values
+df.ref <- data.frame(celltype = com, pcs)
+model.PKHL <- MASS::lda(celltype ~ ., data = df.ref)
+
+```
+
+```{r}
+
+mat.query <- data.frame(dat3_scale)
+KSFB.predictedBy.PKHL <- stats::predict(model.PKHL, mat.query)
+names(KSFB.predictedBy.PKHL$class) <- rownames(mat.query)
+
+```
+
+### PKHL to PBVN (between patients)
+
+Use the original PKHL annotations
+
+Use the scaled data
+
+```{r}
+
+dat5_scale <- t(as.matrix(HBM389.PKHL.936@assays$VolnormExpr@scale.data))
+rownames(dat5_scale) <- paste0(HBM389.PKHL.936@project.name, "_", rownames(dat5_scale))
+dat5_scale <- as.data.frame(dat5_scale)
+
+dat8_scale <- t(as.matrix(HBM825.PBVN.284@assays$VolnormExpr@scale.data))
+rownames(dat8_scale) <- paste0(HBM825.PBVN.284@project.name, "_", rownames(dat8_scale))
+dat8_scale <- as.data.frame(dat8_scale)
+
+```
+
+```{r}
+
+com <- HBM389.PKHL.936$com_nn50_VolnormExpr_data_annots ## spleen1_coms
+pcs <- dat5_scale ## vol norm, log-transformed, scaled expression values
+df.ref <- data.frame(celltype = com, pcs)
+model.PKHL <- MASS::lda(celltype ~ ., data = df.ref)
+
+```
+
+```{r}
+
+mat.query <- data.frame(dat8_scale)
+PBVN.predictedBy.PKHL <- stats::predict(model.PKHL, mat.query)
+names(PBVN.predictedBy.PKHL$class) <- rownames(mat.query)
+
+```
+
+### PKHL to XXCD (within patients)
+
+```{r}
+
+dat5_scale <- t(as.matrix(HBM389.PKHL.936@assays$VolnormExpr@scale.data))
+rownames(dat5_scale) <- paste0(HBM389.PKHL.936@project.name, "_", rownames(dat5_scale))
+dat5_scale <- as.data.frame(dat5_scale)
+
+dat10_scale <- t(as.matrix(HBM772.XXCD.697@assays$VolnormExpr@scale.data))
+rownames(dat10_scale) <- paste0(HBM772.XXCD.697@project.name, "_", rownames(dat10_scale))
+dat10_scale <- as.data.frame(dat10_scale)
+
+```
+
+```{r}
+
+com <- HBM389.PKHL.936$com_nn50_VolnormExpr_data_annots ## spleen1_coms
+pcs <- dat5_scale ## vol norm, log-transformed, scaled expression values
+df.ref <- data.frame(celltype = com, pcs)
+model.PKHL <- MASS::lda(celltype ~ ., data = df.ref)
+
+```
+
+```{r}
+
+mat.query <- data.frame(dat10_scale)
+XXCD.predictedBy.PKHL <- stats::predict(model.PKHL, mat.query)
+names(XXCD.predictedBy.PKHL$class) <- rownames(mat.query)
+
+```
+
+### KSFB to NGPL (harmonized)
+
+```{r}
+
+com <- KSFB.predictedBy.PKHL$class
+pcs <- df_all_28_scale_sep_KSFB_NGPL_harmonized[rownames(dat3_scale),] ## vol norm, log-transformed, scaled expression values, harmonized with NGPL
+df.ref <- data.frame(celltype = com, pcs)
+model.KSFB_harmonizedTo_NGPL <- MASS::lda(celltype ~ ., data = df.ref)
+
+```
+
+```{r}
+
+mat.query <- data.frame(df_all_28_scale_sep_KSFB_NGPL_harmonized[rownames(dat14_scale),]) ## NGPL cells
+NGPL.predictedBy.KSFB_harmonizedTo_NGPL <- stats::predict(model.KSFB_harmonizedTo_NGPL, mat.query)
+names(NGPL.predictedBy.KSFB_harmonizedTo_NGPL$class) <- rownames(mat.query)
+
+```
+
+### PBVN to FSLD (harmonized)
+
+```{r}
+
+com <- PBVN.predictedBy.PKHL$class
+pcs <- df_all_28_scale_sep_PBVN_FSLD_harmonized[rownames(dat8_scale),] ## vol norm, log-transformed, scaled expression values, harmonized with FSLD
+df.ref <- data.frame(celltype = com, pcs)
+model.PBVN_harmonizedTo_FSLD <- MASS::lda(celltype ~ ., data = df.ref)
+
+```
+
+```{r}
+
+mat.query <- data.frame(df_all_28_scale_sep_PBVN_FSLD_harmonized[rownames(dat9_scale),]) ## FSLD cells
+FSLD.predictedBy.PBVN_harmonizedTo_FSLD <- stats::predict(model.PBVN_harmonizedTo_FSLD, mat.query)
+names(FSLD.predictedBy.PBVN_harmonizedTo_FSLD$class) <- rownames(mat.query)
+
+```
+
+## Check posterior probability
+
+Check the posterior probabilities of every cell being assigned a given cell type label. Hopefully we will see a strong assignment of only one particular cell type for a given cell. Additionally, hopefully we will see the cell type probabilities outline spatially where we would expect these given cell types to be located spatially.
+
+### XXCD.predictedBy.PKHL
+
+```{r, fig.height=16, fig.width=16}
+
+id <- "XXCD.predictedBy.PKHL"
+probs <- XXCD.predictedBy.PKHL$posterior
+ps <- lapply(colnames(probs), function(c) {
+
+  p <- HBM772.XXCD.697@meta.data[,c("x", "y")]
+  rownames(p) <- paste0(HBM772.XXCD.697@project.name, "_", rownames(p))
+  vizExpressionMat(mat = XXCD.predictedBy.PKHL$posterior,
+                   pos = p, marker = c, s = 1, title = c) #+
+    #ggplot2::theme(panel.background = ggplot2::element_rect(fill = "gray"))
+})
+
+plt <- gridExtra::grid.arrange(
+  grobs = ps,
+  layout_matrix = rbind(c(1, 2, 3, 4),
+                        c(5, 6, 7, 8),
+                        c(9, 10, 11, 12),
+                        c(13, 14, 15, 16)
+                        )
+)
+
+plt
+
+# ggplot2::ggsave(filename = paste0("tissue_cluster_LDA_predictions_", id, "_.png"),
+#                device = "png",
+#                plot = plt,
+#                dpi = 300,
+#                path = paste0(fig_path),
+#                scale = 1,
+#                width = 16,
+#                height = 16,
+#                units = c("in")
+#               )
+
+```
+
+### KSFB.predictedBy.PKHL
+
+```{r, fig.height=16, fig.width=16}
+
+id <- "KSFB.predictedBy.PKHL"
+probs <- KSFB.predictedBy.PKHL$posterior
+ps <- lapply(colnames(probs), function(c) {
+
+  p <- HBM556.KSFB.592@meta.data[,c("x", "y")]
+  rownames(p) <- paste0(HBM556.KSFB.592@project.name, "_", rownames(p))
+  vizExpressionMat(mat = KSFB.predictedBy.PKHL$posterior,
+                   pos = p, marker = c, s = 1, title = c) #+
+    #ggplot2::theme(panel.background = ggplot2::element_rect(fill = "gray"))
+})
+
+plt <- gridExtra::grid.arrange(
+  grobs = ps,
+  layout_matrix = rbind(c(1, 2, 3, 4),
+                        c(5, 6, 7, 8),
+                        c(9, 10, 11, 12),
+                        c(13, 14, 15, 16)
+                        )
+)
+
+plt
+
+# ggplot2::ggsave(filename = paste0("tissue_cluster_LDA_predictions_", id, "_.png"),
+#                device = "png",
+#                plot = plt,
+#                dpi = 300,
+#                path = paste0(fig_path),
+#                scale = 1,
+#                width = 16,
+#                height = 16,
+#                units = c("in")
+#               )
+
+```
+
+### PBVN.predictedBy.PKHL
+
+```{r, fig.height=16, fig.width=16}
+
+id <- "PBVN.predictedBy.PKHL"
+probs <- PBVN.predictedBy.PKHL$posterior
+ps <- lapply(colnames(probs), function(c) {
+
+  p <- HBM825.PBVN.284@meta.data[,c("x", "y")]
+  rownames(p) <- paste0(HBM825.PBVN.284@project.name, "_", rownames(p))
+  vizExpressionMat(mat = PBVN.predictedBy.PKHL$posterior,
+                   pos = p, marker = c, s = 1, title = c) #+
+    #ggplot2::theme(panel.background = ggplot2::element_rect(fill = "gray"))
+})
+
+plt <- gridExtra::grid.arrange(
+  grobs = ps,
+  layout_matrix = rbind(c(1, 2, 3, 4),
+                        c(5, 6, 7, 8),
+                        c(9, 10, 11, 12),
+                        c(13, 14, 15, 16)
+                        )
+)
+
+plt
+
+# ggplot2::ggsave(filename = paste0("tissue_cluster_LDA_predictions_", id, "_.png"),
+#                device = "png",
+#                plot = plt,
+#                dpi = 300,
+#                path = paste0(fig_path),
+#                scale = 1,
+#                width = 16,
+#                height = 16,
+#                units = c("in")
+#               )
+
+```
+
+### NGPL.predictedBy.KSFB_harmonizedTo_NGPL
+
+```{r, fig.height=16, fig.width=16}
+
+id <- "NGPL.predictedBy.KSFB_harmonizedTo_NGPL"
+probs <- NGPL.predictedBy.KSFB_harmonizedTo_NGPL$posterior
+ps <- lapply(colnames(probs), function(c) {
+
+  p <- HBM568.NGPL.345@meta.data[,c("x", "y")]
+  rownames(p) <- paste0(HBM568.NGPL.345@project.name, "_", rownames(p))
+  vizExpressionMat(mat = NGPL.predictedBy.KSFB_harmonizedTo_NGPL$posterior,
+                   pos = p, marker = c, s = 1, title = c) #+
+    #ggplot2::theme(panel.background = ggplot2::element_rect(fill = "gray"))
+})
+
+plt <- gridExtra::grid.arrange(
+  grobs = ps,
+  layout_matrix = rbind(c(1, 2, 3, 4),
+                        c(5, 6, 7, 8),
+                        c(9, 10, 11, 12),
+                        c(13, 14, 15, 16)
+                        )
+)
+
+plt
+
+# ggplot2::ggsave(filename = paste0("tissue_cluster_LDA_predictions_", id, "_.png"),
+#                device = "png",
+#                plot = plt,
+#                dpi = 300,
+#                path = paste0(fig_path),
+#                scale = 1,
+#                width = 16,
+#                height = 16,
+#                units = c("in")
+#               )
+
+```
+
+### FSLD.predictedBy.PBVN_harmonizedTo_FSLD
+
+```{r, fig.height=16, fig.width=16}
+
+id <- "FSLD.predictedBy.PBVN_harmonizedTo_FSLD"
+probs <- FSLD.predictedBy.PBVN_harmonizedTo_FSLD$posterior
+ps <- lapply(colnames(probs), function(c) {
+
+  p <- HBM342.FSLD.938@meta.data[,c("x", "y")]
+  rownames(p) <- paste0(HBM342.FSLD.938@project.name, "_", rownames(p))
+  vizExpressionMat(mat = FSLD.predictedBy.PBVN_harmonizedTo_FSLD$posterior,
+                   pos = p, marker = c, s = 1, title = c) #+
+    #ggplot2::theme(panel.background = ggplot2::element_rect(fill = "gray"))
+})
+
+plt <- gridExtra::grid.arrange(
+  grobs = ps,
+  layout_matrix = rbind(c(1, 2, 3, 4),
+                        c(5, 6, 7, 8),
+                        c(9, 10, 11, 12),
+                        c(13, 14, 15, 16)
+                        )
+)
+
+plt
+
+# ggplot2::ggsave(filename = paste0("tissue_cluster_LDA_predictions_", id, "_.png"),
+#                device = "png",
+#                plot = plt,
+#                dpi = 300,
+#                path = paste0(fig_path),
+#                scale = 1,
+#                width = 16,
+#                height = 16,
+#                units = c("in")
+#               )
+
+```
+
+Additionally, we can also look at the protein expression correlations between the reference cell types and query cells that were assigned that corresponding cell type label
+
+## Visualize cell types
+
+Visualize the cell types for each tissue
+
+
+
+
+
+
+

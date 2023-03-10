@@ -256,11 +256,11 @@ plotTrendsOverlay <- function(results,
 #' 
 #' @export
 vizAllClusters <- function(cells, coms, ofInterest = NULL,
-                           axisAdj = 100, s = 0.01, a = 1, title = NULL,
+                           axisAdj = 1, s = 0.5, a = 1, title = NULL,
                            nacol = transparentCol(color = "gray", percent = 50)){
   
   ## if cells are a data.frame with "x" and "y" cell coordinate columns
-  if( class(cells)[1] == "data.frame" ){
+  if( class(cells)[1] %in% c("data.frame", "matrix") ){
     pos <- cells[,c("x", "y")]
     tempCom <- factor(coms)
     names(tempCom) <- rownames(cells)
@@ -383,12 +383,12 @@ vizAllClusters <- function(cells, coms, ofInterest = NULL,
 #' vizEachCluster(slide, coms = slide$celltypes, ofInterest = c("Bergmann", "Purkinje"))
 #' 
 #' @export
-vizEachCluster <- function(cells, coms, axisAdj = 100, s = 0, a = 1,
+vizEachCluster <- function(cells, coms, axisAdj = 1, s = 0.5, a = 1,
                            nacol = transparentCol(color = "gray", percent = 50),
                            clustcol = "red"){
   
-  ## if cells are a data.frame with "x" and "y" cell coordinate columns
-  if( class(cells)[1] == "data.frame" ){
+  ## if cells are a data.frame or matrix  with "x" and "y" cell coordinate columns
+  if( class(cells)[1] %in% c("data.frame", "matrix") ){
     pos <- cells[,c("x", "y")]
     ctemp <- factor(coms)
     names(ctemp) <- rownames(cells)
