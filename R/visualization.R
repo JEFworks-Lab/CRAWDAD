@@ -4,6 +4,7 @@
 #'
 #' @param results list or data.frame; the information about the resolution, Z-score, reference and the neighbor cell. It can be the result directly obtained by the findTrends function or the melted version created by the `meltResultsList()` function.
 #' @param idcol character; if results are a data.frame, this is the column that contains the additional feature to plot multiple trend lines with
+#' @param legend boolean to produce legend, if results are a melted data.frame with "idcol" column (default: FALSE)
 #' @param ... additional plotting parameters for base R plotting. Fed into "lines()" in script
 #'
 #' @return nothing
@@ -11,6 +12,7 @@
 #' @export
 plotTrends <- function(results,
                        idcol = "id",
+                       legend = FALSE,
                        ...){
   
   
@@ -108,6 +110,11 @@ plotTrends <- function(results,
         ## threshold lines
         abline(h = -2, col='red')
         abline(h = 2, col='red')
+        
+        if(legend){
+          legend("topright", inset=c(-0.4,0), xpd=TRUE, legend = id, col=cl, pch=20, cex=0.5, title = idcol)
+        }
+        
       })
     })
     
@@ -443,12 +450,12 @@ vizEachCluster <- function(cells, coms, axisAdj = 1, s = 0.5, a = 1,
                     y = "y") +
       
       ggplot2::theme_classic() +
-      ggplot2::theme(axis.text.x = ggplot2::element_text(size=15, color = "black"),
-                     axis.text.y = ggplot2::element_text(size=15, color = "black"),
-                     axis.title.y = ggplot2::element_text(size=15),
-                     axis.title.x = ggplot2::element_text(size=15),
+      ggplot2::theme(axis.text.x = ggplot2::element_text(size=10, color = "black"),
+                     axis.text.y = ggplot2::element_text(size=10, color = "black"),
+                     axis.title.y = ggplot2::element_text(size=10),
+                     axis.title.x = ggplot2::element_text(size=10),
                      axis.ticks.x = ggplot2::element_blank(),
-                     plot.title = ggplot2::element_text(size=15),
+                     plot.title = ggplot2::element_text(size=10),
                      legend.text = ggplot2::element_blank(),
                      legend.title = ggplot2::element_blank(),
                      legend.background = ggplot2::element_blank(),

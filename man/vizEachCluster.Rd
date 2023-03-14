@@ -7,8 +7,8 @@
 vizEachCluster(
   cells,
   coms,
-  axisAdj = 100,
-  s = 0,
+  axisAdj = 1,
+  s = 0.5,
   a = 1,
   nacol = transparentCol(color = "gray", percent = 50),
   clustcol = "red"

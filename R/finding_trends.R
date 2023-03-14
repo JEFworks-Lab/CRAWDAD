@@ -40,7 +40,7 @@ makeShuffledCells <- function(cells,
     grid <- sf::st_make_grid(cells, cellsize = r)
     
     if(verbose){
-      message(r, " micron resolution")
+      message(r, " unit resolution")
       message(length(grid), " tiles to shuffle...")
     }
     
@@ -372,12 +372,9 @@ selectSubsets <- function(binomMatrix,
 #'
 #' @param cells sp::SpatialPointsDataFrame object, with celltypes features and point geometries
 #' @param dist numeric distance to define neighbor cells with respect to each reference cell (default: 50)
-#' @param perms number of permutations to shuffle for each resolution (default = 1)
-#' @param seed set seed for shuffling (if more than 1 permutation, then seed equals permutation number)
 #' @param ncores number of cores for parallelization (default 1)
 #' @param shuffle.list a list of cell type labels shuffled at different resolutions (output from `makeShuffledCells()`)
 #' @param subset.list a subset list (output from `selectSubsets()`). Required if computing trends for subsets (default NULL)
-#' @param plot Boolean to return plots (default TRUE)
 #' @param verbose Boolean for verbosity (default TRUE)
 #'
 #' @return A list that contains a dataframe for each reference cell type, where the dataframe contains the significance values for each neighbor cell type at each resolution
@@ -387,12 +384,9 @@ selectSubsets <- function(binomMatrix,
 #' @export
 findTrends <- function(cells,
                        dist = 50,
-                       perms = 1,
-                       seed = 0,
                        ncores = 1,
                        shuffle.list,
                        subset.list = NULL,
-                       plot = FALSE,
                        verbose = TRUE,
                        removeDups = TRUE){
   
@@ -407,8 +401,6 @@ findTrends <- function(cells,
   if( !any(grepl("celltypes", colnames(cells))) ){
     stop("`cells` needs a column named `celltypes`. You can make this using `toSP()`")
   }
-  
-  seed <- seed
   
   if(verbose){
     start_time <- Sys.time()

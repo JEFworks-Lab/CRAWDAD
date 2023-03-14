@@ -100,9 +100,7 @@ saveRDS(shuffle.list, paste0(here::here(), "/data/seqfish/sp.seqfish.shuffled_re
 results <- crawdad::findTrends(seq,
                         dist = 100,
                         shuffle.list = shuffle.list,
-                        perms = 1,
                         ncores = ncores,
-                        seed = 1, 
                         verbose = TRUE)
 
 ## note: 1.02 minutes with 7 cores, 2.3 GHz Quad-Core Intel Core i7
@@ -122,13 +120,13 @@ saveRDS(results, paste0(here::here(), "/data/seqfish/sp.seqfish.pairwise.results
 
 ```{r}
 
-crawdad::plotTrends(results = results["Intermediate mesoderm"], idcol = "dist")
+crawdad::plotTrends(results = results["Intermediate mesoderm"])
 
 ```
 
 ```{r}
 
-crawdad::plotTrends(results = results["Endothelium"], idcol = "dist")
+crawdad::plotTrends(results = results["Endothelium"])
 
 ```
 
@@ -181,9 +179,7 @@ results.subsets <- crawdad::findTrends(seq,
                         dist = 100,
                         shuffle.list = shuffle.list,
                         subset.list = subset.list,
-                        perms = 1,
                         ncores = ncores,
-                        seed = 1, 
                         verbose = TRUE)
 
 ## note: 11.68 minutes with 7 cores, 2.3 GHz Quad-Core Intel Core i7; vs 7.53 minutes 14 cores on rockfish
@@ -251,7 +247,6 @@ plt
 
 ## shuffling grid
 grid <- sf::st_make_grid(seq, cellsize = 1000)
-grid_coords <- as.data.frame(sf::st_coordinates(grid))
 
 ## centers of the grids to add the tile IDs
 grid_coords_centroids <- as.data.frame(sf::st_coordinates(sf::st_centroid(grid)))
@@ -309,7 +304,7 @@ plt
 grDevices::pdf(file = paste0(figpath, "/2B_mesoderm_trends.pdf"), width = 4, height = 4)
 dat <- crawdad::meltResultsList(results, id = "dist100")
 d <- dat[dat$reference == "Lateral plate mesoderm" & dat$neighbor == "Intermediate mesoderm",]
-crawdad::plotTrends(results = d, idcol = "id")
+crawdad::plotTrends(results = d)
 dev.off()
 
 # dat <- crawdad::meltResultsList(results, id = "dist100")
@@ -396,7 +391,6 @@ plt
 
 ## shuffling grid
 grid <- sf::st_make_grid(seq, cellsize = 1000)
-grid_coords <- as.data.frame(sf::st_coordinates(grid))
 
 ## centers of the grids to add the tile IDs
 grid_coords_centroids <- as.data.frame(sf::st_coordinates(sf::st_centroid(grid)))
@@ -410,8 +404,6 @@ plt <- crawdad::vizAllClusters(cells = seq,
                                axisAdj = 1, s = 6, a = 0.5) +
   ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
   # ggplot2::theme(legend.position="none") +
-  ggplot2::labs(x = "x",
-                y = "y") +
   
   ## add in the grid information on top of the plot
   ggplot2::geom_sf(data = grid, fill = NA) +
@@ -436,8 +428,6 @@ plt <- crawdad::vizAllClusters(cells = cells2,
   # ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
   ggplot2::theme(legend.position="none")
   # ggplot2::theme(legend.position="none") +
-  ggplot2::labs(x = "x",
-                y = "y")
 
 ggplot2::ggsave(filename = "2A_endothelium_tissue_zoom.pdf",
                 plot = plt,
@@ -459,12 +449,12 @@ plt
 grDevices::pdf(file = paste0(figpath, "/2B_endothelium_trends.pdf"), width = 4, height = 4)
 dat <- crawdad::meltResultsList(results, id = "dist100")
 d <- dat[dat$reference == "Endothelium" & dat$neighbor == "Haematoendothelial progenitors",]
-crawdad::plotTrends(results = d, idcol = "id")
+crawdad::plotTrends(results = d)
 dev.off()
 
 dat <- crawdad::meltResultsList(results, id = "dist100")
 d <- dat[dat$reference == "Haematoendothelial progenitors" & dat$neighbor == "Endothelium",]
-crawdad::plotTrends(results = d, idcol = "id")
+crawdad::plotTrends(results = d)
 
 d <- dat[dat$reference == "Haematoendothelial progenitors",]
 crawdad::plotTrendsOverlay(results = d)

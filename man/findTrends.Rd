@@ -7,12 +7,9 @@
 findTrends(
   cells,
   dist = 50,
-  perms = 1,
-  seed = 0,
   ncores = 1,
   shuffle.list,
   subset.list = NULL,
-  plot = FALSE,
   verbose = TRUE,
   removeDups = TRUE
 )
@@ -22,17 +19,11 @@ findTrends(
 
 \item{dist}{numeric distance to define neighbor cells with respect to each reference cell (default: 50)}
 
-\item{perms}{number of permutations to shuffle for each resolution (default = 1)}
-
-\item{seed}{set seed for shuffling (if more than 1 permutation, then seed equals permutation number)}
-
 \item{ncores}{number of cores for parallelization (default 1)}
 
 \item{shuffle.list}{a list of cell type labels shuffled at different resolutions (output from \code{makeShuffledCells()})}
 
 \item{subset.list}{a subset list (output from \code{selectSubsets()}). Required if computing trends for subsets (default NULL)}
-
-\item{plot}{Boolean to return plots (default TRUE)}
 
 \item{verbose}{Boolean for verbosity (default TRUE)}
 }

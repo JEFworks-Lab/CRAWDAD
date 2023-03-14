@@ -8,8 +8,8 @@ vizAllClusters(
   cells,
   coms,
   ofInterest = NULL,
-  axisAdj = 100,
-  s = 0.01,
+  axisAdj = 1,
+  s = 0.5,
   a = 1,
   title = NULL,
   nacol = transparentCol(color = "gray", percent = 50)

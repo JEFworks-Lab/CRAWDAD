@@ -102,9 +102,7 @@ saveRDS(shuffle.list, paste0(here::here(), "/data/slideseq/slideseqPuck.190926_0
 results <- crawdad::findTrends(slide,
                         dist = 100,
                         shuffle.list = shuffle.list,
-                        perms = 1,
                         ncores = ncores,
-                        seed = 1, 
                         verbose = TRUE)
 
 ## note: 1.3 minutes with 7 cores, 2.3 GHz Quad-Core Intel Core i7
@@ -185,9 +183,7 @@ results.subsets <- crawdad::findTrends(slide,
                         dist = 100,
                         shuffle.list = shuffle.list,
                         subset.list = subset.list,
-                        perms = 1,
                         ncores = ncores,
-                        seed = 1, 
                         verbose = TRUE)
 
 ## note: 12.49 minutes with 7 cores, 2.3 GHz Quad-Core Intel Core i7; vs 2:46 minutes 14 cores on rockfish
