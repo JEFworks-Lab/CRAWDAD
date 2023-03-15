@@ -1,0 +1,40 @@
+---
+title: "Untitled"
+author: "Brendan F. Miller"
+date: "3/15/2023"
+output: html_document
+---
+
+# Slide-seq co-occurance data
+
+Load in the co-occurance array and intervals from the squidpy cooccurance analysis of the Slide-seq data.
+Then, subsequently process and plot using R and ggplot2.
+
+```{r}
+
+occ <- readRDS(file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/multiscale_celltype_colocalization_analysis/data/slideseq/slideseq.puck190926_08.rctd.co_occurance_array.rds")
+occ[1,,]
+
+```
+
+```{r}
+
+intervals <- readRDS(file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/multiscale_celltype_colocalization_analysis/data/slideseq/slideseq.puck190926_08.rctd.co_occurance_intervals.rds")
+intervals
+
+```
+
+# seqFISH co-occurance data
+
+note that the original seqFISH data in squidpy is in a difference scale, so might need to multiply intervals by 1000 to convert to micron scale
+
+```{r}
+
+
+
+```
+
+
+
+
+

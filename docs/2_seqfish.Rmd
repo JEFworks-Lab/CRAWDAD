@@ -31,7 +31,7 @@ ncores = 7
 
 ```{r, eval=FALSE}
 
-seq <- read.csv2(file = paste0(here::here(), "/data/seqfish/seqfish.meta.csv.gz"), row.names = 1, sep = ",")
+seq <- read.csv2(file = paste0(here::here(), "/data/seqfish/seqfish.meta.csv"), row.names = 1, sep = ",")
 seq <- seq[,c("x", "y", "cluster")]
 ## make sure the coordinates are numeric
 seq <- seq %>%
@@ -346,14 +346,14 @@ plt <- vizTrends(dat = d, facet = FALSE) +
   ggplot2::theme(legend.position="none")
 plt 
 
-ggplot2::ggsave(filename = "2B_mesoderm_endo_trends.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 4,
-                height = 4,
-                units = c("in"))
+# ggplot2::ggsave(filename = "2B_mesoderm_endo_trends.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 4,
+#                 height = 4,
+#                 units = c("in"))
 
 
 ```
