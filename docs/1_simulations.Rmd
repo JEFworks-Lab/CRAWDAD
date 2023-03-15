@@ -116,14 +116,14 @@ plt <- crawdad::vizAllClusters(cells = p,
   ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
 plt
 
-ggplot2::ggsave(filename = "1A_sim_tissue_legend.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 6,
-                height = 6,
-                units = c("in"))
+# ggplot2::ggsave(filename = "1A_sim_tissue_legend.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 6,
+#                 height = 6,
+#                 units = c("in"))
 
 ```
 

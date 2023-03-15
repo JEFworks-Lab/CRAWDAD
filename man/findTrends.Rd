@@ -11,7 +11,8 @@ findTrends(
   shuffle.list,
   subset.list = NULL,
   verbose = TRUE,
-  removeDups = TRUE
+  removeDups = TRUE,
+  returnMeans = TRUE
 )
 }
 \arguments{
@@ -26,6 +27,10 @@ findTrends(
 \item{subset.list}{a subset list (output from \code{selectSubsets()}). Required if computing trends for subsets (default NULL)}
 
 \item{verbose}{Boolean for verbosity (default TRUE)}
+
+\item{removeDups}{remove duplicate neighbor cells to prevent them from being counted multiple times and inflate the Z scores (default: TRUE)}
+
+\item{returnMeans}{if multiple permutations, return the mean Z score across the permutations in each resolution with respect to each neighbor cell type (default: TRUE)}
 }
 \value{
 A list that contains a dataframe for each reference cell type, where the dataframe contains the significance values for each neighbor cell type at each resolution

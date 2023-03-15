@@ -464,8 +464,82 @@ crawdad::plotTrendsOverlay(results = d)
 
 ```
 
+# ---------------------------------
+
+## check permutations
+
+```{r}
+## the above dataset has been saved as an rda file and able to load here:
+data(seq)
+
+## convert to SP
+seq <- crawdad:::toSP(pos = seq[,c("x", "y")],
+                        celltypes = seq$celltypes)
+
+ncores = 7
+resolutions = c(100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000, 6000)
+
+## generate background
+shuffle.list2 <- crawdad:::makeShuffledCells(seq,
+                          resolutions = resolutions,
+                          perms = 10,
+                          ncores = ncores,
+                          verbose = TRUE)
+
+## note: 0.77 minutes with 7 cores, 2.3 GHz Quad-Core Intel Core i7
+```
+
+```{r}
+
+## find trends, passing background as parameter
+results2 <- crawdad::findTrends(seq,
+                        dist = 100,
+                        shuffle.list = shuffle.list2,
+                        ncores = ncores,
+                        verbose = TRUE,
+                        returnMeans = FALSE)
+
+```
+
+```{r}
+
+dat <- crawdad::meltResultsList(results2, withPerms = TRUE)
+d1 <- dat[dat$reference == "Lateral plate mesoderm" & dat$neighbor == "Intermediate mesoderm",]
+d2 <- dat[dat$reference == "Endothelium" & dat$neighbor == "Haematoendothelial progenitors",]
+## combine the trends into one data.frame, and have the "id" column label the combo, plot both lines on same plot
+## turn off the facet wrap so just coloring the two trends, which are labeled using the "id" column
+d1$id <- "Lateral plate mesoderm vs Intermediate mesoderm"
+d2$id <- "Endothelium vs Haematoendothelial progenitors"
+d <- dplyr::bind_rows(list(d1, d2))
+# resolutions as numeric:
+d <- d %>%
+  dplyr::mutate_at(vars(resolution), as.numeric)
 
 
+dat <- crawdad::meltResultsList(results, withPerms = FALSE)
+d1 <- dat[dat$reference == "Lateral plate mesoderm" & dat$neighbor == "Intermediate mesoderm",]
+d2 <- dat[dat$reference == "Endothelium" & dat$neighbor == "Haematoendothelial progenitors",]
+## combine the trends into one data.frame, and have the "id" column label the combo, plot both lines on same plot
+## turn off the facet wrap so just coloring the two trends, which are labeled using the "id" column
+d1$id <- "Lateral plate mesoderm vs Intermediate mesoderm"
+d2$id <- "Endothelium vs Haematoendothelial progenitors"
+d2 <- dplyr::bind_rows(list(d1, d2))
+# resolutions as numeric:
+d2 <- d2 %>%
+  dplyr::mutate_at(vars(resolution), as.numeric)
+
+
+plt <- vizTrends(dat = d, facet = FALSE, lines = FALSE) +
+  
+  ## add in line from the original plot
+  ggplot2::geom_path(data = d2,
+                     ggplot2::aes(x = resolution, y = Z, color = id), size = 1.5) +
+  
+  ggplot2::scale_x_log10() +
+  ggplot2::theme(legend.position="none")
+plt
+
+```
 
 
 
