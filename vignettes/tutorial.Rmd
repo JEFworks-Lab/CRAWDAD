@@ -36,6 +36,7 @@ BiocManager::install("CRAWDAD")
 ```{r}
 
 library(crawdad)
+library(dplyr)
 
 ```
 
@@ -49,7 +50,7 @@ ncores <- 7
 
 ## Make simulated dataset
 
-```{r}
+```{r, eval=FALSE}
 
 ## cells
 set.seed(1)
@@ -136,18 +137,33 @@ plt <- crawdad::vizAllClusters(cells = p,
   ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
 plt
 
-```
-
-Convert the data.frame of cells to an `sp::SpatialPointsDataFrame` object. This is because CRAWDAD builds upon the `sf` library in R.
-
-```{r}
-
 ## convert to SP
 cells <- crawdad::toSP(pos = p[,c("x", "y")],
                         celltypes = p$type)
 cells
 
 ```
+
+```{r}
+
+data(sim)
+
+## visualize
+plt <- crawdad::vizAllClusters(cells = sim,
+                               coms = p$type,
+                               title = "sim",
+                               axisAdj = 1, s = 6, a = 0.5) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
+plt
+
+## convert to SP
+cells <- crawdad::toSP(pos = sim[,c("x", "y")],
+                        celltypes = p$type)
+cells
+
+```
+
+Convert the data.frame of cells to an `sp::SpatialPointsDataFrame` object. This is because CRAWDAD builds upon the `sf` library in R.
 
 ## Make shuffled background
 
@@ -218,11 +234,11 @@ By default, `vizTrends()` is setup to facet wrap reference and neighbor cell typ
 
 dat <- crawdad::meltResultsList(results)
 
-plt <- vizTrends(dat = dat)
+plt <- crawdad::vizTrends(dat = dat)
 plt 
 
 ## because the output is a `ggplot2` object, we can perform additional manipulations, like log-transformation of the x-axis:
-plt <- vizTrends(dat = dat) +
+plt <- crawdad::vizTrends(dat = dat) +
   ggplot2::scale_x_log10()
 plt 
 
@@ -237,12 +253,12 @@ dat <- crawdad::meltResultsList(results)
 
 ## select different trend combinations
 d1 <- dat[dat$reference == "A" & dat$neighbor == "A",]
-plt <- vizTrends(dat = d1) +
+plt <- crawdad::vizTrends(dat = d1) +
   ggplot2::scale_x_log10()
 plt 
 
 d2 <- dat[dat$reference == "A" & dat$neighbor == "B",]
-plt <- vizTrends(dat = d2) +
+plt <- crawdad::vizTrends(dat = d2) +
   ggplot2::scale_x_log10()
 plt 
 
@@ -254,7 +270,7 @@ d2$id <- "A vs B"
 
 d <- dplyr::bind_rows(list(d1, d2))
 
-plt <- vizTrends(dat = d, facet = FALSE) +
+plt <- crawdad::vizTrends(dat = d, facet = FALSE) +
   ggplot2::scale_x_log10()
 plt 
 

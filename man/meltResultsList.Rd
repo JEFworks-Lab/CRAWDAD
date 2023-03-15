@@ -11,7 +11,7 @@ meltResultsList(resultsList, id = NA, withPerms = FALSE)
 
 \item{id}{id desired, can add a column that contains an additional identifier for the results. Can use these for plotting and comparing different things}
 
-\item{withPerms}{if the results list is a list of lists using \code{returnMeans = FALSE} in \code{findTrends()} then column order is different and this flag is needed (default: FALSE)}
+\item{withPerms}{if the results list is a list of lists using \code{returnMeans = FALSE} in \code{findTrends()}, then column order is different and this flag is needed (default: FALSE)}
 }
 \description{
 idea is that the output of \code{findTrends()} is a list of dataframes, where each dataframe

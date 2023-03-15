@@ -40,7 +40,8 @@ Imports:
   reshape2,
   stats,
   sf,
-  sp
+  sp,
+  dplyr
 Depends:
     R (>= 4.0)
 Suggests:
@@ -48,7 +49,6 @@ Suggests:
   knitr,
   rmarkdown,
   testthat,
-  here,
-  dplyr
+  here
 VignetteBuilder:
   knitr

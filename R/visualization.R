@@ -27,7 +27,7 @@ plotTrends <- function(results,
         mar=rep(4,4))
     
     ## for each reference cell type, ie a dataframe in the list..
-    sapply(names(results), function(ct1) {
+    invisible(sapply(names(results), function(ct1) {
       # print(ct1)
       results.norm <- results[[ct1]]
       results.norm[is.nan(results.norm)] <- NA
@@ -53,7 +53,7 @@ plotTrends <- function(results,
         abline(h = -2, col='red')
         abline(h = 2, col='red')
       })
-    })
+    }))
     
     ## if a melted dataframe,
     ## will have an additional column that can serve to plot
@@ -72,7 +72,7 @@ plotTrends <- function(results,
         mar=c(4,4,4,6)) ## bot, top, left, right
     
     ## for each reference cell type...(rows)
-    sapply(refs, function(ct1) {
+    invisible(sapply(refs, function(ct1) {
       # print(ct1)
       results.norm <- results[results[,"reference"] == ct1,]
       results.norm[is.nan(results.norm[,"Z"]), "Z"] <- NA
@@ -116,7 +116,7 @@ plotTrends <- function(results,
         }
         
       })
-    })
+    }))
     
   } else {
     stop("`results` are neither a list from `findTrends()` or a melted data.frame from `meltResultsList()`")
@@ -504,7 +504,7 @@ vizEachCluster <- function(cells, coms, axisAdj = 1, s = 0.5, a = 1,
 #' 
 #' @description The input data.frame should be the results list from `findTrends()` that has been melted into a data.frame using `meltResultsList()`.
 #' 
-#' @param dat data.frame; the information about the resolution, Z-score, reference and the neighbor cell.
+#' @param dat `findTrends()` results list, or data.frame; the information about the resolution, Z-score, reference and the neighbor cell.
 #' @param id column name that contains an additional feature to color trend lines (default: "id")
 #' @param yaxis column that has significance value across resolutions (default: "Z")
 #' @param sig.thresh threshold for significance, ie Z score significance threshold (default: 2).
@@ -514,6 +514,7 @@ vizEachCluster <- function(cells, coms, axisAdj = 1, s = 0.5, a = 1,
 #' @param facet boolean to facet wrap on reference and neighbor cell types. (default: TRUE)
 #' @param lines boolean to plot lines (default: TRUE)
 #' @param points boolean to plot points (default: TRUE)
+#' @param withPerms if the results list is a list of lists using `returnMeans = FALSE` in `findTrends()`, then column order is different and this flag is needed (default: FALSE)
 #' 
 #' @export
 vizTrends <- function(dat, id = "id", yaxis = "Z",
@@ -523,7 +524,14 @@ vizTrends <- function(dat, id = "id", yaxis = "Z",
                       title = NULL,
                       facet = TRUE,
                       lines = TRUE,
-                      points = TRUE){
+                      points = TRUE,
+                      withPerms = FALSE){
+  
+  ## if results is list from `findTrends()` then melt it.
+  if(inherits(dat, "list")){
+    message("results detected to be a list. Melting to data.frame.")
+    dat <- crawdad::meltResultsList(dat, withPerms = withPerms)
+  }
   
   plt <- ggplot2::ggplot(data = dat)
   if(points){

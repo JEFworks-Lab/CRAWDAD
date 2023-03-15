@@ -14,11 +14,12 @@ vizTrends(
   title = NULL,
   facet = TRUE,
   lines = TRUE,
-  points = TRUE
+  points = TRUE,
+  withPerms = FALSE
 )
 }
 \arguments{
-\item{dat}{data.frame; the information about the resolution, Z-score, reference and the neighbor cell.}
+\item{dat}{\code{findTrends()} results list, or data.frame; the information about the resolution, Z-score, reference and the neighbor cell.}
 
 \item{id}{column name that contains an additional feature to color trend lines (default: "id")}
 
@@ -37,6 +38,8 @@ vizTrends(
 \item{lines}{boolean to plot lines (default: TRUE)}
 
 \item{points}{boolean to plot points (default: TRUE)}
+
+\item{withPerms}{if the results list is a list of lists using \code{returnMeans = FALSE} in \code{findTrends()}, then column order is different and this flag is needed (default: FALSE)}
 }
 \description{
 The input data.frame should be the results list from \code{findTrends()} that has been melted into a data.frame using \code{meltResultsList()}.
