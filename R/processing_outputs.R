@@ -69,7 +69,7 @@ getNeighbors <- function(cells,
 #' 
 #' @param resultsList list output from findTrendsv2
 #' @param id id desired, can add a column that contains an additional identifier for the results. Can use these for plotting and comparing different things
-#' @param withPerms if the results list is a list of lists using `returnMeans = FALSE` in `findTrends()` then column order is different and this flag is needed (default: FALSE)
+#' @param withPerms if the results list is a list of lists using `returnMeans = FALSE` in `findTrends()`, then column order is different and this flag is needed (default: FALSE)
 #' 
 #' @export
 meltResultsList <- function(resultsList, id = NA, withPerms = FALSE){
