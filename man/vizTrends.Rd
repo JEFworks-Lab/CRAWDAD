@@ -12,7 +12,9 @@ vizTrends(
   nc = length(unique(dat[[id]])),
   colors = rainbow(nc),
   title = NULL,
-  facet = TRUE
+  facet = TRUE,
+  lines = TRUE,
+  points = TRUE
 )
 }
 \arguments{
@@ -31,6 +33,10 @@ vizTrends(
 \item{title}{plot title (default: NULL)}
 
 \item{facet}{boolean to facet wrap on reference and neighbor cell types. (default: TRUE)}
+
+\item{lines}{boolean to plot lines (default: TRUE)}
+
+\item{points}{boolean to plot points (default: TRUE)}
 }
 \description{
 The input data.frame should be the results list from \code{findTrends()} that has been melted into a data.frame using \code{meltResultsList()}.

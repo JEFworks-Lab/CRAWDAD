@@ -22,7 +22,7 @@ makeShuffledCells(
 
 \item{ncores}{number of cores for parallelization (default 1)}
 
-\item{seed}{set seed for shuffling (if more than 1 permutation, then seed equals permutation number)}
+\item{seed}{set seed for shuffling (if more than 1 permutation, each shuffling permutation has a seed equal to the permutation number)}
 
 \item{verbose}{Boolean for verbosity (default TRUE)}
 }

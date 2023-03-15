@@ -1,0 +1,184 @@
+---
+title: "Untitled"
+author: "Brendan F. Miller"
+date: "9/29/2022"
+output: html_document
+---
+
+```{r}
+
+d <- t(as.matrix(HBM389.PKHL.936@assays$RawExpr@counts))
+m <- HBM389.PKHL.936@meta.data[,c("x", "y", "cellarea", "com_nn50_VolnormExpr_data_annots")]
+
+write.csv(x = d, file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/spatial_neighborhood_analysis/data/CODEX/HBM389.PKHL.936.exp.csv", sep = ",", row.names = TRUE, col.names = TRUE)
+
+write.csv(x = m, file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/spatial_neighborhood_analysis/data/CODEX/HBM389.PKHL.936.meta.csv", sep = ",", row.names = TRUE, col.names = TRUE)
+
+```
+
+```{r}
+
+# HBM772.XXCD.697@assays$RawExpr@counts
+# HBM772.XXCD.697$com_nn50_VolnormExpr_data_annots_byPKHL
+
+d <- t(as.matrix(HBM772.XXCD.697@assays$RawExpr@counts))
+m <- HBM772.XXCD.697@meta.data[,c("x", "y", "cellarea", "com_nn50_VolnormExpr_data_annots_byPKHL")]
+
+write.csv(x = d, file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/spatial_neighborhood_analysis/data/CODEX/HBM772.XXCD.697.exp.csv", sep = ",", row.names = TRUE, col.names = TRUE)
+
+write.csv(x = m, file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/spatial_neighborhood_analysis/data/CODEX/HBM772.XXCD.697.meta.csv", sep = ",", row.names = TRUE, col.names = TRUE)
+
+```
+
+```{r}
+
+# HBM556.KSFB.592@assays$RawExpr@counts
+# HBM556.KSFB.592$com_nn50_VolnormExpr_data_annots_byPKHL
+
+d <- t(as.matrix(HBM556.KSFB.592@assays$RawExpr@counts))
+m <- HBM556.KSFB.592@meta.data[,c("x", "y", "cellarea", "com_nn50_VolnormExpr_data_annots_byPKHL")]
+
+write.csv(x = d, file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/spatial_neighborhood_analysis/data/CODEX/HBM556.KSFB.592.exp.csv", sep = ",", row.names = TRUE, col.names = TRUE)
+
+write.csv(x = m, file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/spatial_neighborhood_analysis/data/CODEX/HBM556.KSFB.592.meta.csv", sep = ",", row.names = TRUE, col.names = TRUE)
+
+```
+
+```{r}
+
+# HBM568.NGPL.345@assays$RawExpr@counts
+# HBM568.NGPL.345$com_nn50_VolnormExpr_data_annots_byKSFBharmonized
+
+d <- t(as.matrix(HBM568.NGPL.345@assays$RawExpr@counts))
+m <- HBM568.NGPL.345@meta.data[,c("x", "y", "cellarea", "com_nn50_VolnormExpr_data_annots_byKSFBharmonized")]
+
+write.csv(x = d, file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/spatial_neighborhood_analysis/data/CODEX/HBM568.NGPL.345.exp.csv", sep = ",", row.names = TRUE, col.names = TRUE)
+
+write.csv(x = m, file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/spatial_neighborhood_analysis/data/CODEX/HBM568.NGPL.345.meta.csv", sep = ",", row.names = TRUE, col.names = TRUE)
+
+```
+
+```{r}
+
+# HBM825.PBVN.284@assays$RawExpr@counts
+# HBM825.PBVN.284$com_nn50_VolnormExpr_data_annots_byPKHL
+
+d <- t(as.matrix(HBM825.PBVN.284@assays$RawExpr@counts))
+m <- HBM825.PBVN.284@meta.data[,c("x", "y", "cellarea", "com_nn50_VolnormExpr_data_annots_byPKHL")]
+
+write.csv(x = d, file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/spatial_neighborhood_analysis/data/CODEX/HBM825.PBVN.284.exp.csv", sep = ",", row.names = TRUE, col.names = TRUE)
+
+write.csv(x = m, file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/spatial_neighborhood_analysis/data/CODEX/HBM825.PBVN.284.meta.csv", sep = ",", row.names = TRUE, col.names = TRUE)
+
+```
+
+```{r}
+
+# HBM342.FSLD.938@assays$RawExpr@counts
+# HBM342.FSLD.938$com_nn50_VolnormExpr_data_annots_byPBVNharmonized
+
+d <- t(as.matrix(HBM342.FSLD.938@assays$RawExpr@counts))
+m <- HBM342.FSLD.938@meta.data[,c("x", "y", "cellarea", "com_nn50_VolnormExpr_data_annots_byPBVNharmonized")]
+
+write.csv(x = d, file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/spatial_neighborhood_analysis/data/CODEX/HBM342.FSLD.938.exp.csv", sep = ",", row.names = TRUE, col.names = TRUE)
+
+write.csv(x = m, file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/spatial_neighborhood_analysis/data/CODEX/HBM342.FSLD.938.meta.csv", sep = ",", row.names = TRUE, col.names = TRUE)
+
+```
+
+
+thymus
+
+```{r}
+
+HBM288.XSQZ.633 <- readRDS(file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/data/datasets/thymus/HBM288.XSQZ.633.RDS")
+# HBM342.FSLD.938@assays$RawExpr@counts
+# HBM342.FSLD.938$com_nn50_VolnormExpr_data_annots_byPBVNharmonized
+
+d <- t(as.matrix(HBM288.XSQZ.633@assays$RawExpr@counts))
+m <- HBM288.XSQZ.633@meta.data[,c("x", "y", "cellarea", "com_nn50_VolnormExpr_data_annots")]
+
+write.csv(x = d, file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/spatial_neighborhood_analysis/data/CODEX/HBM288.XSQZ.633.exp.csv", sep = ",", row.names = TRUE, col.names = TRUE)
+
+write.csv(x = m, file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/spatial_neighborhood_analysis/data/CODEX/HBM288.XSQZ.633.meta.csv", sep = ",", row.names = TRUE, col.names = TRUE)
+
+```
+
+```{r}
+
+HBM757.VHCK.858 <- readRDS(file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/data/datasets/thymus/HBM757.VHCK.858.RDS")
+# HBM342.FSLD.938@assays$RawExpr@counts
+# HBM342.FSLD.938$com_nn50_VolnormExpr_data_annots_byPBVNharmonized
+
+d <- t(as.matrix(HBM757.VHCK.858@assays$RawExpr@counts))
+m <- HBM757.VHCK.858@meta.data[,c("x", "y", "cellarea", "com_nn50_VolnormExpr_data_annots_byXSQZ")]
+
+write.csv(x = d, file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/spatial_neighborhood_analysis/data/CODEX/HBM757.VHCK.858.exp.csv", sep = ",", row.names = TRUE, col.names = TRUE)
+
+write.csv(x = m, file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/spatial_neighborhood_analysis/data/CODEX/HBM757.VHCK.858.meta.csv", sep = ",", row.names = TRUE, col.names = TRUE)
+
+```
+
+```{r}
+
+HBM769.NBQL.534 <- readRDS(file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/data/datasets/thymus/HBM769.NBQL.534.RDS")
+# HBM342.FSLD.938@assays$RawExpr@counts
+# HBM342.FSLD.938$com_nn50_VolnormExpr_data_annots_byPBVNharmonized
+
+d <- t(as.matrix(HBM769.NBQL.534@assays$RawExpr@counts))
+m <- HBM769.NBQL.534@meta.data[,c("x", "y", "cellarea", "com_nn50_VolnormExpr_data_annots_byXSQZharmonized")]
+
+write.csv(x = d, file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/spatial_neighborhood_analysis/data/CODEX/HBM769.NBQL.534.exp.csv", sep = ",", row.names = TRUE, col.names = TRUE)
+
+write.csv(x = m, file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/spatial_neighborhood_analysis/data/CODEX/HBM769.NBQL.534.meta.csv", sep = ",", row.names = TRUE, col.names = TRUE)
+
+```
+
+```{r}
+
+HBM654.KTJK.968 <- readRDS(file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/data/datasets/thymus/HBM654.KTJK.968.RDS")
+# HBM342.FSLD.938@assays$RawExpr@counts
+# HBM342.FSLD.938$com_nn50_VolnormExpr_data_annots_byPBVNharmonized
+
+d <- t(as.matrix(HBM654.KTJK.968@assays$RawExpr@counts))
+m <- HBM654.KTJK.968@meta.data[,c("x", "y", "cellarea", "com_nn50_VolnormExpr_data_annots_byDMXZ")]
+
+write.csv(x = d, file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/spatial_neighborhood_analysis/data/CODEX/HBM654.KTJK.968.exp.csv", sep = ",", row.names = TRUE, col.names = TRUE)
+
+write.csv(x = m, file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/spatial_neighborhood_analysis/data/CODEX/HBM654.KTJK.968.meta.csv", sep = ",", row.names = TRUE, col.names = TRUE)
+
+```
+
+```{r}
+
+HBM597.QSZV.956 <- readRDS(file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/data/datasets/thymus/HBM597.QSZV.956.RDS")
+# HBM342.FSLD.938@assays$RawExpr@counts
+# HBM342.FSLD.938$com_nn50_VolnormExpr_data_annots_byPBVNharmonized
+
+d <- t(as.matrix(HBM597.QSZV.956@assays$RawExpr@counts))
+m <- HBM597.QSZV.956@meta.data[,c("x", "y", "cellarea", "com_nn50_VolnormExpr_data_annots_byNBQL")]
+
+write.csv(x = d, file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/spatial_neighborhood_analysis/data/CODEX/HBM597.QSZV.956.exp.csv", sep = ",", row.names = TRUE, col.names = TRUE)
+
+write.csv(x = m, file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/spatial_neighborhood_analysis/data/CODEX/HBM597.QSZV.956.meta.csv", sep = ",", row.names = TRUE, col.names = TRUE)
+
+```
+
+```{r}
+
+HBM374.DMXZ.352 <- readRDS(file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/data/datasets/thymus/HBM374.DMXZ.352.RDS")
+# HBM342.FSLD.938@assays$RawExpr@counts
+# HBM342.FSLD.938$com_nn50_VolnormExpr_data_annots_byPBVNharmonized
+
+d <- t(as.matrix(HBM374.DMXZ.352@assays$RawExpr@counts))
+m <- HBM374.DMXZ.352@meta.data[,c("x", "y", "cellarea", "com_nn50_VolnormExpr_data_annots_byXSQZharmonized")]
+
+write.csv(x = d, file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/spatial_neighborhood_analysis/data/CODEX/HBM374.DMXZ.352.exp.csv", sep = ",", row.names = TRUE, col.names = TRUE)
+
+write.csv(x = m, file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/spatial_neighborhood_analysis/data/CODEX/HBM374.DMXZ.352.meta.csv", sep = ",", row.names = TRUE, col.names = TRUE)
+
+```
+
+
+
+

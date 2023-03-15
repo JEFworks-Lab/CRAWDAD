@@ -4,6 +4,7 @@
 #'
 #' @param results list or data.frame; the information about the resolution, Z-score, reference and the neighbor cell. It can be the result directly obtained by the findTrends function or the melted version created by the `meltResultsList()` function.
 #' @param idcol character; if results are a data.frame, this is the column that contains the additional feature to plot multiple trend lines with
+#' @param legend boolean to produce legend, if results are a melted data.frame with "idcol" column (default: FALSE)
 #' @param ... additional plotting parameters for base R plotting. Fed into "lines()" in script
 #'
 #' @return nothing
@@ -11,6 +12,7 @@
 #' @export
 plotTrends <- function(results,
                        idcol = "id",
+                       legend = FALSE,
                        ...){
   
   
@@ -108,6 +110,11 @@ plotTrends <- function(results,
         ## threshold lines
         abline(h = -2, col='red')
         abline(h = 2, col='red')
+        
+        if(legend){
+          legend("topright", inset=c(-0.4,0), xpd=TRUE, legend = id, col=cl, pch=20, cex=0.5, title = idcol)
+        }
+        
       })
     })
     
@@ -256,11 +263,11 @@ plotTrendsOverlay <- function(results,
 #' 
 #' @export
 vizAllClusters <- function(cells, coms, ofInterest = NULL,
-                           axisAdj = 100, s = 0.01, a = 1, title = NULL,
+                           axisAdj = 1, s = 0.5, a = 1, title = NULL,
                            nacol = transparentCol(color = "gray", percent = 50)){
   
   ## if cells are a data.frame with "x" and "y" cell coordinate columns
-  if( class(cells)[1] == "data.frame" ){
+  if( class(cells)[1] %in% c("data.frame", "matrix") ){
     pos <- cells[,c("x", "y")]
     tempCom <- factor(coms)
     names(tempCom) <- rownames(cells)
@@ -383,12 +390,12 @@ vizAllClusters <- function(cells, coms, ofInterest = NULL,
 #' vizEachCluster(slide, coms = slide$celltypes, ofInterest = c("Bergmann", "Purkinje"))
 #' 
 #' @export
-vizEachCluster <- function(cells, coms, axisAdj = 100, s = 0, a = 1,
+vizEachCluster <- function(cells, coms, axisAdj = 1, s = 0.5, a = 1,
                            nacol = transparentCol(color = "gray", percent = 50),
                            clustcol = "red"){
   
-  ## if cells are a data.frame with "x" and "y" cell coordinate columns
-  if( class(cells)[1] == "data.frame" ){
+  ## if cells are a data.frame or matrix  with "x" and "y" cell coordinate columns
+  if( class(cells)[1] %in% c("data.frame", "matrix") ){
     pos <- cells[,c("x", "y")]
     ctemp <- factor(coms)
     names(ctemp) <- rownames(cells)
@@ -443,12 +450,12 @@ vizEachCluster <- function(cells, coms, axisAdj = 100, s = 0, a = 1,
                     y = "y") +
       
       ggplot2::theme_classic() +
-      ggplot2::theme(axis.text.x = ggplot2::element_text(size=15, color = "black"),
-                     axis.text.y = ggplot2::element_text(size=15, color = "black"),
-                     axis.title.y = ggplot2::element_text(size=15),
-                     axis.title.x = ggplot2::element_text(size=15),
+      ggplot2::theme(axis.text.x = ggplot2::element_text(size=10, color = "black"),
+                     axis.text.y = ggplot2::element_text(size=10, color = "black"),
+                     axis.title.y = ggplot2::element_text(size=10),
+                     axis.title.x = ggplot2::element_text(size=10),
                      axis.ticks.x = ggplot2::element_blank(),
-                     plot.title = ggplot2::element_text(size=15),
+                     plot.title = ggplot2::element_text(size=10),
                      legend.text = ggplot2::element_blank(),
                      legend.title = ggplot2::element_blank(),
                      legend.background = ggplot2::element_blank(),
@@ -505,6 +512,8 @@ vizEachCluster <- function(cells, coms, axisAdj = 100, s = 0, a = 1,
 #' @param colors color assignment for each of the features in id column
 #' @param title plot title (default: NULL)
 #' @param facet boolean to facet wrap on reference and neighbor cell types. (default: TRUE)
+#' @param lines boolean to plot lines (default: TRUE)
+#' @param points boolean to plot points (default: TRUE)
 #' 
 #' @export
 vizTrends <- function(dat, id = "id", yaxis = "Z",
@@ -512,12 +521,18 @@ vizTrends <- function(dat, id = "id", yaxis = "Z",
                       nc = length(unique(dat[[id]])),
                       colors = rainbow(nc),
                       title = NULL,
-                      facet = TRUE){
+                      facet = TRUE,
+                      lines = TRUE,
+                      points = TRUE){
   
-  plt <- ggplot2::ggplot(data = dat) +
-    ggplot2::geom_point(ggplot2::aes(x = resolution, y = .data[[yaxis]], color = .data[[id]]), size = 1.5) +
-    ggplot2::geom_path(ggplot2::aes(x = resolution, y = .data[[yaxis]], color = .data[[id]]), size = 1.5) +
-    ggplot2::scale_color_manual(values = colors, na.value = "black") +
+  plt <- ggplot2::ggplot(data = dat)
+  if(points){
+    plt <- plt + ggplot2::geom_point(ggplot2::aes(x = resolution, y = .data[[yaxis]], color = .data[[id]]), size = 1.5)
+  }
+  if(lines){
+    plt <- plt + ggplot2::geom_path(ggplot2::aes(x = resolution, y = .data[[yaxis]], color = .data[[id]]), size = 1.5)
+  }
+  plt <- plt + ggplot2::scale_color_manual(values = colors, na.value = "black") +
     ggplot2::geom_hline(yintercept = 0, color = "black", size = 1) +
     ggplot2::geom_hline(yintercept = sig.thresh, color = "black", size = 0.6, linetype = "dotted") +
     ggplot2::geom_hline(yintercept = -sig.thresh, color = "black", size = 0.6, linetype = "dotted") +

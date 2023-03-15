@@ -31,7 +31,7 @@ ncores = 7
 
 ```{r, eval=FALSE}
 
-seq <- read.csv2(file = paste0(here::here(), "/data/seqfish/seqfish.meta.csv.gz"), row.names = 1, sep = ",")
+seq <- read.csv2(file = paste0(here::here(), "/data/seqfish/seqfish.meta.csv"), row.names = 1, sep = ",")
 seq <- seq[,c("x", "y", "cluster")]
 ## make sure the coordinates are numeric
 seq <- seq %>%
@@ -100,9 +100,7 @@ saveRDS(shuffle.list, paste0(here::here(), "/data/seqfish/sp.seqfish.shuffled_re
 results <- crawdad::findTrends(seq,
                         dist = 100,
                         shuffle.list = shuffle.list,
-                        perms = 1,
                         ncores = ncores,
-                        seed = 1, 
                         verbose = TRUE)
 
 ## note: 1.02 minutes with 7 cores, 2.3 GHz Quad-Core Intel Core i7
@@ -122,13 +120,13 @@ saveRDS(results, paste0(here::here(), "/data/seqfish/sp.seqfish.pairwise.results
 
 ```{r}
 
-crawdad::plotTrends(results = results["Intermediate mesoderm"], idcol = "dist")
+crawdad::plotTrends(results = results["Intermediate mesoderm"])
 
 ```
 
 ```{r}
 
-crawdad::plotTrends(results = results["Endothelium"], idcol = "dist")
+crawdad::plotTrends(results = results["Endothelium"])
 
 ```
 
@@ -181,9 +179,7 @@ results.subsets <- crawdad::findTrends(seq,
                         dist = 100,
                         shuffle.list = shuffle.list,
                         subset.list = subset.list,
-                        perms = 1,
                         ncores = ncores,
-                        seed = 1, 
                         verbose = TRUE)
 
 ## note: 11.68 minutes with 7 cores, 2.3 GHz Quad-Core Intel Core i7; vs 7.53 minutes 14 cores on rockfish
@@ -251,7 +247,6 @@ plt
 
 ## shuffling grid
 grid <- sf::st_make_grid(seq, cellsize = 1000)
-grid_coords <- as.data.frame(sf::st_coordinates(grid))
 
 ## centers of the grids to add the tile IDs
 grid_coords_centroids <- as.data.frame(sf::st_coordinates(sf::st_centroid(grid)))
@@ -309,7 +304,7 @@ plt
 grDevices::pdf(file = paste0(figpath, "/2B_mesoderm_trends.pdf"), width = 4, height = 4)
 dat <- crawdad::meltResultsList(results, id = "dist100")
 d <- dat[dat$reference == "Lateral plate mesoderm" & dat$neighbor == "Intermediate mesoderm",]
-crawdad::plotTrends(results = d, idcol = "id")
+crawdad::plotTrends(results = d)
 dev.off()
 
 # dat <- crawdad::meltResultsList(results, id = "dist100")
@@ -327,7 +322,6 @@ dev.off()
 ```{r}
 
 dat <- crawdad::meltResultsList(results)
-
 
 d1 <- dat[dat$reference == "Lateral plate mesoderm" & dat$neighbor == "Intermediate mesoderm",]
 plt <- vizTrends(dat = d1) +
@@ -348,8 +342,19 @@ d2$id <- "Endothelium vs Haematoendothelial progenitors"
 d <- dplyr::bind_rows(list(d1, d2))
 
 plt <- vizTrends(dat = d, facet = FALSE) +
-  ggplot2::scale_x_log10()
+  ggplot2::scale_x_log10() +
+  ggplot2::theme(legend.position="none")
 plt 
+
+# ggplot2::ggsave(filename = "2B_mesoderm_endo_trends.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 4,
+#                 height = 4,
+#                 units = c("in"))
+
 
 ```
 
@@ -365,7 +370,8 @@ plt <- crawdad::vizAllClusters(cells = seq,
                         coms = as.factor(seq$celltypes),
                         ofInterest = c("Endothelium", "Haematoendothelial progenitors"),
                         s = 2) +
-  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
+  # ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
+  ggplot2::theme(legend.position="none")
 
 ggplot2::ggsave(filename = "2A_endothelium_tissue.pdf",
                 plot = plt,
@@ -385,7 +391,6 @@ plt
 
 ## shuffling grid
 grid <- sf::st_make_grid(seq, cellsize = 1000)
-grid_coords <- as.data.frame(sf::st_coordinates(grid))
 
 ## centers of the grids to add the tile IDs
 grid_coords_centroids <- as.data.frame(sf::st_coordinates(sf::st_centroid(grid)))
@@ -399,8 +404,6 @@ plt <- crawdad::vizAllClusters(cells = seq,
                                axisAdj = 1, s = 6, a = 0.5) +
   ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
   # ggplot2::theme(legend.position="none") +
-  ggplot2::labs(x = "x",
-                y = "y") +
   
   ## add in the grid information on top of the plot
   ggplot2::geom_sf(data = grid, fill = NA) +
@@ -422,10 +425,9 @@ plt <- crawdad::vizAllClusters(cells = cells2,
                                ofInterest = c("Endothelium", "Haematoendothelial progenitors"),
                                title = "grid 22,23,28,29",
                                axisAdj = 1, s = 10, a = 0.5) +
-  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
+  # ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
+  ggplot2::theme(legend.position="none")
   # ggplot2::theme(legend.position="none") +
-  ggplot2::labs(x = "x",
-                y = "y")
 
 ggplot2::ggsave(filename = "2A_endothelium_tissue_zoom.pdf",
                 plot = plt,
@@ -447,12 +449,12 @@ plt
 grDevices::pdf(file = paste0(figpath, "/2B_endothelium_trends.pdf"), width = 4, height = 4)
 dat <- crawdad::meltResultsList(results, id = "dist100")
 d <- dat[dat$reference == "Endothelium" & dat$neighbor == "Haematoendothelial progenitors",]
-crawdad::plotTrends(results = d, idcol = "id")
+crawdad::plotTrends(results = d)
 dev.off()
 
 dat <- crawdad::meltResultsList(results, id = "dist100")
 d <- dat[dat$reference == "Haematoendothelial progenitors" & dat$neighbor == "Endothelium",]
-crawdad::plotTrends(results = d, idcol = "id")
+crawdad::plotTrends(results = d)
 
 d <- dat[dat$reference == "Haematoendothelial progenitors",]
 crawdad::plotTrendsOverlay(results = d)
@@ -462,8 +464,82 @@ crawdad::plotTrendsOverlay(results = d)
 
 ```
 
+# ---------------------------------
+
+## check permutations
+
+```{r}
+## the above dataset has been saved as an rda file and able to load here:
+data(seq)
+
+## convert to SP
+seq <- crawdad:::toSP(pos = seq[,c("x", "y")],
+                        celltypes = seq$celltypes)
+
+ncores = 7
+resolutions = c(100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000, 6000)
+
+## generate background
+shuffle.list2 <- crawdad:::makeShuffledCells(seq,
+                          resolutions = resolutions,
+                          perms = 10,
+                          ncores = ncores,
+                          verbose = TRUE)
+
+## note: 0.77 minutes with 7 cores, 2.3 GHz Quad-Core Intel Core i7
+```
+
+```{r}
+
+## find trends, passing background as parameter
+results2 <- crawdad::findTrends(seq,
+                        dist = 100,
+                        shuffle.list = shuffle.list2,
+                        ncores = ncores,
+                        verbose = TRUE,
+                        returnMeans = FALSE)
+
+```
+
+```{r}
+
+dat <- crawdad::meltResultsList(results2, withPerms = TRUE)
+d1 <- dat[dat$reference == "Lateral plate mesoderm" & dat$neighbor == "Intermediate mesoderm",]
+d2 <- dat[dat$reference == "Endothelium" & dat$neighbor == "Haematoendothelial progenitors",]
+## combine the trends into one data.frame, and have the "id" column label the combo, plot both lines on same plot
+## turn off the facet wrap so just coloring the two trends, which are labeled using the "id" column
+d1$id <- "Lateral plate mesoderm vs Intermediate mesoderm"
+d2$id <- "Endothelium vs Haematoendothelial progenitors"
+d <- dplyr::bind_rows(list(d1, d2))
+# resolutions as numeric:
+d <- d %>%
+  dplyr::mutate_at(vars(resolution), as.numeric)
 
 
+dat <- crawdad::meltResultsList(results, withPerms = FALSE)
+d1 <- dat[dat$reference == "Lateral plate mesoderm" & dat$neighbor == "Intermediate mesoderm",]
+d2 <- dat[dat$reference == "Endothelium" & dat$neighbor == "Haematoendothelial progenitors",]
+## combine the trends into one data.frame, and have the "id" column label the combo, plot both lines on same plot
+## turn off the facet wrap so just coloring the two trends, which are labeled using the "id" column
+d1$id <- "Lateral plate mesoderm vs Intermediate mesoderm"
+d2$id <- "Endothelium vs Haematoendothelial progenitors"
+d2 <- dplyr::bind_rows(list(d1, d2))
+# resolutions as numeric:
+d2 <- d2 %>%
+  dplyr::mutate_at(vars(resolution), as.numeric)
+
+
+plt <- vizTrends(dat = d, facet = FALSE, lines = FALSE) +
+  
+  ## add in line from the original plot
+  ggplot2::geom_path(data = d2,
+                     ggplot2::aes(x = resolution, y = Z, color = id), size = 1.5) +
+  
+  ggplot2::scale_x_log10() +
+  ggplot2::theme(legend.position="none")
+plt
+
+```
 
 
 

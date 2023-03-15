@@ -1,0 +1,1801 @@
+---
+title: "Processing and annotating cell types in CODEX"
+author: "Brendan F. Miller"
+date: "3/9/2023"
+output: html_document
+---
+
+# Summary
+
+The following code will describe:
+
+1.  preprocessing of the CODEX spleen datasets
+2.  clustering of the cells into communities
+3.  annotation of the clusters based on average protein expression
+4.  transfer of cell type labels across spleen datasets
+
+```{r}
+
+## folder on `brendan` branch
+figpath <- paste0(here::here(), "/plots/supplementary")
+
+```
+
+
+# 1. Preprocessing
+
+The data for the spleen samples was obtained from:
+
+[https://portal.hubmapconsortium.org/search?entity_type[0]=Dataset](https://portal.hubmapconsortium.org/search?entity_type%5B0%5D=Dataset){.uri}
+
+Note that the files were accessed via Bulk Data Transfer using Globus.
+
+The compensated Akoya outputs were used. The paths to these files can be viewed in the `/data/CODEX/akoya_output_paths.csv` file on the `brendan` branch.
+
+Each CODEX dataset was converted into a Seurat Object, with the following slots:
+
+`obj@assays$RawExpr@counts` is the original protein expression data
+
+`obj@assays$RawExpr@data` is the original log10 + 1 transformed protein expression data
+
+`obj@assays$VolnormExpr@counts` is the cell area normalized protein expression data
+
+`obj@assays$VolnormExpr@data` is the cell area normalized log10 + 1 transformed protein expression data
+
+`obj@meta.data` contains the following columns:
+
+-   `cell ids`
+-   `cell area`
+-   `x position`
+-   `y position`
+
+These objects can be built using the function `buildObject()` in `/codex/codex_akoya_data_functions.R`
+
+```{r}
+
+library(crawdad)
+source(file = paste0(here::here(), "/codex/codex_akoya_data_functions.R")) ## file on the `brendan` branch.
+
+```
+
+```{r, eval=FALSE}
+
+## example:
+dat_path <- "/path/to/compensated.csv" ## not a real path, just an example of where the path to this file should be written
+HBM389.PKHL.936 <- buildObject(path = dat_path, name = "HBM389.PKHL.936", volNorm = "log") ## log10(cell area) is used to normalize
+
+```
+
+```{r, eval=TRUE}
+
+## files on my computer:
+
+## OneDrive Path from `brendan/`:
+## `work/HuBMAP/data/datasets/spleen/`
+
+HBM556.KSFB.592 <- readRDS(file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/data/datasets/spleen/HBM556.KSFB.592.RDS")
+HBM389.PKHL.936 <- readRDS(file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/data/datasets/spleen/HBM389.PKHL.936.RDS")
+HBM825.PBVN.284 <- readRDS(file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/data/datasets/spleen/HBM825.PBVN.284.RDS")
+HBM342.FSLD.938 <- readRDS(file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/data/datasets/spleen/HBM342.FSLD.938.RDS")
+HBM772.XXCD.697 <- readRDS(file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/data/datasets/spleen/HBM772.XXCD.697.RDS")
+HBM568.NGPL.345 <- readRDS(file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/data/datasets/spleen/HBM568.NGPL.345.RDS")
+
+```
+
+# 2. Clustering
+
+Next, we would like to cluster the cells into communities based on their protein expression. We'll use the log10(cell area) normalized log10 + 1 transformed protein expression data
+
+For example, with respect to PKHL:
+
+```{r, eval=FALSE}
+
+## this will add a metadata column to the Seurat object that contains the community assignment for each cell
+## performs louvian graph based clustering using k=50 nearest neighbors
+HBM389.PKHL.936 <- getCommunities(HBM389.PKHL.936,
+                                  assay = "VolnormExpr", mat.name = "data", ## the expression data to use
+                                  numneigh = 50) ## k
+
+```
+
+```{r}
+
+## the communities:
+head(HBM389.PKHL.936@meta.data$com_nn50_VolnormExpr_data)
+
+```
+
+# 3. Annotation of cells
+
+To assign cell type annotations to the communities, we can compute the scaled expression of each protein across clusters and visualize using a heatmap
+
+```{r}
+
+grDevices::pdf(file = paste0(figpath, "/cluster_exp_PKHL_clusters.pdf"), width = 5, height = 4)
+clusterExpressions(object = HBM389.PKHL.936, clusters = "com_nn50_VolnormExpr_data",
+                   assay = "VolnormExpr", mat = "counts", # cell area normalized protein expression data
+                   ave = FALSE,
+                   scaled = TRUE, ## expression of each protein scaled across clusters
+                   plot = TRUE)
+dev.off()
+
+```
+
+We can manually inspect the protein expression of each cluster and it's spatial pattern to annotate it is a particular cell type in the spleen data.
+
+A list of proposed annotations can be found: `/data/CODEX/ProposedAnnotations.xlsx` on the `brendan` branch.
+
+We can append these to another column in the `meta.data` as a factor of cell type annotations. We will also combine the "follicle B Cell, outer" and "follicle B Cell, inner" cell types into one "follicle B cell" cluster.
+
+```{r}
+
+spleen1_coms <- as.character(HBM389.PKHL.936@meta.data$com_nn50_VolnormExpr_data)
+
+spleen1_coms[which(spleen1_coms %in% c("1"))] <- "CD4 Memory T cells"
+spleen1_coms[which(spleen1_coms %in% c("2", "4"))] <- "Neutrophils/Monocytes"
+spleen1_coms[which(spleen1_coms %in% c("3"))] <- "Macrophages"
+spleen1_coms[which(spleen1_coms %in% c("5"))] <- "Fol B cells, ctr"
+spleen1_coms[which(spleen1_coms %in% c("6"))] <- "B cells, red pulp"
+spleen1_coms[which(spleen1_coms %in% c("7"))] <- "Fol B cells, out"
+spleen1_coms[which(spleen1_coms %in% c("8"))] <- "CD8 Memory T cells"
+spleen1_coms[which(spleen1_coms %in% c("9"))] <- "Blood endothelial"
+spleen1_coms[which(spleen1_coms %in% c("15"))] <- "Podoplanin"
+spleen1_coms[which(spleen1_coms %in% c("13"))] <- "Myeloid cells"
+spleen1_coms[which(spleen1_coms %in% c("10"))] <- "Sinusoidal cells"
+spleen1_coms[which(spleen1_coms %in% c("11", "12"))] <- "indistinct"
+spleen1_coms[which(spleen1_coms %in% c("16"))] <- "Ki67 proliferating"
+spleen1_coms[which(spleen1_coms %in% c("14", "17"))] <- "indistinct"
+
+spleen1_cluster_annots <- c(
+  "1" = "CD4 Memory T cells",
+  "2" = "Neutrophils/Monocytes",
+  "3" = "Macrophages",
+  "4" = "Neutrophils/Monocytes",
+  "5" = "Fol B cells, ctr",
+  "6" = "B cells, red pulp",
+  "7" = "Fol B cells, out",
+  "8" = "CD8 Memory T cells",
+  "9" = "Blood endothelial",
+  "10" = "Sinusoidal cells",
+  "11" = "indistinct",
+  "12" = "indistinct",
+  "13" = "Myeloid cells",
+  "14" = "indistinct",
+  "15" = "Podoplanin",
+  "16" = "Ki67 proliferating",
+  "17" = "indistinct"
+)
+level_order <- unique(as.vector(spleen1_cluster_annots[order(spleen1_cluster_annots)]))
+
+# HBM389.PKHL.936[["com_nn50_VolnormExpr_data_annots"]] <- factor(spleen1_coms, levels = level_order, ordered = TRUE)
+
+```
+
+```{r}
+
+head(HBM389.PKHL.936@meta.data$com_nn50_VolnormExpr_data_annots)
+head(HBM389.PKHL.936@meta.data$com_nn50_VolnormExpr_data_annots_bcombn)
+
+```
+
+Visualize the clusters, and the cell type annotations:
+
+```{r}
+
+plt <- crawdad::vizAllClusters(cells = HBM389.PKHL.936@meta.data[,c("x", "y")],
+                        coms = HBM389.PKHL.936@meta.data$com_nn50_VolnormExpr_data, s = 1.5) +
+  ggplot2::theme(plot.title = ggplot2::element_text(size=10),
+                 legend.text = ggplot2::element_text(size = 8, colour = "black"),
+                 legend.title = ggplot2::element_text(size = 8, colour = "black")) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
+plt
+ggplot2::ggsave(filename = "spleen_tissue_PKHL_clusters.pdf",
+               device = "pdf",
+               plot = plt,
+               dpi = 300,
+               path = figpath,
+               scale = 1,
+               width = 5,
+               height = 5,
+               units = c("in")
+              )
+
+
+crawdad::vizAllClusters(cells = HBM389.PKHL.936@meta.data[,c("x", "y")],
+                        coms = HBM389.PKHL.936@meta.data$com_nn50_VolnormExpr_data_annots, s = 1.5) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
+
+
+plt <- crawdad::vizAllClusters(cells = HBM389.PKHL.936@meta.data[,c("x", "y")],
+                        coms = HBM389.PKHL.936@meta.data$com_nn50_VolnormExpr_data_annots_bcombn, s = 1.5) +
+  ggplot2::theme(plot.title = ggplot2::element_text(size=10),
+                 legend.text = ggplot2::element_text(size = 8, colour = "black"),
+                 legend.title = ggplot2::element_text(size = 8, colour = "black")) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
+plt
+ggplot2::ggsave(filename = "spleen_tissue_PKHL_annots.pdf",
+               device = "pdf",
+               plot = plt,
+               dpi = 300,
+               path = figpath,
+               scale = 1,
+               width = 5,
+               height = 5,
+               units = c("in")
+              )
+
+```
+
+# 4. Transfer cell type labels
+
+Now that we have a spleen dataset annotated, we can transfer the cell type annotations to cells in other spleen datasets that have similar protein expression. We can use Linear Discriminant analysis (LDA) to construct a model of cell type annotations and protein expression using the PKHL spleen dataset, and apply it to predict cell type annotations of cell in other spleen datasets that have the same 28 marker panel of proteins.
+
+But first, we should check if we need to harmonize the protein expression of any of the datasets. To see if this might be the case, lets visualize the datasets on a t-SNE embedding.
+
+## scale expression
+
+To visualize the different samples together, let's first scale the protein expression for each sample dataset separately. After, we will combine them all into one data.frame.
+
+```{r}
+
+library(Seurat)
+library(dplyr)
+
+```
+
+```{r}
+
+## SPLEEN
+
+dat3 <- t(as.matrix(HBM556.KSFB.592@assays$VolnormExpr@data))
+rownames(dat3) <- paste0(HBM556.KSFB.592@project.name, "_", rownames(dat3))
+dat3 <- as.data.frame(dat3)
+
+dat5 <- t(as.matrix(HBM389.PKHL.936@assays$VolnormExpr@data))
+rownames(dat5) <- paste0(HBM389.PKHL.936@project.name, "_", rownames(dat5))
+dat5 <- as.data.frame(dat5)
+
+dat8 <- t(as.matrix(HBM825.PBVN.284@assays$VolnormExpr@data))
+rownames(dat8) <- paste0(HBM825.PBVN.284@project.name, "_", rownames(dat8))
+dat8 <- as.data.frame(dat8)
+
+dat9 <- t(as.matrix(HBM342.FSLD.938@assays$VolnormExpr@data))
+rownames(dat9) <- paste0(HBM342.FSLD.938@project.name, "_", rownames(dat9))
+dat9 <- as.data.frame(dat9)
+
+dat10 <- t(as.matrix(HBM772.XXCD.697@assays$VolnormExpr@data))
+rownames(dat10) <- paste0(HBM772.XXCD.697@project.name, "_", rownames(dat10))
+dat10 <- as.data.frame(dat10)
+
+dat14 <- t(as.matrix(HBM568.NGPL.345@assays$VolnormExpr@data))
+rownames(dat14) <- paste0(HBM568.NGPL.345@project.name, "_", rownames(dat14))
+dat14 <- as.data.frame(dat14)
+
+```
+
+```{r, eval=FALSE}
+
+## dat8, # HBM825.PBVN.284
+Seurat::DefaultAssay(object = HBM825.PBVN.284) <- "VolnormExpr"
+Seurat::VariableFeatures(object = HBM825.PBVN.284) <- colnames(dat8)
+HBM825.PBVN.284 <- Seurat::ScaleData(HBM825.PBVN.284, do.center = TRUE, do.scale = TRUE, verbose = TRUE)
+
+## dat9, # HBM342.FSLD.938
+Seurat::DefaultAssay(object = HBM342.FSLD.938) <- "VolnormExpr"
+Seurat::VariableFeatures(object = HBM342.FSLD.938) <- colnames(dat9)
+HBM342.FSLD.938 <- Seurat::ScaleData(HBM342.FSLD.938, do.center = TRUE, do.scale = TRUE, verbose = TRUE)
+
+## dat3, # HBM556.KSFB.592
+Seurat::DefaultAssay(object = HBM556.KSFB.592) <- "VolnormExpr"
+Seurat::VariableFeatures(object = HBM556.KSFB.592) <- colnames(dat3)
+HBM556.KSFB.592 <- Seurat::ScaleData(HBM556.KSFB.592, do.center = TRUE, do.scale = TRUE, verbose = TRUE)
+
+## dat14, # HBM568.NGPL.345
+Seurat::DefaultAssay(object = HBM568.NGPL.345) <- "VolnormExpr"
+Seurat::VariableFeatures(object = HBM568.NGPL.345) <- colnames(dat14)
+HBM568.NGPL.345 <- Seurat::ScaleData(HBM568.NGPL.345, do.center = TRUE, do.scale = TRUE, verbose = TRUE)
+
+## dat5, # HBM389.PKHL.936
+Seurat::DefaultAssay(object = HBM389.PKHL.936) <- "VolnormExpr"
+Seurat::VariableFeatures(object = HBM389.PKHL.936) <- colnames(dat5)
+HBM389.PKHL.936 <- Seurat::ScaleData(HBM389.PKHL.936, do.center = TRUE, do.scale = TRUE, verbose = TRUE)
+
+## dat10 # HBM772.XXCD.697
+Seurat::DefaultAssay(object = HBM772.XXCD.697) <- "VolnormExpr"
+Seurat::VariableFeatures(object = HBM772.XXCD.697) <- colnames(dat10)
+HBM772.XXCD.697 <- Seurat::ScaleData(HBM772.XXCD.697, do.center = TRUE, do.scale = TRUE, verbose = TRUE)
+
+```
+
+```{r}
+
+dat3_scale <- t(as.matrix(HBM556.KSFB.592@assays$VolnormExpr@scale.data))
+rownames(dat3_scale) <- paste0(HBM556.KSFB.592@project.name, "_", rownames(dat3_scale))
+dat3_scale <- as.data.frame(dat3_scale)
+
+dat5_scale <- t(as.matrix(HBM389.PKHL.936@assays$VolnormExpr@scale.data))
+rownames(dat5_scale) <- paste0(HBM389.PKHL.936@project.name, "_", rownames(dat5_scale))
+dat5_scale <- as.data.frame(dat5_scale)
+
+dat8_scale <- t(as.matrix(HBM825.PBVN.284@assays$VolnormExpr@scale.data))
+rownames(dat8_scale) <- paste0(HBM825.PBVN.284@project.name, "_", rownames(dat8_scale))
+dat8_scale <- as.data.frame(dat8_scale)
+
+dat9_scale <- t(as.matrix(HBM342.FSLD.938@assays$VolnormExpr@scale.data))
+rownames(dat9_scale) <- paste0(HBM342.FSLD.938@project.name, "_", rownames(dat9_scale))
+dat9_scale <- as.data.frame(dat9_scale)
+
+dat10_scale <- t(as.matrix(HBM772.XXCD.697@assays$VolnormExpr@scale.data))
+rownames(dat10_scale) <- paste0(HBM772.XXCD.697@project.name, "_", rownames(dat10_scale))
+dat10_scale <- as.data.frame(dat10_scale)
+
+dat14_scale <- t(as.matrix(HBM568.NGPL.345@assays$VolnormExpr@scale.data))
+rownames(dat14_scale) <- paste0(HBM568.NGPL.345@project.name, "_", rownames(dat14_scale))
+dat14_scale <- as.data.frame(dat14_scale)
+
+```
+
+Now let's combine the scaled data for each sample into one data.frame
+
+```{r}
+
+## 28 marker panels:
+df_all_28_scale_sep <- dplyr::bind_rows(list(dat8_scale, # HBM825.PBVN.284
+                                            dat9_scale, # HBM342.FSLD.938
+                                            dat3_scale, # HBM556.KSFB.592
+                                            dat14_scale, # HBM568.NGPL.345
+                                            dat5_scale, # HBM389.PKHL.936
+                                            dat10_scale # HBM772.XXCD.697
+                                   ))
+
+```
+
+## compute the t-SNE embedding
+
+(this takes a long time, so ran on HPC)
+
+```{r, eval=FALSE}
+
+library(Rtsne)
+library(uwot)
+cores <- 7
+
+pcs <- df_all_28_scale_sep
+
+tsne_emb_28_scale_sep <- Rtsne::Rtsne(pcs, 
+                                      is_distance=FALSE, 
+                                      perplexity=30, 
+                                      num_threads=cores,
+                                      verbose=FALSE)$Y 
+rownames(tsne_emb_28_scale_sep) <- rownames(pcs)
+colnames(tsne_emb_28_scale_sep) <- c("x", "y")
+
+```
+
+```{r}
+
+tsne_emb_28_scale_sep <- readRDS(file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/data/datasets/spleen/spleen_combined_volNorm_log10_mat_28markersets_scale_sep_tsneEmb.RDS")
+colnames(tsne_emb_28_scale_sep) <- c("x", "y")
+
+head(tsne_emb_28_scale_sep)
+
+```
+
+## visualize embedding
+
+get dataset assignments for each cell for labeling purposes on plot:
+
+```{r}
+
+dataset_assign_28_scale_sep <- vapply(strsplit(rownames(tsne_emb_28_scale_sep), "_"), `[`, 1, FUN.VALUE=character(1))
+names(dataset_assign_28_scale_sep) <- rownames(tsne_emb_28_scale_sep)
+dataset_assign_28_scale_sep <- as.factor(dataset_assign_28_scale_sep)
+head(dataset_assign_28_scale_sep)
+
+```
+
+```{r, fig.width=10, fig.height=10}
+
+plt <- crawdad::vizAllClusters(cells = tsne_emb_28_scale_sep,
+                              coms = dataset_assign_28_scale_sep, a = 0.5) +
+  ggplot2::theme(plot.title = ggplot2::element_text(size=10),
+                 legend.text = ggplot2::element_text(size = 8, colour = "black"),
+                 legend.title = ggplot2::element_text(size = 8, colour = "black")) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
+plt
+ggplot2::ggsave(filename = "spleen_tsne_datasets_all_beforeHarmony.pdf",
+               device = "pdf",
+               plot = plt,
+               dpi = 300,
+               path = figpath,
+               scale = 1,
+               width = 5,
+               height = 5,
+               units = c("in")
+              )
+
+
+plt <- crawdad::vizEachCluster(cells = tsne_emb_28_scale_sep,
+                              coms = dataset_assign_28_scale_sep)
+plt
+ggplot2::ggsave(filename = "spleen_tsne_datasets_separate_beforeHarmony.pdf",
+               device = "pdf",
+               plot = plt,
+               dpi = 300,
+               path = figpath,
+               scale = 1,
+               width = 5,
+               height = 8,
+               units = c("in")
+              )
+
+```
+
+There are 6 spleen datasets, 2 pairs from 3 different patients:
+
+HBM389.PKHL.936 and HBM772.XXCD.697; HBM556.KSFB.592 and HBM568.NGPL.345; HBM825.PBVN.284 and HBM342.FSLD.938.
+
+From the embedding, it looks like HBM389.PKHL.936, HBM772.XXCD.697, HBM556.KSFB.592, and HBM825.PBVN.284 overlap well, whereas HBM568.NGPL.345 and HBM342.FSLD.938 have some differences.
+
+So we will transfer labels directly from our annotated reference:
+
+HBM389.PKHL.936 -\> HBM772.XXCD.697
+
+HBM389.PKHL.936 -\> HBM556.KSFB.592
+
+HBM389.PKHL.936 -\> HBM825.PBVN.284
+
+Then we will harmonize HBM556.KSFB.592 and HBM568.NGPL.345, and then transfer:
+
+HBM556.KSFB.592 -\> HBM568.NGPL.345
+
+Likewise, we will also harmonize HBM825.PBVN.284 and HBM342.FSLD.938, and then transfer:
+
+HBM825.PBVN.284 -\> HBM342.FSLD.938
+
+## A) harmonize datasets
+
+### KSFB and NGPL
+
+Combine datasets for the two samples of interest:
+
+```{r}
+
+df_all_28_scale_sep_KSFB_NGPL <- dplyr::bind_rows(
+                              list(
+                                     dat3_scale, # HBM556.KSFB.592
+                                     dat14_scale # HBM568.NGPL.345
+                                   ))
+
+```
+
+factor of which dataset a cell belongs to. Needed for harmonization.
+
+```{r}
+
+dataset_assign_28_scale_sep_KSFB_NGPL <- vapply(strsplit(rownames(df_all_28_scale_sep_KSFB_NGPL), "_"), `[`, 1, FUN.VALUE=character(1))
+names(dataset_assign_28_scale_sep_KSFB_NGPL) <- rownames(df_all_28_scale_sep_KSFB_NGPL)
+dataset_assign_28_scale_sep_KSFB_NGPL <- as.factor(dataset_assign_28_scale_sep_KSFB_NGPL)
+head(dataset_assign_28_scale_sep_KSFB_NGPL)
+
+```
+
+harmonize (takes a while)
+
+```{r, eval=FALSE}
+
+library(harmony)
+
+## "gene by cell matrix"
+pcs <- t(df_all_28_scale_sep_KSFB_NGPL)
+
+df_all_28_scale_sep_KSFB_NGPL_harmonized <- harmony::HarmonyMatrix(pcs, dataset_assign_28_scale_sep_KSFB_NGPL, do_pca = FALSE, verbose = TRUE)
+
+## back to cell x protein matrix
+df_all_28_scale_sep_KSFB_NGPL_harmonized <- t(df_all_28_scale_sep_KSFB_NGPL_harmonized)
+
+```
+
+```{r}
+
+df_all_28_scale_sep_KSFB_NGPL_harmonized <- readRDS(file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/data/datasets/spleen/spleen_combined_volNorm_log10_df_28_scale_sep_KSFB_NGPL_harm.RDS")
+
+head(df_all_28_scale_sep_KSFB_NGPL_harmonized)
+
+```
+
+get new embedding to check harmonization
+
+```{r, eval=FALSE}
+
+library(Rtsne)
+library(uwot)
+cores <- 7
+
+pcs <- df_all_28_scale_sep_KSFB_NGPL_harmonized
+
+tsne_emb_28_scale_sep_KSFB_NGPL_harmonized <- Rtsne::Rtsne(pcs, 
+                                      is_distance=FALSE, 
+                                      perplexity=30, 
+                                      num_threads=cores,
+                                      verbose=FALSE)$Y 
+rownames(tsne_emb_28_scale_sep_KSFB_NGPL_harmonized) <- rownames(pcs)
+colnames(tsne_emb_28_scale_sep_KSFB_NGPL_harmonized) <- c("x", "y")
+
+```
+
+```{r}
+
+tsne_emb_28_scale_sep_KSFB_NGPL_harmonized <- readRDS(file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/data/datasets/spleen/spleen_combined_volNorm_log10_mat_28markersets_scale_sep_tsneEmb_KSFB_NGPL_harm.RDS")
+colnames(tsne_emb_28_scale_sep_KSFB_NGPL_harmonized) <- c("x", "y")
+
+head(tsne_emb_28_scale_sep_KSFB_NGPL_harmonized)
+
+```
+
+### PBVN and FSLD
+
+the separately scaled combined datasets for the two samples of interest:
+
+```{r}
+
+df_all_28_scale_sep_PBVN_FSLD <- dplyr::bind_rows(
+                              list(
+                                    dat8_scale, # HBM825.PBVN.284
+                                    dat9_scale # HBM342.FSLD.938
+                                   ))
+
+```
+
+factor of which dataset a cell belongs to. Needed for harmonization.
+
+```{r}
+
+dataset_assign_28_scale_sep_PBVN_FSLD <- vapply(strsplit(rownames(df_all_28_scale_sep_PBVN_FSLD), "_"), `[`, 1, FUN.VALUE=character(1))
+names(dataset_assign_28_scale_sep_PBVN_FSLD) <- rownames(df_all_28_scale_sep_PBVN_FSLD)
+dataset_assign_28_scale_sep_PBVN_FSLD <- as.factor(dataset_assign_28_scale_sep_PBVN_FSLD)
+head(dataset_assign_28_scale_sep_PBVN_FSLD)
+
+```
+
+harmonize:
+
+```{r, eval=FALSE}
+
+library(harmony)
+
+## "gene by cell matrix"
+pcs <- t(df_all_28_scale_sep_PBVN_FSLD)
+
+df_all_28_scale_sep_PBVN_FSLD_harmonized <- harmony::HarmonyMatrix(pcs, dataset_assign_28_scale_sep_PBVN_FSLD, do_pca = FALSE, verbose = TRUE)
+
+## back to cell x protein matrix
+df_all_28_scale_sep_PBVN_FSLD_harmonized <- t(df_all_28_scale_sep_PBVN_FSLD_harmonized)
+
+```
+
+```{r}
+
+df_all_28_scale_sep_PBVN_FSLD_harmonized <- readRDS(file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/data/datasets/spleen/spleen_combined_volNorm_log10_df_28_scale_sep_PBVN_FSLD_harm.RDS")
+head(df_all_28_scale_sep_PBVN_FSLD_harmonized)
+
+```
+
+get new embedding to check harmonization
+
+```{r, eval=FALSE}
+
+library(Rtsne)
+library(uwot)
+cores <- 7
+
+pcs <- df_all_28_scale_sep_PBVN_FSLD_harmonized
+
+tsne_emb_28_scale_sep_PBVN_FSLD_harmonized <- Rtsne::Rtsne(pcs, 
+                                      is_distance=FALSE, 
+                                      perplexity=30, 
+                                      num_threads=cores,
+                                      verbose=FALSE)$Y 
+rownames(tsne_emb_28_scale_sep_PBVN_FSLD_harmonized) <- rownames(pcs)
+colnames(tsne_emb_28_scale_sep_PBVN_FSLD_harmonized) <- c("x", "y")
+
+```
+
+```{r}
+
+tsne_emb_28_scale_sep_PBVN_FSLD_harmonized <- readRDS(file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/data/datasets/spleen/spleen_combined_volNorm_log10_mat_28markersets_scale_sep_tsneEmb_PBVN_FSLD_harm.RDS")
+colnames(tsne_emb_28_scale_sep_PBVN_FSLD_harmonized) <- c("x", "y")
+head(tsne_emb_28_scale_sep_PBVN_FSLD_harmonized)
+
+```
+
+## B) Linear Discriminant analysis
+
+```{r}
+
+library(MASS)
+
+```
+
+### PKHL to KSFB (between patients)
+
+Use the scaled data
+
+```{r}
+
+dat5_scale <- t(as.matrix(HBM389.PKHL.936@assays$VolnormExpr@scale.data))
+rownames(dat5_scale) <- paste0(HBM389.PKHL.936@project.name, "_", rownames(dat5_scale))
+dat5_scale <- as.data.frame(dat5_scale)
+
+dat3_scale <- t(as.matrix(HBM556.KSFB.592@assays$VolnormExpr@scale.data))
+rownames(dat3_scale) <- paste0(HBM556.KSFB.592@project.name, "_", rownames(dat3_scale))
+dat3_scale <- as.data.frame(dat3_scale)
+
+```
+
+```{r}
+
+com <- HBM389.PKHL.936$com_nn50_VolnormExpr_data_annots ## spleen1_coms
+pcs <- dat5_scale ## vol norm, log-transformed, scaled expression values
+df.ref <- data.frame(celltype = com, pcs)
+model.PKHL <- MASS::lda(celltype ~ ., data = df.ref)
+
+```
+
+```{r}
+
+mat.query <- data.frame(dat3_scale)
+KSFB.predictedBy.PKHL <- stats::predict(model.PKHL, mat.query)
+names(KSFB.predictedBy.PKHL$class) <- rownames(mat.query)
+
+```
+
+### PKHL to PBVN (between patients)
+
+Use the original PKHL annotations
+
+Use the scaled data
+
+```{r}
+
+dat5_scale <- t(as.matrix(HBM389.PKHL.936@assays$VolnormExpr@scale.data))
+rownames(dat5_scale) <- paste0(HBM389.PKHL.936@project.name, "_", rownames(dat5_scale))
+dat5_scale <- as.data.frame(dat5_scale)
+
+dat8_scale <- t(as.matrix(HBM825.PBVN.284@assays$VolnormExpr@scale.data))
+rownames(dat8_scale) <- paste0(HBM825.PBVN.284@project.name, "_", rownames(dat8_scale))
+dat8_scale <- as.data.frame(dat8_scale)
+
+```
+
+```{r}
+
+com <- HBM389.PKHL.936$com_nn50_VolnormExpr_data_annots ## spleen1_coms
+pcs <- dat5_scale ## vol norm, log-transformed, scaled expression values
+df.ref <- data.frame(celltype = com, pcs)
+model.PKHL <- MASS::lda(celltype ~ ., data = df.ref)
+
+```
+
+```{r}
+
+mat.query <- data.frame(dat8_scale)
+PBVN.predictedBy.PKHL <- stats::predict(model.PKHL, mat.query)
+names(PBVN.predictedBy.PKHL$class) <- rownames(mat.query)
+
+```
+
+### PKHL to XXCD (within patients)
+
+```{r}
+
+dat5_scale <- t(as.matrix(HBM389.PKHL.936@assays$VolnormExpr@scale.data))
+rownames(dat5_scale) <- paste0(HBM389.PKHL.936@project.name, "_", rownames(dat5_scale))
+dat5_scale <- as.data.frame(dat5_scale)
+
+dat10_scale <- t(as.matrix(HBM772.XXCD.697@assays$VolnormExpr@scale.data))
+rownames(dat10_scale) <- paste0(HBM772.XXCD.697@project.name, "_", rownames(dat10_scale))
+dat10_scale <- as.data.frame(dat10_scale)
+
+```
+
+```{r}
+
+com <- HBM389.PKHL.936$com_nn50_VolnormExpr_data_annots ## spleen1_coms
+pcs <- dat5_scale ## vol norm, log-transformed, scaled expression values
+df.ref <- data.frame(celltype = com, pcs)
+model.PKHL <- MASS::lda(celltype ~ ., data = df.ref)
+
+```
+
+```{r}
+
+mat.query <- data.frame(dat10_scale)
+XXCD.predictedBy.PKHL <- stats::predict(model.PKHL, mat.query)
+names(XXCD.predictedBy.PKHL$class) <- rownames(mat.query)
+
+```
+
+### KSFB to NGPL (harmonized)
+
+```{r}
+
+com <- KSFB.predictedBy.PKHL$class
+pcs <- df_all_28_scale_sep_KSFB_NGPL_harmonized[rownames(dat3_scale),] ## vol norm, log-transformed, scaled expression values, harmonized with NGPL
+df.ref <- data.frame(celltype = com, pcs)
+model.KSFB_harmonizedTo_NGPL <- MASS::lda(celltype ~ ., data = df.ref)
+
+```
+
+```{r}
+
+mat.query <- data.frame(df_all_28_scale_sep_KSFB_NGPL_harmonized[rownames(dat14_scale),]) ## NGPL cells
+NGPL.predictedBy.KSFB_harmonizedTo_NGPL <- stats::predict(model.KSFB_harmonizedTo_NGPL, mat.query)
+names(NGPL.predictedBy.KSFB_harmonizedTo_NGPL$class) <- rownames(mat.query)
+
+```
+
+### PBVN to FSLD (harmonized)
+
+```{r}
+
+com <- PBVN.predictedBy.PKHL$class
+pcs <- df_all_28_scale_sep_PBVN_FSLD_harmonized[rownames(dat8_scale),] ## vol norm, log-transformed, scaled expression values, harmonized with FSLD
+df.ref <- data.frame(celltype = com, pcs)
+model.PBVN_harmonizedTo_FSLD <- MASS::lda(celltype ~ ., data = df.ref)
+
+```
+
+```{r}
+
+mat.query <- data.frame(df_all_28_scale_sep_PBVN_FSLD_harmonized[rownames(dat9_scale),]) ## FSLD cells
+FSLD.predictedBy.PBVN_harmonizedTo_FSLD <- stats::predict(model.PBVN_harmonizedTo_FSLD, mat.query)
+names(FSLD.predictedBy.PBVN_harmonizedTo_FSLD$class) <- rownames(mat.query)
+
+```
+
+## C) Check posterior probability
+
+Check the posterior probabilities of every cell being assigned a given cell type label. Hopefully we will see a strong assignment of only one particular cell type for a given cell. Additionally, hopefully we will see the cell type probabilities outline spatially where we would expect these given cell types to be located spatially.
+
+### XXCD.predictedBy.PKHL
+
+```{r, fig.height=16, fig.width=16}
+
+id <- "XXCD.predictedBy.PKHL"
+probs <- XXCD.predictedBy.PKHL$posterior
+ps <- lapply(colnames(probs), function(c) {
+
+  p <- HBM772.XXCD.697@meta.data[,c("x", "y")]
+  rownames(p) <- paste0(HBM772.XXCD.697@project.name, "_", rownames(p))
+  vizExpressionMat(mat = XXCD.predictedBy.PKHL$posterior,
+                   pos = p, marker = c, s = 1, title = c) +
+    ggplot2::theme(plot.title = ggplot2::element_text(size=8),
+                   legend.text = ggplot2::element_text(size = 8, colour = "black"),
+                   legend.title = ggplot2::element_text(size = 8, colour = "black"))
+})
+
+plt <- gridExtra::grid.arrange(
+  grobs = ps,
+  layout_matrix = rbind(c(1, 2, 3, 4),
+                        c(5, 6, 7, 8),
+                        c(9, 10, 11, 12),
+                        c(13, 14, 15, 16)
+                        )
+)
+
+plt
+
+ggplot2::ggsave(filename = paste0("lda_", id, "_posterior.pdf"),
+               device = "pdf",
+               plot = plt,
+               dpi = 300,
+               path = figpath,
+               scale = 1,
+               width = 16,
+               height = 16,
+               units = c("in")
+              )
+
+```
+
+### KSFB.predictedBy.PKHL
+
+```{r, fig.height=16, fig.width=16}
+
+id <- "KSFB.predictedBy.PKHL"
+probs <- KSFB.predictedBy.PKHL$posterior
+ps <- lapply(colnames(probs), function(c) {
+
+  p <- HBM556.KSFB.592@meta.data[,c("x", "y")]
+  rownames(p) <- paste0(HBM556.KSFB.592@project.name, "_", rownames(p))
+  vizExpressionMat(mat = KSFB.predictedBy.PKHL$posterior,
+                   pos = p, marker = c, s = 1, title = c) +
+    ggplot2::theme(plot.title = ggplot2::element_text(size=8),
+                   legend.text = ggplot2::element_text(size = 8, colour = "black"),
+                   legend.title = ggplot2::element_text(size = 8, colour = "black"))
+})
+
+plt <- gridExtra::grid.arrange(
+  grobs = ps,
+  layout_matrix = rbind(c(1, 2, 3, 4),
+                        c(5, 6, 7, 8),
+                        c(9, 10, 11, 12),
+                        c(13, 14, 15, 16)
+                        )
+)
+
+plt
+
+ggplot2::ggsave(filename = paste0("lda_", id, "_posterior.pdf"),
+               device = "pdf",
+               plot = plt,
+               dpi = 300,
+               path = figpath,
+               scale = 1,
+               width = 16,
+               height = 16,
+               units = c("in")
+              )
+
+```
+
+### PBVN.predictedBy.PKHL
+
+```{r, fig.height=16, fig.width=16}
+
+id <- "PBVN.predictedBy.PKHL"
+probs <- PBVN.predictedBy.PKHL$posterior
+ps <- lapply(colnames(probs), function(c) {
+
+  p <- HBM825.PBVN.284@meta.data[,c("x", "y")]
+  rownames(p) <- paste0(HBM825.PBVN.284@project.name, "_", rownames(p))
+  vizExpressionMat(mat = PBVN.predictedBy.PKHL$posterior,
+                   pos = p, marker = c, s = 1, title = c) +
+    ggplot2::theme(plot.title = ggplot2::element_text(size=8),
+                   legend.text = ggplot2::element_text(size = 8, colour = "black"),
+                   legend.title = ggplot2::element_text(size = 8, colour = "black"))
+})
+
+plt <- gridExtra::grid.arrange(
+  grobs = ps,
+  layout_matrix = rbind(c(1, 2, 3, 4),
+                        c(5, 6, 7, 8),
+                        c(9, 10, 11, 12),
+                        c(13, 14, 15, 16)
+                        )
+)
+
+plt
+
+ggplot2::ggsave(filename = paste0("lda_", id, "_posterior.pdf"),
+               device = "pdf",
+               plot = plt,
+               dpi = 300,
+               path = figpath,
+               scale = 1,
+               width = 16,
+               height = 16,
+               units = c("in")
+              )
+
+```
+
+### NGPL.predictedBy.KSFB_harmonizedTo_NGPL
+
+```{r, fig.height=16, fig.width=16}
+
+id <- "NGPL.predictedBy.KSFB_harmonizedTo_NGPL"
+probs <- NGPL.predictedBy.KSFB_harmonizedTo_NGPL$posterior
+ps <- lapply(colnames(probs), function(c) {
+
+  p <- HBM568.NGPL.345@meta.data[,c("x", "y")]
+  rownames(p) <- paste0(HBM568.NGPL.345@project.name, "_", rownames(p))
+  vizExpressionMat(mat = NGPL.predictedBy.KSFB_harmonizedTo_NGPL$posterior,
+                   pos = p, marker = c, s = 1, title = c) +
+    ggplot2::theme(plot.title = ggplot2::element_text(size=8),
+                   legend.text = ggplot2::element_text(size = 8, colour = "black"),
+                   legend.title = ggplot2::element_text(size = 8, colour = "black"))
+})
+
+plt <- gridExtra::grid.arrange(
+  grobs = ps,
+  layout_matrix = rbind(c(1, 2, 3, 4),
+                        c(5, 6, 7, 8),
+                        c(9, 10, 11, 12),
+                        c(13, 14, 15, 16)
+                        )
+)
+
+plt
+
+ggplot2::ggsave(filename = paste0("lda_", id, "_posterior.pdf"),
+               device = "pdf",
+               plot = plt,
+               dpi = 300,
+               path = figpath,
+               scale = 1,
+               width = 16,
+               height = 16,
+               units = c("in")
+              )
+
+```
+
+### FSLD.predictedBy.PBVN_harmonizedTo_FSLD
+
+```{r, fig.height=16, fig.width=16}
+
+id <- "FSLD.predictedBy.PBVN_harmonizedTo_FSLD"
+probs <- FSLD.predictedBy.PBVN_harmonizedTo_FSLD$posterior
+ps <- lapply(colnames(probs), function(c) {
+
+  p <- HBM342.FSLD.938@meta.data[,c("x", "y")]
+  rownames(p) <- paste0(HBM342.FSLD.938@project.name, "_", rownames(p))
+  vizExpressionMat(mat = FSLD.predictedBy.PBVN_harmonizedTo_FSLD$posterior,
+                   pos = p, marker = c, s = 1, title = c) +
+    ggplot2::theme(plot.title = ggplot2::element_text(size=8),
+                   legend.text = ggplot2::element_text(size = 8, colour = "black"),
+                   legend.title = ggplot2::element_text(size = 8, colour = "black"))
+})
+
+plt <- gridExtra::grid.arrange(
+  grobs = ps,
+  layout_matrix = rbind(c(1, 2, 3, 4),
+                        c(5, 6, 7, 8),
+                        c(9, 10, 11, 12),
+                        c(13, 14, 15, 16)
+                        )
+)
+
+plt
+
+ggplot2::ggsave(filename = paste0("lda_", id, "_posterior.pdf"),
+               device = "pdf",
+               plot = plt,
+               dpi = 300,
+               path = figpath,
+               scale = 1,
+               width = 16,
+               height = 16,
+               units = c("in")
+              )
+
+```
+
+## D) Assign cell type labels
+
+Assign the cell type predictions as new columns in the meta.data slot
+
+```{r, eval=FALSE}
+
+HBM556.KSFB.592@meta.data$com_nn50_VolnormExpr_data_annots_byPKHL <- KSFB.predictedBy.PKHL$class
+HBM825.PBVN.284@meta.data$com_nn50_VolnormExpr_data_annots_byPKHL <- PBVN.predictedBy.PKHL$class
+HBM342.FSLD.938@meta.data$com_nn50_VolnormExpr_data_annots_byPBVNharmonized <- FSLD.predictedBy.PBVN_harmonizedTo_FSLD$class
+HBM772.XXCD.697@meta.data$com_nn50_VolnormExpr_data_annots_byPKHL <- XXCD.predictedBy.PKHL$class
+HBM568.NGPL.345@meta.data$com_nn50_VolnormExpr_data_annots_byKSFBharmonized <- NGPL.predictedBy.KSFB_harmonizedTo_NGPL$class
+
+```
+
+## E) Check cluster expression correlations
+
+After assigning the transferred labels, we can check the protein expression correlations between the same cell types from different samples.
+
+If the cell type label transfer was successful, then we would expect cells predicted to be a given cell type to have similar protein expression to cells of that same cell type in the reference data set from which the labels were originallt transferred from.
+
+### cluster expressions
+
+```{r}
+
+grDevices::pdf(file = paste0(figpath, "/cluster_exp_PKHL_annot.pdf"), width = 5, height = 4)
+PKHL_annotClustExp <- clusterExpressions(object = HBM389.PKHL.936,
+                                        clusters = "com_nn50_VolnormExpr_data_annots",
+                                        assay = "VolnormExpr", mat = "counts",
+                                        ave = FALSE, scaled = TRUE, plot = TRUE)
+dev.off()
+
+```
+
+```{r}
+
+grDevices::pdf(file = paste0(figpath, "/cluster_exp_KSFB_annot.pdf"), width = 5, height = 4)
+KSFB_annotClustExp <- clusterExpressions(object = HBM556.KSFB.592,
+                                        clusters = "com_nn50_VolnormExpr_data_annots_byPKHL",
+                                        assay = "VolnormExpr", mat = "counts",
+                                        ave = FALSE, scaled = TRUE, plot = TRUE)
+dev.off()
+
+```
+
+```{r}
+
+grDevices::pdf(file = paste0(figpath, "/cluster_exp_PBVN_annot.pdf"), width = 5, height = 4)
+PBVN_annotClustExp <- clusterExpressions(object = HBM825.PBVN.284,
+                                        clusters = "com_nn50_VolnormExpr_data_annots_byPKHL",
+                                        assay = "VolnormExpr", mat = "counts",
+                                        ave = FALSE, scaled = TRUE, plot = TRUE)
+dev.off()
+
+```
+
+```{r}
+
+grDevices::pdf(file = paste0(figpath, "/cluster_exp_XXCD_annot.pdf"), width = 5, height = 4)
+XXCD_annotClustExp <- clusterExpressions(object = HBM772.XXCD.697,
+                                        clusters = "com_nn50_VolnormExpr_data_annots_byPKHL",
+                                        assay = "VolnormExpr", mat = "counts",
+                                        ave = FALSE, scaled = TRUE, plot = TRUE)
+dev.off()
+
+```
+
+```{r}
+
+grDevices::pdf(file = paste0(figpath, "/cluster_exp_FSLD_annot.pdf"), width = 5, height = 4)
+FSLD_annotClustExp <- clusterExpressions(object = HBM342.FSLD.938,
+                                        clusters = "com_nn50_VolnormExpr_data_annots_byPBVNharmonized",
+                                        assay = "VolnormExpr", mat = "counts",
+                                        ave = FALSE, scaled = TRUE, plot = TRUE)
+dev.off()
+
+```
+
+```{r}
+
+grDevices::pdf(file = paste0(figpath, "/cluster_exp_NGPL_annot.pdf"), width = 5, height = 4)
+NGPL_annotClustExp <- clusterExpressions(object = HBM568.NGPL.345,
+                                        clusters = "com_nn50_VolnormExpr_data_annots_byKSFBharmonized",
+                                        assay = "VolnormExpr", mat = "counts",
+                                        ave = FALSE, scaled = TRUE, plot = TRUE)
+dev.off()
+
+```
+
+### correlate between dataset annotations
+
+```{r}
+
+## use for the plotting function `correlationPlot` and for getting Pearson correlations via `getCorrMtx`
+library(STdeconvolve)
+
+```
+
+#### PKHL vs KSFB
+
+```{r, fig.height=5, fig.width=5}
+
+corMtx <- STdeconvolve::getCorrMtx(m1 = t(PKHL_annotClustExp),
+                                   m2 = t(KSFB_annotClustExp),
+                                   type = "t")
+
+corMtx
+
+pairs <- STdeconvolve::lsatPairs(corMtx)
+pairs
+
+m <- corMtx[pairs$rowix,pairs$colsix]
+# m[lower.tri(m)] <- NA
+
+plt <- STdeconvolve::correlationPlot(mat = m,
+                              colLabs = "PKHL", # aka x-axis, and rows of matrix
+                              rowLabs = "KSFB annotations (via PKHL)", # aka y-axis, and columns of matrix
+                              title = "", annotation = TRUE) +
+                    ggplot2::theme(
+                      text = ggplot2::element_text(size = 6),
+                      axis.text.x = ggplot2::element_text(size=12, color = "black", hjust = 1, vjust = 0.5, angle=90),
+                                   axis.text.y = ggplot2::element_text(size=8, color = "black"),
+                                   axis.title.y = ggplot2::element_text(size=8),
+                                   axis.title.x = ggplot2::element_text(size=8),
+                                   plot.title = ggplot2::element_text(size=8),
+                                   legend.text = ggplot2::element_text(size = 8, colour = "black"),
+                                   legend.title = ggplot2::element_text(size = 8, colour = "black", angle = 90),
+                                   panel.background = ggplot2::element_blank(),
+                                   ## border around plot
+                                   panel.border = ggplot2::element_rect(fill = NA, color = "black", size = 2),
+                                   plot.background = ggplot2::element_blank(),
+                                   legend.background = ggplot2::element_blank()
+                                   ) +
+                    ## fix up colorbar legend
+                    ggplot2::scale_fill_gradientn(limits = c(-1,1),
+                                                   breaks = c(-1,0,1),
+                                                   colors=(grDevices::colorRampPalette(c("blue","white","red")))(n = 209)
+                                                     ) +
+                    ggplot2::guides(fill = ggplot2::guide_colorbar(title = "Correlation",
+                                                                   title.position = "left",
+                                                                   title.hjust = 0.5,
+                                                                   ticks.colour = "black",
+                                                                   ticks.linewidth = 1,
+                                                                   frame.colour= "black",
+                                                                   frame.linewidth = 1,
+                                                                   label.hjust = 0
+                                                                   ))
+print(plt)
+
+ggplot2::ggsave(filename = "cluster_corr_heatmap_PKHL_vs_KSFB.pdf",
+                 device = "pdf",
+                 plot = plt,
+                 dpi = 300,
+                 path = figpath,
+                 scale = 1,
+                 width = 8,
+                 height = 8,
+                 units = c("in")
+                )
+
+```
+
+#### PKHL vs PBVN
+
+```{r, fig.height=5, fig.width=5}
+
+corMtx <- STdeconvolve::getCorrMtx(m1 = t(PKHL_annotClustExp),
+                                   m2 = t(PBVN_annotClustExp),
+                                   type = "t")
+
+corMtx
+
+pairs <- STdeconvolve::lsatPairs(corMtx)
+pairs
+
+m <- corMtx[pairs$rowix,pairs$colsix]
+# m[lower.tri(m)] <- NA
+
+plt <- STdeconvolve::correlationPlot(mat = m,
+                              colLabs = "PKHL", # aka x-axis, and rows of matrix
+                              rowLabs = "PBVN annotations (via PKHL)", # aka y-axis, and columns of matrix
+                              title = "", annotation = TRUE) +
+                    ggplot2::theme(
+                      text = ggplot2::element_text(size = 6),
+                      axis.text.x = ggplot2::element_text(size=12, color = "black", hjust = 1, vjust = 0.5, angle=90),
+                                   axis.text.y = ggplot2::element_text(size=8, color = "black"),
+                                   axis.title.y = ggplot2::element_text(size=8),
+                                   axis.title.x = ggplot2::element_text(size=8),
+                                   plot.title = ggplot2::element_text(size=8),
+                                   legend.text = ggplot2::element_text(size = 8, colour = "black"),
+                                   legend.title = ggplot2::element_text(size = 8, colour = "black", angle = 90),
+                                   panel.background = ggplot2::element_blank(),
+                                   ## border around plot
+                                   panel.border = ggplot2::element_rect(fill = NA, color = "black", size = 2),
+                                   plot.background = ggplot2::element_blank(),
+                                   legend.background = ggplot2::element_blank()
+                                   ) +
+                    ## fix up colorbar legend
+                    ggplot2::scale_fill_gradientn(limits = c(-1,1),
+                                                   breaks = c(-1,0,1),
+                                                   colors=(grDevices::colorRampPalette(c("blue","white","red")))(n = 209)
+                                                     ) +
+                    ggplot2::guides(fill = ggplot2::guide_colorbar(title = "Correlation",
+                                                                   title.position = "left",
+                                                                   title.hjust = 0.5,
+                                                                   ticks.colour = "black",
+                                                                   ticks.linewidth = 1,
+                                                                   frame.colour= "black",
+                                                                   frame.linewidth = 1,
+                                                                   label.hjust = 0
+                                                                   ))
+print(plt)
+
+ggplot2::ggsave(filename = "cluster_corr_heatmap_PKHL_vs_PBVN.pdf",
+                 device = "pdf",
+                 plot = plt,
+                 dpi = 300,
+                 path = figpath,
+                 scale = 1,
+                 width = 8,
+                 height = 8,
+                 units = c("in")
+                )
+
+```
+
+#### PKHL vs XXCD
+
+```{r, fig.height=5, fig.width=5}
+
+corMtx <- STdeconvolve::getCorrMtx(m1 = t(PKHL_annotClustExp),
+                                   m2 = t(XXCD_annotClustExp),
+                                   type = "t")
+
+corMtx
+
+pairs <- STdeconvolve::lsatPairs(corMtx)
+pairs
+
+m <- corMtx[pairs$rowix,pairs$colsix]
+# m[lower.tri(m)] <- NA
+
+plt <- STdeconvolve::correlationPlot(mat = m,
+                              colLabs = "PKHL", # aka x-axis, and rows of matrix
+                              rowLabs = "XXCD annotations (via PKHL)", # aka y-axis, and columns of matrix
+                              title = "", annotation = TRUE) +
+                    ggplot2::theme(
+                      text = ggplot2::element_text(size = 6),
+                      axis.text.x = ggplot2::element_text(size=12, color = "black", hjust = 1, vjust = 0.5, angle=90),
+                                   axis.text.y = ggplot2::element_text(size=8, color = "black"),
+                                   axis.title.y = ggplot2::element_text(size=8),
+                                   axis.title.x = ggplot2::element_text(size=8),
+                                   plot.title = ggplot2::element_text(size=8),
+                                   legend.text = ggplot2::element_text(size = 8, colour = "black"),
+                                   legend.title = ggplot2::element_text(size = 8, colour = "black", angle = 90),
+                                   panel.background = ggplot2::element_blank(),
+                                   ## border around plot
+                                   panel.border = ggplot2::element_rect(fill = NA, color = "black", size = 2),
+                                   plot.background = ggplot2::element_blank(),
+                                   legend.background = ggplot2::element_blank()
+                                   ) +
+                    ## fix up colorbar legend
+                    ggplot2::scale_fill_gradientn(limits = c(-1,1),
+                                                   breaks = c(-1,0,1),
+                                                   colors=(grDevices::colorRampPalette(c("blue","white","red")))(n = 209)
+                                                     ) +
+                    ggplot2::guides(fill = ggplot2::guide_colorbar(title = "Correlation",
+                                                                   title.position = "left",
+                                                                   title.hjust = 0.5,
+                                                                   ticks.colour = "black",
+                                                                   ticks.linewidth = 1,
+                                                                   frame.colour= "black",
+                                                                   frame.linewidth = 1,
+                                                                   label.hjust = 0
+                                                                   ))
+print(plt)
+
+ggplot2::ggsave(filename = "cluster_corr_heatmap_PKHL_vs_XXCD.pdf",
+                 device = "pdf",
+                 plot = plt,
+                 dpi = 300,
+                 path = figpath,
+                 scale = 1,
+                 width = 8,
+                 height = 8,
+                 units = c("in")
+                )
+
+```
+
+#### PBVN vs FSLD
+
+```{r, fig.height=5, fig.width=5}
+
+corMtx <- STdeconvolve::getCorrMtx(m1 = t(PBVN_annotClustExp),
+                                   m2 = t(FSLD_annotClustExp),
+                                   type = "t")
+
+corMtx
+
+pairs <- STdeconvolve::lsatPairs(corMtx)
+pairs
+
+m <- corMtx[pairs$rowix,pairs$colsix]
+# m[lower.tri(m)] <- NA
+
+plt <- STdeconvolve::correlationPlot(mat = m,
+                              colLabs = "PBVN annotations (via PKHL)", # aka x-axis, and rows of matrix
+                              rowLabs = "FSLD annotations (via PBVN, harmonized)", # aka y-axis, and columns of matrix
+                              title = "", annotation = TRUE) +
+                    ggplot2::theme(
+                      text = ggplot2::element_text(size = 6),
+                      axis.text.x = ggplot2::element_text(size=12, color = "black", hjust = 1, vjust = 0.5, angle=90),
+                                   axis.text.y = ggplot2::element_text(size=8, color = "black"),
+                                   axis.title.y = ggplot2::element_text(size=8),
+                                   axis.title.x = ggplot2::element_text(size=8),
+                                   plot.title = ggplot2::element_text(size=8),
+                                   legend.text = ggplot2::element_text(size = 8, colour = "black"),
+                                   legend.title = ggplot2::element_text(size = 8, colour = "black", angle = 90),
+                                   panel.background = ggplot2::element_blank(),
+                                   ## border around plot
+                                   panel.border = ggplot2::element_rect(fill = NA, color = "black", size = 2),
+                                   plot.background = ggplot2::element_blank(),
+                                   legend.background = ggplot2::element_blank()
+                                   ) +
+                    ## fix up colorbar legend
+                    ggplot2::scale_fill_gradientn(limits = c(-1,1),
+                                                   breaks = c(-1,0,1),
+                                                   colors=(grDevices::colorRampPalette(c("blue","white","red")))(n = 209)
+                                                     ) +
+                    ggplot2::guides(fill = ggplot2::guide_colorbar(title = "Correlation",
+                                                                   title.position = "left",
+                                                                   title.hjust = 0.5,
+                                                                   ticks.colour = "black",
+                                                                   ticks.linewidth = 1,
+                                                                   frame.colour= "black",
+                                                                   frame.linewidth = 1,
+                                                                   label.hjust = 0
+                                                                   ))
+print(plt)
+
+ggplot2::ggsave(filename = "cluster_corr_heatmap_PBVN_vs_FSLD.pdf",
+                 device = "pdf",
+                 plot = plt,
+                 dpi = 300,
+                 path = figpath,
+                 scale = 1,
+                 width = 8,
+                 height = 8,
+                 units = c("in")
+                )
+
+```
+
+#### KSFB vs NGPL
+
+```{r, fig.height=5, fig.width=5}
+
+corMtx <- STdeconvolve::getCorrMtx(m1 = t(KSFB_annotClustExp),
+                                   m2 = t(NGPL_annotClustExp),
+                                   type = "t")
+
+corMtx
+
+pairs <- STdeconvolve::lsatPairs(corMtx)
+pairs
+
+m <- corMtx[pairs$rowix,pairs$colsix]
+# m[lower.tri(m)] <- NA
+
+plt <- STdeconvolve::correlationPlot(mat = m,
+                              colLabs = "KSFB annotations (via PKHL)", # aka x-axis, and rows of matrix
+                              rowLabs = "FSLD annotations (via NGPL, harmonized)", # aka y-axis, and columns of matrix
+                              title = "", annotation = TRUE) +
+                    ggplot2::theme(
+                      text = ggplot2::element_text(size = 6),
+                      axis.text.x = ggplot2::element_text(size=12, color = "black", hjust = 1, vjust = 0.5, angle=90),
+                                   axis.text.y = ggplot2::element_text(size=8, color = "black"),
+                                   axis.title.y = ggplot2::element_text(size=8),
+                                   axis.title.x = ggplot2::element_text(size=8),
+                                   plot.title = ggplot2::element_text(size=8),
+                                   legend.text = ggplot2::element_text(size = 8, colour = "black"),
+                                   legend.title = ggplot2::element_text(size = 8, colour = "black", angle = 90),
+                                   panel.background = ggplot2::element_blank(),
+                                   ## border around plot
+                                   panel.border = ggplot2::element_rect(fill = NA, color = "black", size = 2),
+                                   plot.background = ggplot2::element_blank(),
+                                   legend.background = ggplot2::element_blank()
+                                   ) +
+                    ## fix up colorbar legend
+                    ggplot2::scale_fill_gradientn(limits = c(-1,1),
+                                                   breaks = c(-1,0,1),
+                                                   colors=(grDevices::colorRampPalette(c("blue","white","red")))(n = 209)
+                                                     ) +
+                    ggplot2::guides(fill = ggplot2::guide_colorbar(title = "Correlation",
+                                                                   title.position = "left",
+                                                                   title.hjust = 0.5,
+                                                                   ticks.colour = "black",
+                                                                   ticks.linewidth = 1,
+                                                                   frame.colour= "black",
+                                                                   frame.linewidth = 1,
+                                                                   label.hjust = 0
+                                                                   ))
+print(plt)
+
+ggplot2::ggsave(filename = "cluster_corr_heatmap_KSFB_vs_NGPL.pdf",
+                 device = "pdf",
+                 plot = plt,
+                 dpi = 300,
+                 path = figpath,
+                 scale = 1,
+                 width = 8,
+                 height = 8,
+                 units = c("in")
+                )
+
+```
+
+# 5. Visualize cell types
+
+Visualize the cell types for each of the datasets on the embedding and on the respective tissue
+
+## annotations on embeddings
+
+Make a temporary factor that contains all of the cell of the 6 different datasets. Only add cell type annotations to the cells of a given dataset of interest.
+After, plot the all of the cells in the embedding, and then color the cells in a given dataset by their cell type annotations.
+
+Note that this is the embedding before harmonization of any datasets
+
+### PKHL
+
+```{r}
+
+coms <- HBM389.PKHL.936$com_nn50_VolnormExpr_data_annots
+
+## `dataset_assign_28_scale_sep` # a factor of the datasets that each cell belongs to
+cell_annots <- rep(NA, length(dataset_assign_28_scale_sep)) ## a factor 
+names(cell_annots) <- names(dataset_assign_28_scale_sep)
+cell_annots[rownames(dat5_scale)] <- as.vector(coms)  ## `dat5_scale` has the specific dataset + cell number IDs needed
+cell_annots <- factor(cell_annots, levels = level_order, ordered = TRUE)
+
+
+## `tsne_emb_28_scale_sep` # tsne embedding made from all 6 datasets
+
+id <- "HBM389.PKHL.936"
+plt <- crawdad::vizAllClusters(cells = tsne_emb_28_scale_sep,
+               coms = cell_annots,
+               ofInterest = level_order, ## using level order so colors and labels are all consistent between datasets and plots
+               title = id,
+               axisAdj = 1, s = 1, a = 0.5) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
+  # ggplot2::theme(legend.position="none") +
+  ggplot2::labs(x = "tSNE-1",
+                y = "tSNE-2")  +
+  ggplot2::theme(plot.title = ggplot2::element_text(size=10),
+                 legend.text = ggplot2::element_text(size = 8, colour = "black"),
+                 legend.title = ggplot2::element_text(size = 8, colour = "black"))
+plt
+
+ggplot2::ggsave(filename = "spleen_tsne_datasets_PKHL_annots_beforeHarmonyTsne.pdf",
+               device = "pdf",
+               plot = plt,
+               dpi = 300,
+               path = figpath,
+               scale = 1,
+               width = 5,
+               height = 6,
+               units = c("in")
+              )
+
+```
+
+### XXCD
+
+```{r}
+
+coms <- HBM772.XXCD.697$com_nn50_VolnormExpr_data_annots_byPKHL
+
+## `dataset_assign_28_scale_sep` # a factor of the datasets that each cell belongs to
+cell_annots <- rep(NA, length(dataset_assign_28_scale_sep)) ## a factor 
+names(cell_annots) <- names(dataset_assign_28_scale_sep)
+cell_annots[rownames(dat10_scale)] <- as.vector(coms)  ## `dat10_scale` has the specific dataset + cell number IDs needed
+cell_annots <- factor(cell_annots, levels = level_order, ordered = TRUE)
+
+
+## `tsne_emb_28_scale_sep` # tsne embedding made from all 6 datasets
+
+id <- "HBM772.XXCD.697"
+plt <- crawdad::vizAllClusters(cells = tsne_emb_28_scale_sep,
+               coms = cell_annots,
+               ofInterest = level_order, ## using level order so colors and labels are all consistent between datasets and plots
+               title = id,
+               axisAdj = 1, s = 1, a = 0.5) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
+  # ggplot2::theme(legend.position="none") +
+  ggplot2::labs(x = "tSNE-1",
+                y = "tSNE-2")  +
+  ggplot2::theme(plot.title = ggplot2::element_text(size=10),
+                 legend.text = ggplot2::element_text(size = 8, colour = "black"),
+                 legend.title = ggplot2::element_text(size = 8, colour = "black"))
+plt
+
+ggplot2::ggsave(filename = "spleen_tsne_datasets_XXCD_annots_beforeHarmonyTsne.pdf",
+               device = "pdf",
+               plot = plt,
+               dpi = 300,
+               path = figpath,
+               scale = 1,
+               width = 5,
+               height = 6,
+               units = c("in")
+              )
+
+```
+
+### KSFB
+
+```{r}
+
+coms <- HBM556.KSFB.592$com_nn50_VolnormExpr_data_annots_byPKHL
+
+## `dataset_assign_28_scale_sep` # a factor of the datasets that each cell belongs to
+cell_annots <- rep(NA, length(dataset_assign_28_scale_sep)) ## a factor 
+names(cell_annots) <- names(dataset_assign_28_scale_sep)
+cell_annots[rownames(dat3_scale)] <- as.vector(coms)  ## `dat3_scale` has the specific dataset + cell number IDs needed
+cell_annots <- factor(cell_annots, levels = level_order, ordered = TRUE)
+
+
+## `tsne_emb_28_scale_sep` # tsne embedding made from all 6 datasets
+
+id <- "HBM556.KSFB.592"
+plt <- crawdad::vizAllClusters(cells = tsne_emb_28_scale_sep,
+               coms = cell_annots,
+               ofInterest = level_order, ## using level order so colors and labels are all consistent between datasets and plots
+               title = id,
+               axisAdj = 1, s = 1, a = 0.5) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
+  # ggplot2::theme(legend.position="none") +
+  ggplot2::labs(x = "tSNE-1",
+                y = "tSNE-2")  +
+  ggplot2::theme(plot.title = ggplot2::element_text(size=10),
+                 legend.text = ggplot2::element_text(size = 8, colour = "black"),
+                 legend.title = ggplot2::element_text(size = 8, colour = "black"))
+plt
+
+ggplot2::ggsave(filename = "spleen_tsne_datasets_KSFB_annots_beforeHarmonyTsne.pdf",
+               device = "pdf",
+               plot = plt,
+               dpi = 300,
+               path = figpath,
+               scale = 1,
+               width = 5,
+               height = 6,
+               units = c("in")
+              )
+
+```
+
+### PBVN
+
+```{r}
+
+coms <- HBM825.PBVN.284$com_nn50_VolnormExpr_data_annots_byPKHL
+
+## `dataset_assign_28_scale_sep` # a factor of the datasets that each cell belongs to
+cell_annots <- rep(NA, length(dataset_assign_28_scale_sep)) ## a factor 
+names(cell_annots) <- names(dataset_assign_28_scale_sep)
+cell_annots[rownames(dat8_scale)] <- as.vector(coms)  ## `dat8_scale` has the specific dataset + cell number IDs needed
+cell_annots <- factor(cell_annots, levels = level_order, ordered = TRUE)
+
+
+## `tsne_emb_28_scale_sep` # tsne embedding made from all 6 datasets
+
+id <- "HBM825.PBVN.284"
+plt <- crawdad::vizAllClusters(cells = tsne_emb_28_scale_sep,
+               coms = cell_annots,
+               ofInterest = level_order, ## using level order so colors and labels are all consistent between datasets and plots
+               title = id,
+               axisAdj = 1, s = 1, a = 0.5) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
+  # ggplot2::theme(legend.position="none") +
+  ggplot2::labs(x = "tSNE-1",
+                y = "tSNE-2")  +
+  ggplot2::theme(plot.title = ggplot2::element_text(size=10),
+                 legend.text = ggplot2::element_text(size = 8, colour = "black"),
+                 legend.title = ggplot2::element_text(size = 8, colour = "black"))
+plt
+
+ggplot2::ggsave(filename = "spleen_tsne_datasets_PBVN_annots_beforeHarmonyTsne.pdf",
+               device = "pdf",
+               plot = plt,
+               dpi = 300,
+               path = figpath,
+               scale = 1,
+               width = 5,
+               height = 6,
+               units = c("in")
+              )
+
+```
+
+### FSLD
+
+```{r}
+
+coms <- HBM342.FSLD.938$com_nn50_VolnormExpr_data_annots_byPBVNharmonized
+
+## `dataset_assign_28_scale_sep` # a factor of the datasets that each cell belongs to
+cell_annots <- rep(NA, length(dataset_assign_28_scale_sep)) ## a factor 
+names(cell_annots) <- names(dataset_assign_28_scale_sep)
+cell_annots[rownames(dat9_scale)] <- as.vector(coms)  ## `dat9_scale` has the specific dataset + cell number IDs needed
+cell_annots <- factor(cell_annots, levels = level_order, ordered = TRUE)
+
+
+## `tsne_emb_28_scale_sep` # tsne embedding made from all 6 datasets
+
+id <- "HBM342.FSLD.938"
+plt <- crawdad::vizAllClusters(cells = tsne_emb_28_scale_sep,
+               coms = cell_annots,
+               ofInterest = level_order, ## using level order so colors and labels are all consistent between datasets and plots
+               title = id,
+               axisAdj = 1, s = 1, a = 0.5) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
+  # ggplot2::theme(legend.position="none") +
+  ggplot2::labs(x = "tSNE-1",
+                y = "tSNE-2")  +
+  ggplot2::theme(plot.title = ggplot2::element_text(size=10),
+                 legend.text = ggplot2::element_text(size = 8, colour = "black"),
+                 legend.title = ggplot2::element_text(size = 8, colour = "black"))
+plt
+
+ggplot2::ggsave(filename = "spleen_tsne_datasets_FSLD_annots_beforeHarmonyTsne.pdf",
+               device = "pdf",
+               plot = plt,
+               dpi = 300,
+               path = figpath,
+               scale = 1,
+               width = 5,
+               height = 6,
+               units = c("in")
+              )
+
+```
+
+### NGPL
+
+```{r}
+
+coms <- HBM568.NGPL.345$com_nn50_VolnormExpr_data_annots_byKSFBharmonized
+
+## `dataset_assign_28_scale_sep` # a factor of the datasets that each cell belongs to
+cell_annots <- rep(NA, length(dataset_assign_28_scale_sep)) ## a factor 
+names(cell_annots) <- names(dataset_assign_28_scale_sep)
+cell_annots[rownames(dat14_scale)] <- as.vector(coms)  ## `dat14_scale` has the specific dataset + cell number IDs needed
+cell_annots <- factor(cell_annots, levels = level_order, ordered = TRUE)
+
+
+## `tsne_emb_28_scale_sep` # tsne embedding made from all 6 datasets
+
+id <- "HBM568.NGPL.345"
+plt <- crawdad::vizAllClusters(cells = tsne_emb_28_scale_sep,
+               coms = cell_annots,
+               ofInterest = level_order, ## using level order so colors and labels are all consistent between datasets and plots
+               title = id,
+               axisAdj = 1, s = 1, a = 0.5) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
+  # ggplot2::theme(legend.position="none") +
+  ggplot2::labs(x = "tSNE-1",
+                y = "tSNE-2")  +
+  ggplot2::theme(plot.title = ggplot2::element_text(size=10),
+                 legend.text = ggplot2::element_text(size = 8, colour = "black"),
+                 legend.title = ggplot2::element_text(size = 8, colour = "black"))
+plt
+
+ggplot2::ggsave(filename = "spleen_tsne_datasets_NGPL_annots_beforeHarmonyTsne.pdf",
+               device = "pdf",
+               plot = plt,
+               dpi = 300,
+               path = figpath,
+               scale = 1,
+               width = 5,
+               height = 6,
+               units = c("in")
+              )
+
+```
+
+## post-harmony embedding
+
+
+
+## annotations on tissues
+
+### PKHL
+
+```{r}
+
+plt <- crawdad::vizAllClusters(cells = HBM389.PKHL.936@meta.data[,c("x", "y")],
+                        coms = HBM389.PKHL.936@meta.data$com_nn50_VolnormExpr_data_annots_bcombn, s = 1.5) +
+  ggplot2::theme(plot.title = ggplot2::element_text(size=10),
+                 legend.text = ggplot2::element_text(size = 8, colour = "black"),
+                 legend.title = ggplot2::element_text(size = 8, colour = "black")) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
+plt
+ggplot2::ggsave(filename = "spleen_tissue_PKHL_annots.pdf",
+               device = "pdf",
+               plot = plt,
+               dpi = 300,
+               path = figpath,
+               scale = 1,
+               width = 5,
+               height = 5,
+               units = c("in")
+              )
+
+```
+
+### XXCD
+
+```{r}
+
+plt <- crawdad::vizAllClusters(cells = HBM772.XXCD.697@meta.data[,c("x", "y")],
+                        coms = HBM772.XXCD.697@meta.data$com_nn50_VolnormExpr_data_annots_byPKHL_bcombn, s = 1.5) +
+  ggplot2::theme(plot.title = ggplot2::element_text(size=10),
+                 legend.text = ggplot2::element_text(size = 8, colour = "black"),
+                 legend.title = ggplot2::element_text(size = 8, colour = "black")) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
+plt
+ggplot2::ggsave(filename = "spleen_tissue_XXCD_annots.pdf",
+               device = "pdf",
+               plot = plt,
+               dpi = 300,
+               path = figpath,
+               scale = 1,
+               width = 5,
+               height = 5,
+               units = c("in")
+              )
+
+```
+
+### KSFB
+
+```{r}
+
+plt <- crawdad::vizAllClusters(cells = HBM556.KSFB.592@meta.data[,c("x", "y")],
+                        coms = HBM556.KSFB.592@meta.data$com_nn50_VolnormExpr_data_annots_byPKHL_bcombn, s = 1.5) +
+  ggplot2::theme(plot.title = ggplot2::element_text(size=10),
+                 legend.text = ggplot2::element_text(size = 8, colour = "black"),
+                 legend.title = ggplot2::element_text(size = 8, colour = "black")) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
+plt
+ggplot2::ggsave(filename = "spleen_tissue_KSFB_annots.pdf",
+               device = "pdf",
+               plot = plt,
+               dpi = 300,
+               path = figpath,
+               scale = 1,
+               width = 5,
+               height = 5,
+               units = c("in")
+              )
+
+```
+
+### PBVN
+
+```{r}
+
+plt <- crawdad::vizAllClusters(cells = HBM825.PBVN.284@meta.data[,c("x", "y")],
+                        coms = HBM825.PBVN.284@meta.data$com_nn50_VolnormExpr_data_annots_byPKHL_bcombn, s = 1.5) +
+  ggplot2::theme(plot.title = ggplot2::element_text(size=10),
+                 legend.text = ggplot2::element_text(size = 8, colour = "black"),
+                 legend.title = ggplot2::element_text(size = 8, colour = "black")) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
+plt
+ggplot2::ggsave(filename = "spleen_tissue_PBVN_annots.pdf",
+               device = "pdf",
+               plot = plt,
+               dpi = 300,
+               path = figpath,
+               scale = 1,
+               width = 5,
+               height = 5,
+               units = c("in")
+              )
+
+```
+
+### FSLD
+
+```{r}
+
+plt <- crawdad::vizAllClusters(cells = HBM342.FSLD.938@meta.data[,c("x", "y")],
+                        coms = HBM342.FSLD.938@meta.data$com_nn50_VolnormExpr_data_annots_byPBVNharmonized_bcombn, s = 1.5) +
+  ggplot2::theme(plot.title = ggplot2::element_text(size=10),
+                 legend.text = ggplot2::element_text(size = 8, colour = "black"),
+                 legend.title = ggplot2::element_text(size = 8, colour = "black")) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
+plt
+ggplot2::ggsave(filename = "spleen_tissue_FSLD_annots.pdf",
+               device = "pdf",
+               plot = plt,
+               dpi = 300,
+               path = figpath,
+               scale = 1,
+               width = 5,
+               height = 5,
+               units = c("in")
+              )
+
+```
+
+### NGPL
+
+```{r}
+
+plt <- crawdad::vizAllClusters(cells = HBM568.NGPL.345@meta.data[,c("x", "y")],
+                        coms = HBM568.NGPL.345@meta.data$com_nn50_VolnormExpr_data_annots_byKSFBharmonized_bcombn, s = 1.5) +
+  ggplot2::theme(plot.title = ggplot2::element_text(size=10),
+                 legend.text = ggplot2::element_text(size = 8, colour = "black"),
+                 legend.title = ggplot2::element_text(size = 8, colour = "black")) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
+plt
+ggplot2::ggsave(filename = "spleen_tissue_NGPL_annots.pdf",
+               device = "pdf",
+               plot = plt,
+               dpi = 300,
+               path = figpath,
+               scale = 1,
+               width = 5,
+               height = 5,
+               units = c("in")
+              )
+
+```
+

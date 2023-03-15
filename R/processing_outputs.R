@@ -69,14 +69,26 @@ getNeighbors <- function(cells,
 #' 
 #' @param resultsList list output from findTrendsv2
 #' @param id id desired, can add a column that contains an additional identifier for the results. Can use these for plotting and comparing different things
+#' @param withPerms if the results list is a list of lists using `returnMeans = FALSE` in `findTrends()` then column order is different and this flag is needed (default: FALSE)
 #' 
 #' @export
-meltResultsList <- function(resultsList, id = NA){
+meltResultsList <- function(resultsList, id = NA, withPerms = FALSE){
   
   df <- reshape2::melt(resultsList)
-  colnames(df) <- c("resolution", "neighbor", "Z", "reference")
+  
+  if(withPerms){
+    colnames(df) <- c("perm", "neighbor", "Z", "resolution", "reference")
+  } else {
+    colnames(df) <- c("resolution", "neighbor", "Z", "reference")
+  }
+  
   ## add an identifier for the particular results
   df[["id"]] <- id
+  
+  # resolutions as numeric:
+  df <- df %>%
+    dplyr::mutate_at(vars(resolution), as.numeric)
+  
   return(df)
   
 }
