@@ -176,91 +176,91 @@ Note that the `.gitignore` files for each branch reflect the differences in the 
 │   ├── simulations.R
 │   └── visualization.R
 ├── README.md
-├── data
-│   ├── pkhl.rda
-│   ├── seq.rda
-│   ├── seqfish
-│   │   ├── seqfish.meta.csv.gz
-│   │   ├── sp.seqfish.binomMat.near.subdist100.rds
-│   │   ├── sp.seqfish.pairwise.50-300.results.res100-6000.removeDups.rds
-│   │   ├── sp.seqfish.pairwise.results.dist100.res100-6000.rds
-│   │   ├── sp.seqfish.shuffled_res100-6000.rds
-│   │   ├── sp.seqfish.subset.results.dist100.res100-6000.rds
-│   │   ├── sp.seqfish.subsets.near.subdist100.rds
-│   │   ├── sp.seqfish.subsets.near.subdist200.rds
-│   │   ├── sp.seqfish.triplet.near.binom.subdist100.dist100.results.res100-6000.removeDups.rds
-│   │   └── sp.seqfish.triplet.near.binom.subdist200.dist100.results.res100-6000.removeDups.rds
-│   ├── sim
-│   │   ├── sim.pairwise.50-200.results.res100-6000.removeDups.rds
-│   │   ├── sim.pairwise.meta.csv.gz
-│   │   ├── sim.pairwise.shuffled_res100-6000.rds
-│   │   ├── sim.subsets.meta.csv.gz
-│   │   ├── sim.subsets.near.subdist100.rds
-│   │   ├── sim.subsets.near.subdist200.rds
-│   │   ├── sim.subsets.near.subdist300.rds
-│   │   ├── sim.subsets.near.subdist50.rds
-│   │   ├── sim.subsets.pairwise.50-200.results.res100-6000.removeDups.rds
-│   │   ├── sim.subsets.shuffled_res100-6000.rds
-│   │   ├── sim.subsets.triplet.near.binom.subdist100.dist100.results.res100-6000.removeDups.rds
-│   │   ├── sim.subsets.triplet.near.binom.subdist300.dist300.results.res100-6000.removeDups.rds
-│   │   └── sim.subsets.triplet.near.binom.subdist50.dist50.results.res100-6000.removeDups.rds
-│   ├── slide.rda
-│   ├── slideseq
-│   │   ├── slideseq.puck190926_08.rctd.meta.csv.gz
-│   │   ├── slideseqPuck.190926_08.binomMat.near.subdist100.rds
-│   │   ├── slideseqPuck.190926_08.pairwise.results.dist100.res30-6000.rds
-│   │   ├── slideseqPuck.190926_08.rctd.near.binom.subdist100.dist100.results.removeDups.rds
-│   │   ├── slideseqPuck.190926_08.rctd.pairwise.30-300.results.removeDups.rds
-│   │   ├── slideseqPuck.190926_08.rctd.shuffled_res30-6000.rds
-│   │   ├── slideseqPuck.190926_08.rctd.subsets.near.subdist100.rds
-│   │   ├── slideseqPuck.190926_08.rctd.subsets.near.subdist200.rds
-│   │   ├── slideseqPuck.190926_08.shuffled_res30-6000.rds
-│   │   ├── slideseqPuck.190926_08.subset.results.dist100.res30-6000.rds
-│   │   └── slideseqPuck.190926_08.subsets.near.subdist100.rds
-│   └── spleen
-│       ├── FSLD
-│       │   ├── fsld.folBcombined.shuffled_res100-6000.rds
-│       │   ├── fsld.folBcombined.subsets.near.subdist100.rds
-│       │   ├── fsld.pairwise.100-200.folBcombined.results.res100-6000.removeDups.rds
-│       │   └── fsld.triplet.near.binom.subdist100.dist100.folBcombined.results.res100-6000.removeDups.rds
-│       ├── FSLD.meta.csv.gz
-│       ├── KSFB
-│       │   ├── ksfb.folBcombined.shuffled_res100-6000.rds
-│       │   ├── ksfb.folBcombined.subsets.near.subdist100.rds
-│       │   ├── ksfb.pairwise.100-200.folBcombined.results.res100-6000.removeDups.rds
-│       │   └── ksfb.triplet.near.binom.subdist100.dist100.folBcombined.results.res100-6000.removeDups.rds
-│       ├── KSFB.meta.csv.gz
-│       ├── NGPL
-│       │   ├── ngpl.folBcombined.shuffled_res100-6000.rds
-│       │   ├── ngpl.folBcombined.subsets.near.subdist100.rds
-│       │   ├── ngpl.pairwise.100-200.folBcombined.results.res100-6000.removeDups.rds
-│       │   └── ngpl.triplet.near.binom.subdist100.dist100.folBcombined.results.res100-6000.removeDups.rds
-│       ├── NGPL.meta.csv.gz
-│       ├── PBVN
-│       │   ├── pbvn.folBcombined.shuffled_res100-6000.rds
-│       │   ├── pbvn.folBcombined.subsets.near.subdist100.rds
-│       │   ├── pbvn.pairwise.100-200.folBcombined.results.res100-6000.removeDups.rds
-│       │   └── pbvn.triplet.near.binom.subdist100.dist100.folBcombined.results.res100-6000.removeDups.rds
-│       ├── PBVN.meta.csv.gz
-│       ├── PKHL
-│       │   ├── pkhl.binomMat.near.subdist100.rds
-│       │   ├── pkhl.folBcombined.binomMat.near.subdist100.rds
-│       │   ├── pkhl.folBcombined.pairwise.results.dist100.res100-6000.rds
-│       │   ├── pkhl.folBcombined.shuffled_res100-6000.rds
-│       │   ├── pkhl.folBcombined.subset.results.dist100.res100-6000.rds
-│       │   ├── pkhl.folBcombined.subsets.near.subdist100.rds
-│       │   ├── pkhl.pairwise.100-200.folBcombined.results.res100-6000.removeDups.rds
-│       │   ├── pkhl.pairwise.100-200.results.res100-6000.removeDups.rds
-│       │   ├── pkhl.subsets.near.subdist100.rds
-│       │   ├── pkhl.triplet.near.binom.subdist100.dist100.folBcombined.results.res100-6000.removeDups.rds
-│       │   └── pkhl.triplet.near.binom.subdist100.dist100.results.res100-6000.removeDups.rds
-│       ├── PKHL.meta.csv.gz
-│       ├── XXCD
-│       │   ├── xxcd.folBcombined.shuffled_res100-6000.rds
-│       │   ├── xxcd.folBcombined.subsets.near.subdist100.rds
-│       │   ├── xxcd.pairwise.100-200.folBcombined.results.res100-6000.removeDups.rds
-│       │   └── xxcd.triplet.near.binom.subdist100.dist100.folBcombined.results.res100-6000.removeDups.rds
-│       └── XXCD.meta.csv.gz
+# ├── data
+# │   ├── pkhl.rda
+# │   ├── seq.rda
+# │   ├── seqfish
+# │   │   ├── seqfish.meta.csv.gz
+# │   │   ├── sp.seqfish.binomMat.near.subdist100.rds
+# │   │   ├── sp.seqfish.pairwise.50-300.results.res100-6000.removeDups.rds
+# │   │   ├── sp.seqfish.pairwise.results.dist100.res100-6000.rds
+# │   │   ├── sp.seqfish.shuffled_res100-6000.rds
+# │   │   ├── sp.seqfish.subset.results.dist100.res100-6000.rds
+# │   │   ├── sp.seqfish.subsets.near.subdist100.rds
+# │   │   ├── sp.seqfish.subsets.near.subdist200.rds
+# │   │   ├── sp.seqfish.triplet.near.binom.subdist100.dist100.results.res100-6000.removeDups.rds
+# │   │   └── sp.seqfish.triplet.near.binom.subdist200.dist100.results.res100-6000.removeDups.rds
+# │   ├── sim
+# │   │   ├── sim.pairwise.50-200.results.res100-6000.removeDups.rds
+# │   │   ├── sim.pairwise.meta.csv.gz
+# │   │   ├── sim.pairwise.shuffled_res100-6000.rds
+# │   │   ├── sim.subsets.meta.csv.gz
+# │   │   ├── sim.subsets.near.subdist100.rds
+# │   │   ├── sim.subsets.near.subdist200.rds
+# │   │   ├── sim.subsets.near.subdist300.rds
+# │   │   ├── sim.subsets.near.subdist50.rds
+# │   │   ├── sim.subsets.pairwise.50-200.results.res100-6000.removeDups.rds
+# │   │   ├── sim.subsets.shuffled_res100-6000.rds
+# │   │   ├── sim.subsets.triplet.near.binom.subdist100.dist100.results.res100-6000.removeDups.rds
+# │   │   ├── sim.subsets.triplet.near.binom.subdist300.dist300.results.res100-6000.removeDups.rds
+# │   │   └── sim.subsets.triplet.near.binom.subdist50.dist50.results.res100-6000.removeDups.rds
+# │   ├── slide.rda
+# │   ├── slideseq
+# │   │   ├── slideseq.puck190926_08.rctd.meta.csv.gz
+# │   │   ├── slideseqPuck.190926_08.binomMat.near.subdist100.rds
+# │   │   ├── slideseqPuck.190926_08.pairwise.results.dist100.res30-6000.rds
+# │   │   ├── slideseqPuck.190926_08.rctd.near.binom.subdist100.dist100.results.removeDups.rds
+# │   │   ├── slideseqPuck.190926_08.rctd.pairwise.30-300.results.removeDups.rds
+# │   │   ├── slideseqPuck.190926_08.rctd.shuffled_res30-6000.rds
+# │   │   ├── slideseqPuck.190926_08.rctd.subsets.near.subdist100.rds
+# │   │   ├── slideseqPuck.190926_08.rctd.subsets.near.subdist200.rds
+# │   │   ├── slideseqPuck.190926_08.shuffled_res30-6000.rds
+# │   │   ├── slideseqPuck.190926_08.subset.results.dist100.res30-6000.rds
+# │   │   └── slideseqPuck.190926_08.subsets.near.subdist100.rds
+# │   └── spleen
+# │       ├── FSLD
+# │       │   ├── fsld.folBcombined.shuffled_res100-6000.rds
+# │       │   ├── fsld.folBcombined.subsets.near.subdist100.rds
+# │       │   ├── fsld.pairwise.100-200.folBcombined.results.res100-6000.removeDups.rds
+# │       │   └── fsld.triplet.near.binom.subdist100.dist100.folBcombined.results.res100-6000.removeDups.rds
+# │       ├── FSLD.meta.csv.gz
+# │       ├── KSFB
+# │       │   ├── ksfb.folBcombined.shuffled_res100-6000.rds
+# │       │   ├── ksfb.folBcombined.subsets.near.subdist100.rds
+# │       │   ├── ksfb.pairwise.100-200.folBcombined.results.res100-6000.removeDups.rds
+# │       │   └── ksfb.triplet.near.binom.subdist100.dist100.folBcombined.results.res100-6000.removeDups.rds
+# │       ├── KSFB.meta.csv.gz
+# │       ├── NGPL
+# │       │   ├── ngpl.folBcombined.shuffled_res100-6000.rds
+# │       │   ├── ngpl.folBcombined.subsets.near.subdist100.rds
+# │       │   ├── ngpl.pairwise.100-200.folBcombined.results.res100-6000.removeDups.rds
+# │       │   └── ngpl.triplet.near.binom.subdist100.dist100.folBcombined.results.res100-6000.removeDups.rds
+# │       ├── NGPL.meta.csv.gz
+# │       ├── PBVN
+# │       │   ├── pbvn.folBcombined.shuffled_res100-6000.rds
+# │       │   ├── pbvn.folBcombined.subsets.near.subdist100.rds
+# │       │   ├── pbvn.pairwise.100-200.folBcombined.results.res100-6000.removeDups.rds
+# │       │   └── pbvn.triplet.near.binom.subdist100.dist100.folBcombined.results.res100-6000.removeDups.rds
+# │       ├── PBVN.meta.csv.gz
+# │       ├── PKHL
+# │       │   ├── pkhl.binomMat.near.subdist100.rds
+# │       │   ├── pkhl.folBcombined.binomMat.near.subdist100.rds
+# │       │   ├── pkhl.folBcombined.pairwise.results.dist100.res100-6000.rds
+# │       │   ├── pkhl.folBcombined.shuffled_res100-6000.rds
+# │       │   ├── pkhl.folBcombined.subset.results.dist100.res100-6000.rds
+# │       │   ├── pkhl.folBcombined.subsets.near.subdist100.rds
+# │       │   ├── pkhl.pairwise.100-200.folBcombined.results.res100-6000.removeDups.rds
+# │       │   ├── pkhl.pairwise.100-200.results.res100-6000.removeDups.rds
+# │       │   ├── pkhl.subsets.near.subdist100.rds
+# │       │   ├── pkhl.triplet.near.binom.subdist100.dist100.folBcombined.results.res100-6000.removeDups.rds
+# │       │   └── pkhl.triplet.near.binom.subdist100.dist100.results.res100-6000.removeDups.rds
+# │       ├── PKHL.meta.csv.gz
+# │       ├── XXCD
+# │       │   ├── xxcd.folBcombined.shuffled_res100-6000.rds
+# │       │   ├── xxcd.folBcombined.subsets.near.subdist100.rds
+# │       │   ├── xxcd.pairwise.100-200.folBcombined.results.res100-6000.removeDups.rds
+# │       │   └── xxcd.triplet.near.binom.subdist100.dist100.folBcombined.results.res100-6000.removeDups.rds
+<> │       └── XXCD.meta.csv.gz
 ├── docs
 │   ├── 1_simulations.Rmd
 │   ├── 2_seqfish.Rmd
