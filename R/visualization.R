@@ -507,7 +507,7 @@ vizEachCluster <- function(cells, coms, axisAdj = 1, s = 0.5, a = 1,
 #' @param dat `findTrends()` results list, or data.frame; the information about the resolution, Z-score, reference and the neighbor cell.
 #' @param id column name that contains an additional feature to color trend lines (default: "id")
 #' @param yaxis column that has significance value across resolutions (default: "Z")
-#' @param sig.thresh threshold for significance, ie Z score significance threshold (default: 2).
+#' @param sig.thresh threshold for significance, ie Z score significance threshold (default: 1.96).
 #' @param nc number of colors to use for labeling features in id column
 #' @param colors color assignment for each of the features in id column
 #' @param title plot title (default: NULL)
@@ -518,7 +518,7 @@ vizEachCluster <- function(cells, coms, axisAdj = 1, s = 0.5, a = 1,
 #' 
 #' @export
 vizTrends <- function(dat, id = "id", yaxis = "Z",
-                      sig.thresh = 2, # -log10(0.05/nrow(dat)), ## sig thresh for num tests
+                      sig.thresh = 1.96, # -log10(0.05/nrow(dat)), ## sig thresh for num tests
                       nc = length(unique(dat[[id]])),
                       colors = rainbow(nc),
                       title = NULL,

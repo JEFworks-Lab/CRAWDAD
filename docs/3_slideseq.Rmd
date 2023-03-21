@@ -118,6 +118,37 @@ saveRDS(results, paste0(here::here(), "/data/slideseq/slideseqPuck.190926_08.pai
 
 ```
 
+# Filter trends
+
+```{r}
+
+results.coloc <- crawdad::filterCoTrends(results = results, alpha = 0.05)
+results.sep <- crawdad::filterSepTrends(results = results, alpha = 0.05)
+results.change <- crawdad::filterChangeTrends(results = results, alpha = 0.05)
+
+```
+
+```{r}
+
+## example: neighbor cell types that are significantly co-localized with Purkinje at some scale
+results.coloc$`Purkinje`
+
+```
+
+```{r}
+
+## example: neighbor cell types that are significantly separated with Purkinje at some scale
+results.sep$`Purkinje`
+
+```
+
+```{r}
+
+## example: neighbor cell types that become significantly co-localized and separated at difference scales with Purkinje
+results.change$`Purkinje`
+
+```
+
 # Visualizing trends
 
 ```{r}

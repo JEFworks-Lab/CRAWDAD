@@ -116,6 +116,37 @@ saveRDS(results, paste0(here::here(), "/data/seqfish/sp.seqfish.pairwise.results
 
 ```
 
+# Filter trends
+
+```{r}
+
+results.coloc <- crawdad::filterCoTrends(results = results, alpha = 0.05)
+results.sep <- crawdad::filterSepTrends(results = results, alpha = 0.05)
+results.change <- crawdad::filterChangeTrends(results = results, alpha = 0.05)
+
+```
+
+```{r}
+
+## example: neighbor cell types that are significantly co-localized with Intermediate mesoderm at some scale
+results.coloc$`Intermediate mesoderm`
+
+```
+
+```{r}
+
+## example: neighbor cell types that are significantly separated with Intermediate mesoderm at some scale
+results.sep$`Intermediate mesoderm`
+
+```
+
+```{r}
+
+## example: neighbor cell types that become significantly co-localized and separated at difference scales with Intermediate mesoderm
+results.change$`Intermediate mesoderm`
+
+```
+
 # Visualizing trends
 
 ```{r}
@@ -346,18 +377,17 @@ plt <- vizTrends(dat = d, facet = FALSE) +
   ggplot2::theme(legend.position="none")
 plt 
 
-# ggplot2::ggsave(filename = "2B_mesoderm_endo_trends.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 4,
-#                 height = 4,
-#                 units = c("in"))
+ggplot2::ggsave(filename = "2B_mesoderm_endo_trends.pdf",
+                plot = plt,
+                device = "pdf",
+                path = figpath,
+                scale = 1,
+                width = 4,
+                height = 4,
+                units = c("in"))
 
 
 ```
-
 
 ## Fig 2 - endothelium on tissue
 

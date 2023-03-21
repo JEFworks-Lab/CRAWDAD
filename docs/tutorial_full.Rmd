@@ -1,7 +1,7 @@
 ---
 title: "CRAWDAD Tutorial"
 author: "Brendan F. Miller, Jean Fan"
-date: "3/16/2023"
+date: "2/15/2023"
 output: html_document
 vignette: >
   %\VignetteIndexEntry{CRAWDAD Vignette}

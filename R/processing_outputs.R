@@ -67,7 +67,7 @@ getNeighbors <- function(cells,
 #' Then both dataframes can be combined into one final dataframe.
 #' Now you have identifiers that include: resolution, neighbor, reference, and "id" (ie neighbor distance).
 #' 
-#' @param resultsList list output from findTrendsv2
+#' @param resultsList list output from `findTrends()`
 #' @param id id desired, can add a column that contains an additional identifier for the results. Can use these for plotting and comparing different things
 #' @param withPerms if the results list is a list of lists using `returnMeans = FALSE` in `findTrends()`, then column order is different and this flag is needed (default: FALSE)
 #' 
@@ -92,3 +92,59 @@ meltResultsList <- function(resultsList, id = NA, withPerms = FALSE){
   return(df)
   
 }
+
+
+#' filter for significant cell type association trends that are co-localized
+#' 
+#' @description filter the results list from `findTrends()` for neighbor cell types that are significantly co-localized with each reference cell type.
+#' 
+#' @param results list output from `findTrends()`
+#' @param alpha significance threshold
+#' 
+#' @export
+filterCoTrends <- function(results, alpha = 0.05) {
+  zthresh <- qnorm(1-alpha/2)
+  lapply(results, function(x) {
+    x[,unique(which(x > zthresh, arr.ind=TRUE)[,2])]
+  })
+}
+
+
+#' filter for significant cell type association trends that are separated
+#' 
+#' @description filter the results list from `findTrends()` for neighbor cell types that are significantly separated with each reference cell type.
+#' 
+#' @param results list output from `findTrends()`
+#' @param alpha significance threshold
+#' 
+#' @export
+filterSepTrends <- function(results, alpha = 0.05) {
+  zthresh <- qnorm(1-alpha/2)
+  lapply(results, function(x) {
+    x[,unique(which(x < -zthresh, arr.ind=TRUE)[,2])]
+  })
+}
+
+
+#' filter for significant cell type association trends that are either co-localized or separated
+#' 
+#' @description filter the results list from `findTrends()` for neighbor cell types that become significantly co-localized and separated at different scales with each reference cell type.
+#' 
+#' @param results list output from `findTrends()`
+#' @param alpha significance threshold
+#' 
+#' @export
+filterChangeTrends <- function(results, alpha = 0.05) {
+  zthresh <- qnorm(1-alpha/2)
+  lapply(results, function(x) {
+    co <- unique(which(x > zthresh, arr.ind=TRUE)[,2])
+    sep <- unique(which(x < -zthresh, arr.ind=TRUE)[,2])
+    x[,intersect(co, sep)]
+  })
+}
+
+
+
+
+
+

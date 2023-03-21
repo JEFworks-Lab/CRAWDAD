@@ -10,6 +10,21 @@ output: html_document
 Load in the co-occurance array and intervals from the squidpy cooccurance analysis of the Slide-seq data.
 Then, subsequently process and plot using R and ggplot2.
 
+```{r, eval=FALSE}
+
+slide <- read.csv2(file = paste0(here::here(), "/data/slideseq/slideseq.puck190926_08.rctd.meta.csv.gz"), row.names = 1, sep = ",")
+slide <- slide[,c("x", "y", "class")]
+## make sure the coordinates are numeric
+slide <- slide %>%
+  dplyr::mutate_at(vars(x, y), as.numeric)
+
+## convert to SP
+slide <- crawdad:::toSP(pos = slide[,c("x", "y")],
+                        celltypes = slide$class)
+slide
+
+```
+
 ```{r}
 
 occ <- readRDS(file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/multiscale_celltype_colocalization_analysis/data/slideseq/slideseq.puck190926_08.rctd.co_occurance_array.rds")
@@ -19,8 +34,160 @@ occ[1,,]
 
 ```{r}
 
+## celltype x celltype x interval
+occ[,,1]
+
+## is the data symmetrical? So it doesn't matter if rows or columns (first or second array indices) are used to plot the lines?
+## maybe assume rows are the reference cell type anyways moving forward
+
+```
+
+
+```{r}
+
 intervals <- readRDS(file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/multiscale_celltype_colocalization_analysis/data/slideseq/slideseq.puck190926_08.rctd.co_occurance_intervals.rds")
 intervals
+
+```
+
+intervals have 50 positions, but actually the points are for within an interval. So for simplicity sake, use the 2:50 intervals for plotting. Might be worth checking this in the python code to make sure
+
+```{r}
+
+astros <- occ[1,,]
+rownames(astros) <- levels(slide$celltypes)
+astros <- reshape2::melt(astros)
+colnames(astros) <- c("exp", "distance", "value")
+
+ggplot2::ggplot(data = astros) +
+  ggplot2::geom_line(ggplot2::aes(x = distance, y = value, color = exp))
+
+
+dat <- astros[astros$exp == "Golgi",]
+ggplot2::ggplot(data = dat) +
+  ggplot2::geom_line(ggplot2::aes(x = distance, y = value, color = exp))
+
+```
+
+## Bergmann and Purkinje
+
+```{r}
+
+## Bergmann
+
+df <- occ[2,,]
+rownames(df) <- levels(slide$celltypes)
+df <- reshape2::melt(df)
+colnames(df) <- c("exp", "distance", "value")
+
+ggplot2::ggplot(data = df) +
+  ggplot2::geom_line(ggplot2::aes(x = distance, y = value, color = exp))
+
+
+dat <- df[df$exp %in% c("Purkinje", "Bergmann"),]
+ggplot2::ggplot(data = dat) +
+  ggplot2::geom_line(ggplot2::aes(x = distance, y = value, color = exp))
+
+```
+
+```{r}
+
+## Purkinje
+
+df <- occ[18,,]
+rownames(df) <- levels(slide$celltypes)
+df <- reshape2::melt(df)
+colnames(df) <- c("exp", "distance", "value")
+
+ggplot2::ggplot(data = df) +
+  ggplot2::geom_line(ggplot2::aes(x = distance, y = value, color = exp))
+
+
+dat <- df[df$exp %in% c("Purkinje", "Bergmann"),]
+ggplot2::ggplot(data = dat) +
+  ggplot2::geom_line(ggplot2::aes(x = distance, y = value, color = exp))
+
+```
+
+Pairwise cell type comparisons are identical. I don't necessarily see this symmetry with crawdad. What about the UBCs and Granule?
+
+## Granule and UBCs
+
+```{r}
+
+## Granule
+
+df <- occ[10,,]
+rownames(df) <- levels(slide$celltypes)
+df <- reshape2::melt(df)
+colnames(df) <- c("exp", "distance", "value")
+
+ggplot2::ggplot(data = df) +
+  ggplot2::geom_line(ggplot2::aes(x = distance, y = value, color = exp))
+
+
+dat <- df[df$exp == "UBCs",]
+ggplot2::ggplot(data = dat) +
+  ggplot2::geom_line(ggplot2::aes(x = distance, y = value, color = exp))
+
+```
+
+```{r}
+
+## UBCs
+
+df <- occ[19,,]
+rownames(df) <- levels(slide$celltypes)
+df <- reshape2::melt(df)
+colnames(df) <- c("exp", "distance", "value")
+
+ggplot2::ggplot(data = df) +
+  ggplot2::geom_line(ggplot2::aes(x = distance, y = value, color = exp))
+
+
+dat <- df[df$exp == "Granule",]
+ggplot2::ggplot(data = dat) +
+  ggplot2::geom_line(ggplot2::aes(x = distance, y = value, color = exp))
+
+```
+
+identical, but I don't see this with crawdad. Also, how does one interpret this plot? Compare it to self?
+
+```{r}
+
+## UBCs
+
+df <- occ[19,,]
+rownames(df) <- levels(slide$celltypes)
+df <- reshape2::melt(df)
+colnames(df) <- c("exp", "distance", "value")
+
+ggplot2::ggplot(data = df) +
+  ggplot2::geom_line(ggplot2::aes(x = distance, y = value, color = exp))
+
+
+dat <- df[df$exp %in% c("Granule", "UBCs"),]
+ggplot2::ggplot(data = dat) +
+  ggplot2::geom_line(ggplot2::aes(x = distance, y = value, color = exp))
+
+```
+
+```{r}
+
+## Granule
+
+df <- occ[10,,]
+rownames(df) <- levels(slide$celltypes)
+df <- reshape2::melt(df)
+colnames(df) <- c("exp", "distance", "value")
+
+ggplot2::ggplot(data = df) +
+  ggplot2::geom_line(ggplot2::aes(x = distance, y = value, color = exp))
+
+
+dat <- df[df$exp %in% c("Granule", "UBCs"),]
+ggplot2::ggplot(data = dat) +
+  ggplot2::geom_line(ggplot2::aes(x = distance, y = value, color = exp))
 
 ```
 
