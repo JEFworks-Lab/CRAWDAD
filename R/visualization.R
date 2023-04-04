@@ -356,7 +356,7 @@ vizAllClusters <- function(cells, coms, ofInterest = NULL,
                    plot.background = ggplot2::element_blank(),
                    legend.background = ggplot2::element_blank(),
                    panel.grid.major.y = ggplot2::element_blank(),
-                   axis.line = ggplot2::element_line(size = 1, colour = "black")
+                   axis.line = ggplot2::element_line(linewidth = 1, colour = "black")
                    # legend.position="none"
     ) +
     
@@ -462,7 +462,7 @@ vizEachCluster <- function(cells, coms, axisAdj = 1, s = 0.5, a = 1,
                      panel.background = ggplot2::element_blank(),
                      plot.background = ggplot2::element_blank(),
                      panel.grid.major.y =  ggplot2::element_blank(),
-                     axis.line = ggplot2::element_line(size = 1, colour = "black"),
+                     axis.line = ggplot2::element_line(linewidth = 1, colour = "black"),
                      plot.margin = ggplot2::unit(c(1,1,1,1), "pt"), # change default margins around each plot
                      legend.position="none"
       ) +
@@ -488,17 +488,6 @@ vizEachCluster <- function(cells, coms, axisAdj = 1, s = 0.5, a = 1,
   p
 }
 
-
-## dat = the data.frame of pvals, trend cluster assignments, etc for each pairwise combo. i.e. PKHL
-## could subset this to get specific interactions
-## clusters = the name of the column that has the clusters to color by
-## nc = the number of unique clusters to color by.
-## default should be number of unique entries in the clusters column
-## but its possible that one dataset might not have a cluster because all 
-## datasets clustered together so a cluster could be specific to a particular
-## datasets
-## colors = by default used rainbow(nc), but can specifically change to vector 
-## to be used in scale_color_manual
 
 #' Plot trends with ggplot2
 #' 
@@ -558,9 +547,9 @@ vizTrends <- function(dat, id = "id", yaxis = "Z",
                    plot.background = ggplot2::element_blank(),
                    legend.background = ggplot2::element_blank(),
                    panel.background = ggplot2::element_blank(),
-                   panel.grid.major =  ggplot2::element_line(size = 0.1, colour = "black"),
-                   panel.border = ggplot2::element_rect(colour = "black", fill=NA, size=1),
-                   axis.line = ggplot2::element_line(size = 0, colour = "black"),
+                   panel.grid.major =  ggplot2::element_line(linewidth = 0.1, colour = "black"),
+                   panel.border = ggplot2::element_rect(colour = "black", fill=NA, linewidth=1),
+                   axis.line = ggplot2::element_line(linewidth = 0, colour = "black"),
                    panel.spacing = ggplot2::unit(0.1, "lines"),
                    strip.text = ggplot2::element_text(size = 12),
                    legend.title = ggplot2::element_blank(),
@@ -569,6 +558,92 @@ vizTrends <- function(dat, id = "id", yaxis = "Z",
   
   if(facet){
     plt <- plt + ggplot2::facet_grid(neighbor ~ reference)
+  }
+  
+  plt
+  
+}
+
+
+#' Plot trends as heatmaps with ggplot2
+#' 
+#' @description The input data.frame should be the results list from `findTrends()` that has been melted into a data.frame using `meltResultsList()`.
+#' 
+#' @param dat `findTrends()` results list, or data.frame; the information about the resolution, Z-score, reference and the neighbor cell.
+#' @param sig.thresh threshold for significance, ie Z score significance threshold (default: 1.96).
+#' @param z_limit Z score limits (default +/- 20)
+#' @param palette_ color gradient for heatmap (default: grDevices::colorRampPalette(c("blue", "white", "red"))(n = 209))
+#' @param title plot title (default: NULL)
+#' @param withPerms if the results list is a list of lists using `returnMeans = FALSE` in `findTrends()`, then column order is different and this flag is needed (default: FALSE)
+#' @param annotation boolean to show the Z score values in the squares of the heatmap (default: FALSE)
+#' @param ncols specify number of columns in facet wrap (default: 4)
+#' 
+#' @export
+vizTrends.heatmap <- function(dat,
+                      sig.thresh = 1.96, # -log10(0.05/nrow(dat)), ## sig thresh for num tests
+                      z_limit = 20,
+                      palette_ = grDevices::colorRampPalette(c("blue", "white", "red"))(n = 209),
+                      title = NULL,
+                      withPerms = FALSE,
+                      annotation = FALSE,
+                      ncols = 4
+                      ){
+  
+  ## if results is list from `findTrends()` then melt it.
+  if(inherits(dat, "list")){
+    message("results detected to be a list. Melting to data.frame.")
+    dat <- crawdad::meltResultsList(dat, withPerms = withPerms)
+  }
+  
+  ## save original for actual Z scores if annotation
+  dat$resolution <- factor(as.character(dat$resolution), ordered = TRUE,
+                           levels = as.character(sort(unique(dat$resolution), decreasing = FALSE)))
+  
+  d <- dat
+  ## winsorize high Z scores
+  d$Z <- DescTools::Winsorize(d$Z, minval = -z_limit, maxval = z_limit)
+  ## all non-significant scores to 0 so they are white on heat map
+  d$Z[with(d, Z < sig.thresh & Z > -sig.thresh)] <- 0
+  
+  plt <- ggplot2::ggplot(data = d) +
+    ggplot2::geom_tile(ggplot2::aes(x = resolution, y = neighbor, fill=Z)) +
+    ggplot2::facet_wrap(~reference, ncol = ncols) +
+    ggplot2::scale_fill_gradientn(
+      limits = c(-z_limit, z_limit),
+      # values = breaks_,
+      colors = palette_
+    ) +
+    ggplot2::ggtitle(title) +
+    ggplot2::theme_classic() +
+    ggplot2::theme(axis.text.x = ggplot2::element_text(size=10, color = "black", angle = -90, vjust = 0.5, hjust = 0),
+                   axis.text.y = ggplot2::element_text(size=10, color = "black"),
+                   axis.title.y = ggplot2::element_text(size=15),
+                   axis.title.x = ggplot2::element_text(size=15),
+                   # axis.ticks.x = ggplot2::element_blank(),
+                   plot.title = ggplot2::element_text(size=15),
+                   plot.background = ggplot2::element_blank(),
+                   legend.background = ggplot2::element_blank(),
+                   panel.background = ggplot2::element_blank(),
+                   panel.grid.major =  ggplot2::element_line(linewidth = 0.1, colour = "black"),
+                   panel.border = ggplot2::element_rect(colour = "black", fill=NA, linewidth=1),
+                   axis.line = ggplot2::element_line(linewidth = 0, colour = "black"),
+                   panel.spacing = ggplot2::unit(0.1, "lines"),
+                   strip.text = ggplot2::element_text(size = 8),
+                   # legend.title = ggplot2::element_blank(),
+                   # legend.position="none"
+    ) +
+    ggplot2::guides(fill = ggplot2::guide_colorbar(title = "Z score",
+                                                   title.position = "left",
+                                                   title.hjust = 0.5,
+                                                   ticks.colour = "black",
+                                                   ticks.linewidth = 1,
+                                                   frame.colour= "black",
+                                                   frame.linewidth = 1,
+                                                   label.hjust = 0
+    ))
+  
+  if(annotation){
+    plt <- plt + ggplot2::geom_text(data = dat, ggplot2::aes(x = resolution, y = neighbor, label = format(round(Z, 1), nsmall = 2) ), size = 2)
   }
   
   plt

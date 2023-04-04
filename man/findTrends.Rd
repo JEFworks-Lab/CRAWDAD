@@ -41,3 +41,9 @@ Cell type proportions are with respect to the different cell types that are neig
 This is done at difference resolutions, where a resolution is whether the cell type labels are shuffled locally or globally.
 Trends are essentially built from significance values. The significance test basically asks if two cell types are localized or separated by assessing if the proportion of the neighboring cell type is significantly greater, or less than, random chance.
 }
+\examples{
+data(sim)
+shuffle.list <- makeShuffledCells(sim, resolutions = c(50, 100, 200, 300, 400, 500))
+findTrends(sim, dist = 100, shuffle.list = shuffle.list, ncores = 2)
+
+}

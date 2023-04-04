@@ -260,7 +260,7 @@ plt <- crawdad::vizAllClusters(cells = seq,
   # ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
   ggplot2::theme(legend.position="none")
 
-ggplot2::ggsave(filename = "2A_mesoderm_tissue.pdf",
+ggplot2::ggsave(filename = "2_seqfish_mesoderm_tissue.pdf",
                 plot = plt,
                 device = "pdf",
                 path = figpath,
@@ -271,8 +271,6 @@ ggplot2::ggsave(filename = "2A_mesoderm_tissue.pdf",
 plt
 
 ```
-
-### zoom in
 
 ```{r}
 
@@ -285,17 +283,26 @@ grid_coords_centroids$name <- as.character(rownames(grid_coords_centroids))
 
 
 plt <- crawdad::vizAllClusters(cells = seq,
-                               coms = seq$celltypes,
-                               ofInterest = c("Lateral plate mesoderm", "Intermediate mesoderm"),
-                               title = "seq",
-                               axisAdj = 1, s = 6, a = 0.5) +
-  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
+                        coms = as.factor(seq$celltypes),
+                        ofInterest = c("Lateral plate mesoderm", "Intermediate mesoderm"),
+                        s = 2) +
+  # ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
+  ggplot2::theme(legend.position="none") +
   # ggplot2::theme(legend.position="none") +
   
   ## add in the grid information on top of the plot
-  ggplot2::geom_sf(data = grid, fill = NA) +
-  ggplot2::geom_text(data = grid_coords_centroids, ggplot2::aes(X, Y, label = name))
-  
+  ggplot2::geom_sf(data = grid, fill = NA) 
+  # ggplot2::geom_text(data = grid_coords_centroids, ggplot2::aes(X, Y, label = name))
+
+ggplot2::ggsave(filename = "2B_mesoderm_tissue_grid.pdf",
+                plot = plt,
+                device = "pdf",
+                path = figpath,
+                scale = 1,
+                width = 6,
+                height = 6,
+                units = c("in"))
+
 plt
 
 ```
@@ -315,7 +322,7 @@ plt <- crawdad::vizAllClusters(cells = cells2,
   # ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
   ggplot2::theme(legend.position="none")
 
-ggplot2::ggsave(filename = "2A_mesoderm_tissue_zoom.pdf",
+ggplot2::ggsave(filename = "2_seqfish_mesoderm_tissue_zoom.pdf",
                 plot = plt,
                 device = "pdf",
                 path = figpath,
@@ -328,29 +335,98 @@ plt
 
 ```
 
-## Fig 2 - mesoderms trends
+## Fig 2 - endothelium on tissue
 
-```{r}
+Endothelium
+Haematoendothelial progenitors
 
-grDevices::pdf(file = paste0(figpath, "/2B_mesoderm_trends.pdf"), width = 4, height = 4)
-dat <- crawdad::meltResultsList(results, id = "dist100")
-d <- dat[dat$reference == "Lateral plate mesoderm" & dat$neighbor == "Intermediate mesoderm",]
-crawdad::plotTrends(results = d)
-dev.off()
+```{r, fig.height=4, fig.width=4}
 
-# dat <- crawdad::meltResultsList(results, id = "dist100")
-# d <- dat[dat$reference == "Intermediate mesoderm" & dat$neighbor == "Lateral plate mesoderm",]
-# crawdad::plotTrends(results = d, idcol = "id")
-# 
-# d <- dat[dat$reference == "Intermediate mesoderm",]
-# crawdad::plotTrendsOverlay(results = d)
-# 
-# d <- dat[dat$reference == "Lateral plate mesoderm",]
-# crawdad::plotTrendsOverlay(results = d)
+plt <- crawdad::vizAllClusters(cells = seq,
+                        coms = as.factor(seq$celltypes),
+                        ofInterest = c("Endothelium", "Haematoendothelial progenitors"),
+                        s = 2) +
+  # ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
+  ggplot2::theme(legend.position="none")
+
+ggplot2::ggsave(filename = "2_seqfish_endothelium_tissue.pdf",
+                plot = plt,
+                device = "pdf",
+                path = figpath,
+                scale = 1,
+                width = 6,
+                height = 6,
+                units = c("in"))
+plt
 
 ```
 
 ```{r}
+
+## shuffling grid
+grid <- sf::st_make_grid(seq, cellsize = 1000)
+
+## centers of the grids to add the tile IDs
+grid_coords_centroids <- as.data.frame(sf::st_coordinates(sf::st_centroid(grid)))
+grid_coords_centroids$name <- as.character(rownames(grid_coords_centroids))
+
+
+plt <- crawdad::vizAllClusters(cells = seq,
+                        coms = as.factor(seq$celltypes),
+                        ofInterest = c("Endothelium", "Haematoendothelial progenitors"),
+                        s = 2) +
+  # ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
+  ggplot2::theme(legend.position="none") +
+  
+  ## add in the grid information on top of the plot
+  ggplot2::geom_sf(data = grid, fill = NA) +
+  ggplot2::geom_text(data = grid_coords_centroids, ggplot2::aes(X, Y, label = name))
+
+ggplot2::ggsave(filename = "2B_endothelium_tissue_grid.pdf",
+                plot = plt,
+                device = "pdf",
+                path = figpath,
+                scale = 1,
+                width = 6,
+                height = 6,
+                units = c("in"))
+
+plt
+
+```
+
+```{r}
+
+## pull out cells in specific grid regions
+int <- sf::st_intersection(seq, grid[c(22,23,28,29)])
+cells2 <- seq[rownames(int),]
+
+## grid 11 real
+plt <- crawdad::vizAllClusters(cells = cells2,
+                               coms = cells2$celltypes,
+                               ofInterest = c("Endothelium", "Haematoendothelial progenitors"),
+                               title = "grid 22,23,28,29",
+                               axisAdj = 1, s = 10, a = 0.5) +
+  # ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
+  ggplot2::theme(legend.position="none")
+  # ggplot2::theme(legend.position="none") +
+
+ggplot2::ggsave(filename = "2_seqfish_endothelium_tissue_zoom.pdf",
+                plot = plt,
+                device = "pdf",
+                path = figpath,
+                scale = 1,
+                width = 6,
+                height = 6,
+                units = c("in"))
+
+plt
+
+```
+
+## Fig 2 - trends
+
+```{r, eval=FALSE}
 
 dat <- crawdad::meltResultsList(results)
 
@@ -377,129 +453,45 @@ plt <- vizTrends(dat = d, facet = FALSE) +
   ggplot2::theme(legend.position="none")
 plt 
 
-ggplot2::ggsave(filename = "2B_mesoderm_endo_trends.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 4,
-                height = 4,
-                units = c("in"))
+## use the permutations instead
+
+# ggplot2::ggsave(filename = "2B_mesoderm_endo_trends.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 4,
+#                 height = 4,
+#                 units = c("in"))
 
 
 ```
 
-## Fig 2 - endothelium on tissue
+```{r}
 
-Endothelium
-Haematoendothelial progenitors
+dat <- crawdad::meltResultsList(results)
+d <- dat[dat$reference %in% c("Lateral plate mesoderm", "Intermediate mesoderm", "Endothelium", "Haematoendothelial progenitors") & dat$neighbor %in% c("Lateral plate mesoderm", "Intermediate mesoderm", "Endothelium", "Haematoendothelial progenitors"),]
 
-```{r, fig.height=4, fig.width=4}
+plt <- vizTrends.heatmap(dat = d)
+plt
 
-plt <- crawdad::vizAllClusters(cells = seq,
-                        coms = as.factor(seq$celltypes),
-                        ofInterest = c("Endothelium", "Haematoendothelial progenitors"),
-                        s = 2) +
-  # ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
-  ggplot2::theme(legend.position="none")
-
-ggplot2::ggsave(filename = "2A_endothelium_tissue.pdf",
+ggplot2::ggsave(filename = "2_slideseq_trends_heatmap.pdf",
                 plot = plt,
                 device = "pdf",
                 path = figpath,
                 scale = 1,
-                width = 6,
+                width = 9,
                 height = 6,
                 units = c("in"))
-plt
-
-```
-
-### zoom in
-
-```{r}
-
-## shuffling grid
-grid <- sf::st_make_grid(seq, cellsize = 1000)
-
-## centers of the grids to add the tile IDs
-grid_coords_centroids <- as.data.frame(sf::st_coordinates(sf::st_centroid(grid)))
-grid_coords_centroids$name <- as.character(rownames(grid_coords_centroids))
-
-
-plt <- crawdad::vizAllClusters(cells = seq,
-                               coms = seq$celltypes,
-                               ofInterest = c("Endothelium", "Haematoendothelial progenitors"),
-                               title = "seq",
-                               axisAdj = 1, s = 6, a = 0.5) +
-  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
-  # ggplot2::theme(legend.position="none") +
-  
-  ## add in the grid information on top of the plot
-  ggplot2::geom_sf(data = grid, fill = NA) +
-  ggplot2::geom_text(data = grid_coords_centroids, ggplot2::aes(X, Y, label = name))
-  
-plt
-
-```
-
-```{r}
-
-## pull out cells in specific grid regions
-int <- sf::st_intersection(seq, grid[c(22,23,28,29)])
-cells2 <- seq[rownames(int),]
-
-## grid 11 real
-plt <- crawdad::vizAllClusters(cells = cells2,
-                               coms = cells2$celltypes,
-                               ofInterest = c("Endothelium", "Haematoendothelial progenitors"),
-                               title = "grid 22,23,28,29",
-                               axisAdj = 1, s = 10, a = 0.5) +
-  # ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
-  ggplot2::theme(legend.position="none")
-  # ggplot2::theme(legend.position="none") +
-
-ggplot2::ggsave(filename = "2A_endothelium_tissue_zoom.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 6,
-                height = 6,
-                units = c("in"))
-
-plt
-
-```
-
-## Fig 2 - endothelium trends
-
-```{r}
-
-grDevices::pdf(file = paste0(figpath, "/2B_endothelium_trends.pdf"), width = 4, height = 4)
-dat <- crawdad::meltResultsList(results, id = "dist100")
-d <- dat[dat$reference == "Endothelium" & dat$neighbor == "Haematoendothelial progenitors",]
-crawdad::plotTrends(results = d)
-dev.off()
-
-dat <- crawdad::meltResultsList(results, id = "dist100")
-d <- dat[dat$reference == "Haematoendothelial progenitors" & dat$neighbor == "Endothelium",]
-crawdad::plotTrends(results = d)
-
-d <- dat[dat$reference == "Haematoendothelial progenitors",]
-crawdad::plotTrendsOverlay(results = d)
-
-d <- dat[dat$reference == "Endothelium",]
-crawdad::plotTrendsOverlay(results = d)
 
 ```
 
 # ---------------------------------
 
-## check permutations
+## Fig 2 - trends with permutations
 
 ```{r}
-## the above dataset has been saved as an rda file and able to load here:
+
 data(seq)
 
 ## convert to SP
@@ -538,37 +530,32 @@ d1 <- dat[dat$reference == "Lateral plate mesoderm" & dat$neighbor == "Intermedi
 d2 <- dat[dat$reference == "Endothelium" & dat$neighbor == "Haematoendothelial progenitors",]
 ## combine the trends into one data.frame, and have the "id" column label the combo, plot both lines on same plot
 ## turn off the facet wrap so just coloring the two trends, which are labeled using the "id" column
-d1$id <- "Lateral plate mesoderm vs Intermediate mesoderm"
-d2$id <- "Endothelium vs Haematoendothelial progenitors"
+d1$id <- "Lateral plate mesoderm with Intermediate mesoderm"
+d2$id <- "Endothelium with Haematoendothelial progenitors"
 d <- dplyr::bind_rows(list(d1, d2))
 # resolutions as numeric:
 d <- d %>%
   dplyr::mutate_at(vars(resolution), as.numeric)
 
-
-dat <- crawdad::meltResultsList(results, withPerms = FALSE)
-d1 <- dat[dat$reference == "Lateral plate mesoderm" & dat$neighbor == "Intermediate mesoderm",]
-d2 <- dat[dat$reference == "Endothelium" & dat$neighbor == "Haematoendothelial progenitors",]
-## combine the trends into one data.frame, and have the "id" column label the combo, plot both lines on same plot
-## turn off the facet wrap so just coloring the two trends, which are labeled using the "id" column
-d1$id <- "Lateral plate mesoderm vs Intermediate mesoderm"
-d2$id <- "Endothelium vs Haematoendothelial progenitors"
-d2 <- dplyr::bind_rows(list(d1, d2))
-# resolutions as numeric:
-d2 <- d2 %>%
-  dplyr::mutate_at(vars(resolution), as.numeric)
-
+# mean_line <- d %>%
+#   group_by(reference, resolution) %>%
+#   summarise(Mean = mean(Z))
 
 plt <- vizTrends(dat = d, facet = FALSE, lines = FALSE) +
-  
-  ## add in line from the original plot
-  ggplot2::geom_path(data = d2,
-                     ggplot2::aes(x = resolution, y = Z, color = id), size = 1.5) +
-  
+  ggplot2::geom_smooth(data = d, 
+                       ggplot2::aes(x = resolution, y = Z, color = id, fill = id)) +
   ggplot2::scale_x_log10() +
   ggplot2::theme(legend.position="none")
 plt
 
-```
+ggplot2::ggsave(filename = "2_seqfish_trends_permutations.pdf",
+                plot = plt,
+                device = "pdf",
+                path = figpath,
+                scale = 1,
+                width = 6,
+                height = 6,
+                units = c("in"))
 
+```
 

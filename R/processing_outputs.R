@@ -105,7 +105,11 @@ meltResultsList <- function(resultsList, id = NA, withPerms = FALSE){
 filterCoTrends <- function(results, alpha = 0.05) {
   zthresh <- qnorm(1-alpha/2)
   lapply(results, function(x) {
-    x[,unique(which(x > zthresh, arr.ind=TRUE)[,2])]
+    colIds <- unique(which(x > zthresh, arr.ind=TRUE)[,2])
+    celltypes <- colnames(x)[colIds]
+    x <- as.matrix(x[,celltypes])
+    colnames(x) <- celltypes
+    x
   })
 }
 
@@ -121,7 +125,11 @@ filterCoTrends <- function(results, alpha = 0.05) {
 filterSepTrends <- function(results, alpha = 0.05) {
   zthresh <- qnorm(1-alpha/2)
   lapply(results, function(x) {
-    x[,unique(which(x < -zthresh, arr.ind=TRUE)[,2])]
+    colIds <- unique(which(x < -zthresh, arr.ind=TRUE)[,2])
+    celltypes <- colnames(x)[colIds]
+    x <- as.matrix(x[,celltypes])
+    colnames(x) <- celltypes
+    x
   })
 }
 
@@ -139,7 +147,11 @@ filterChangeTrends <- function(results, alpha = 0.05) {
   lapply(results, function(x) {
     co <- unique(which(x > zthresh, arr.ind=TRUE)[,2])
     sep <- unique(which(x < -zthresh, arr.ind=TRUE)[,2])
-    x[,intersect(co, sep)]
+    colIds <- intersect(co, sep)
+    celltypes <- colnames(x)[colIds]
+    x <- as.matrix(x[,celltypes])
+    colnames(x) <- celltypes
+    x
   })
 }
 

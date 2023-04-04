@@ -1,0 +1,682 @@
+---
+title: "compare_ripleys"
+author: "Brendan F. Miller"
+date: "3/30/2023"
+output: html_document
+---
+
+```{r}
+
+library(crawdad)
+data(slide)
+
+```
+
+# SlideSeq
+
+```{r}
+
+figpath <- paste0(here::here(), "/plots/slideseq")
+
+## run ripley's K
+library(spatstat)
+## need to convert to these point process objects
+pp  <- spatstat.geom::ppp(x=slide$x, y=slide$y, 
+           window = owin(range(slide$x), range(slide$y)), 
+           marks=factor(slide$celltypes))
+plot(pp)
+
+test <- spatstat.explore::Kcross(pp,'Purkinje','Bergmann')
+
+## "The standard interpretation of the plots of the K function is that
+## if the estimated K function curve lies above the theoretical curve, 
+## then the pattern is clustered, while if the estimated K lies below the theoretical curve, 
+## then the pattern is regular."
+plot(test)
+names(test)
+## plot isotropic-corrected minus theoretical across distances
+plot(x = test$r, y = test$iso - test$theo, type='l')
+
+```
+
+r      distance argument r                                                 
+theo   theoretical Poisson "K"["Purkinje","Bergmann"](r)                   
+border border-corrected estimate of "K"["Purkinje","Bergmann"](r)          
+trans  translation-corrected estimate of "K"["Purkinje","Bergmann"](r)     
+iso    Ripley isotropic corrected estimate of "K"["Purkinje","Bergmann"](r) (isotropic edge correction weights for a point pattern) use this
+
+## Bergmann
+
+```{r}
+
+results <- do.call(rbind, lapply(levels(pp$marks), function(x) {
+  test <- spatstat.explore::Kcross(pp,'Bergmann',x)
+  ## isotropic-corrected minus theoretical
+  test$iso - test$theo
+}))
+rownames(results) <- levels(pp$marks)
+colnames(results) <- test$r
+
+results.melt.berg <- reshape2::melt(results)
+colnames(results.melt.berg) <- c("celltypes", "r", "K")
+
+```
+
+```{r}
+
+plt <- ggplot2::ggplot(data = results.melt.berg) +
+  ggplot2::geom_line(ggplot2::aes(x = r, y = K, color = celltypes)) +
+  ggplot2::theme_classic() +
+  ggplot2::theme(axis.text.x = ggplot2::element_text(size=12, color = "black", angle = -90, vjust = 0.5, hjust = 0),
+                   axis.text.y = ggplot2::element_text(size=12, color = "black"),
+                   axis.title.y = ggplot2::element_text(size=15),
+                   axis.title.x = ggplot2::element_text(size=15),
+                   axis.ticks.x = ggplot2::element_blank(),
+                   plot.title = ggplot2::element_text(size=15),
+                   plot.background = ggplot2::element_blank(),
+                   legend.background = ggplot2::element_blank(),
+                   panel.background = ggplot2::element_blank(),
+                   panel.grid.major =  ggplot2::element_line(size = 0.1, colour = "black"),
+                   panel.border = ggplot2::element_rect(colour = "black", fill=NA, size=1),
+                   axis.line = ggplot2::element_line(size = 0, colour = "black"),
+                   panel.spacing = ggplot2::unit(0.1, "lines"),
+                   strip.text = ggplot2::element_text(size = 12),
+                   legend.title = ggplot2::element_blank(),
+                   # legend.position="none"
+    ) +
+  ggplot2::ggtitle("Bergmann") +
+  ggplot2::ylab(expression(K[iso](r) - K[theoretical](r)))
+
+plt
+
+ggplot2::ggsave(filename = "S2_slideseq_berg_ripleys.pdf",
+                plot = plt,
+                device = "pdf",
+                path = figpath,
+                scale = 1,
+                width = 8,
+                height = 6,
+                units = c("in"))
+
+```
+
+## Purkinje
+
+```{r}
+
+results <- do.call(rbind, lapply(levels(pp$marks), function(x) {
+  test <- spatstat.explore::Kcross(pp,'Purkinje',x)
+  ## isotropic-corrected minus theoretical
+  test$iso - test$theo
+}))
+rownames(results) <- levels(pp$marks)
+colnames(results) <- test$r
+
+results.melt.purk <- reshape2::melt(results)
+colnames(results.melt.purk) <- c("celltypes", "r", "K")
+
+```
+
+```{r}
+
+plt <- ggplot2::ggplot(data = results.melt.purk) +
+  ggplot2::geom_line(ggplot2::aes(x = r, y = K, color = celltypes)) +
+  ggplot2::theme_classic() +
+  ggplot2::theme(axis.text.x = ggplot2::element_text(size=12, color = "black", angle = -90, vjust = 0.5, hjust = 0),
+                   axis.text.y = ggplot2::element_text(size=12, color = "black"),
+                   axis.title.y = ggplot2::element_text(size=15),
+                   axis.title.x = ggplot2::element_text(size=15),
+                   axis.ticks.x = ggplot2::element_blank(),
+                   plot.title = ggplot2::element_text(size=15),
+                   plot.background = ggplot2::element_blank(),
+                   legend.background = ggplot2::element_blank(),
+                   panel.background = ggplot2::element_blank(),
+                   panel.grid.major =  ggplot2::element_line(size = 0.1, colour = "black"),
+                   panel.border = ggplot2::element_rect(colour = "black", fill=NA, size=1),
+                   axis.line = ggplot2::element_line(size = 0, colour = "black"),
+                   panel.spacing = ggplot2::unit(0.1, "lines"),
+                   strip.text = ggplot2::element_text(size = 12),
+                   legend.title = ggplot2::element_blank(),
+                   # legend.position="none"
+    ) +
+  ggplot2::ggtitle("Purkinje") +
+  ggplot2::ylab(expression(K[iso](r) - K[theoretical](r)))
+
+plt
+
+ggplot2::ggsave(filename = "S2_slideseq_purk_ripleys.pdf",
+                plot = plt,
+                device = "pdf",
+                path = figpath,
+                scale = 1,
+                width = 8,
+                height = 6,
+                units = c("in"))
+
+```
+
+```{r}
+
+dat <- results.melt.purk[results.melt.purk$celltypes %in% c("Ependymal", "Choroid", "Granule", "Oligodendrocytes"),]
+
+plt <- ggplot2::ggplot(data = dat) +
+  ggplot2::geom_line(ggplot2::aes(x = r, y = K, color = celltypes)) +
+  ggplot2::theme_classic() +
+  ggplot2::theme(axis.text.x = ggplot2::element_text(size=12, color = "black", angle = -90, vjust = 0.5, hjust = 0),
+                   axis.text.y = ggplot2::element_text(size=12, color = "black"),
+                   axis.title.y = ggplot2::element_text(size=15),
+                   axis.title.x = ggplot2::element_text(size=15),
+                   axis.ticks.x = ggplot2::element_blank(),
+                   plot.title = ggplot2::element_text(size=15),
+                   plot.background = ggplot2::element_blank(),
+                   legend.background = ggplot2::element_blank(),
+                   panel.background = ggplot2::element_blank(),
+                   panel.grid.major =  ggplot2::element_line(size = 0.1, colour = "black"),
+                   panel.border = ggplot2::element_rect(colour = "black", fill=NA, size=1),
+                   axis.line = ggplot2::element_line(size = 0, colour = "black"),
+                   panel.spacing = ggplot2::unit(0.1, "lines"),
+                   strip.text = ggplot2::element_text(size = 12),
+                   legend.title = ggplot2::element_blank(),
+                   # legend.position="none"
+    ) +
+  ggplot2::ggtitle("Purkinje") +
+  ggplot2::ylab(expression(K[iso](r) - K[theoretical](r)))
+
+plt
+
+```
+
+## MLI1
+
+```{r}
+
+results <- do.call(rbind, lapply(levels(pp$marks), function(x) {
+  test <- spatstat.explore::Kcross(pp,'MLI1',x)
+  ## isotropic-corrected minus theoretical
+  test$iso - test$theo
+}))
+rownames(results) <- levels(pp$marks)
+colnames(results) <- test$r
+
+results.melt.mli1 <- reshape2::melt(results)
+colnames(results.melt.mli1) <- c("celltypes", "r", "K")
+
+```
+
+```{r}
+
+plt <- ggplot2::ggplot(data = results.melt.mli1) +
+  ggplot2::geom_line(ggplot2::aes(x = r, y = K, color = celltypes)) +
+  ggplot2::theme_classic() +
+  ggplot2::theme(axis.text.x = ggplot2::element_text(size=12, color = "black", angle = -90, vjust = 0.5, hjust = 0),
+                   axis.text.y = ggplot2::element_text(size=12, color = "black"),
+                   axis.title.y = ggplot2::element_text(size=15),
+                   axis.title.x = ggplot2::element_text(size=15),
+                   axis.ticks.x = ggplot2::element_blank(),
+                   plot.title = ggplot2::element_text(size=15),
+                   plot.background = ggplot2::element_blank(),
+                   legend.background = ggplot2::element_blank(),
+                   panel.background = ggplot2::element_blank(),
+                   panel.grid.major =  ggplot2::element_line(size = 0.1, colour = "black"),
+                   panel.border = ggplot2::element_rect(colour = "black", fill=NA, size=1),
+                   axis.line = ggplot2::element_line(size = 0, colour = "black"),
+                   panel.spacing = ggplot2::unit(0.1, "lines"),
+                   strip.text = ggplot2::element_text(size = 12),
+                   legend.title = ggplot2::element_blank(),
+                   # legend.position="none"
+    ) +
+  ggplot2::ggtitle("MLI1") +
+  ggplot2::ylab(expression(K[iso](r) - K[theoretical](r)))
+
+plt
+
+ggplot2::ggsave(filename = "S2_slideseq_mli1_ripleys.pdf",
+                plot = plt,
+                device = "pdf",
+                path = figpath,
+                scale = 1,
+                width = 8,
+                height = 6,
+                units = c("in"))
+
+```
+
+## MLI2
+
+```{r}
+
+results <- do.call(rbind, lapply(levels(pp$marks), function(x) {
+  test <- spatstat.explore::Kcross(pp,'MLI2',x)
+  ## isotropic-corrected minus theoretical
+  test$iso - test$theo
+}))
+rownames(results) <- levels(pp$marks)
+colnames(results) <- test$r
+
+results.melt.mli2 <- reshape2::melt(results)
+colnames(results.melt.mli2) <- c("celltypes", "r", "K")
+
+```
+
+```{r}
+
+plt <- ggplot2::ggplot(data = results.melt.mli2) +
+  ggplot2::geom_line(ggplot2::aes(x = r, y = K, color = celltypes)) +
+  ggplot2::theme_classic() +
+  ggplot2::theme(axis.text.x = ggplot2::element_text(size=12, color = "black", angle = -90, vjust = 0.5, hjust = 0),
+                   axis.text.y = ggplot2::element_text(size=12, color = "black"),
+                   axis.title.y = ggplot2::element_text(size=15),
+                   axis.title.x = ggplot2::element_text(size=15),
+                   axis.ticks.x = ggplot2::element_blank(),
+                   plot.title = ggplot2::element_text(size=15),
+                   plot.background = ggplot2::element_blank(),
+                   legend.background = ggplot2::element_blank(),
+                   panel.background = ggplot2::element_blank(),
+                   panel.grid.major =  ggplot2::element_line(size = 0.1, colour = "black"),
+                   panel.border = ggplot2::element_rect(colour = "black", fill=NA, size=1),
+                   axis.line = ggplot2::element_line(size = 0, colour = "black"),
+                   panel.spacing = ggplot2::unit(0.1, "lines"),
+                   strip.text = ggplot2::element_text(size = 12),
+                   legend.title = ggplot2::element_blank(),
+                   # legend.position="none"
+    ) +
+  ggplot2::ggtitle("MLI2") +
+  ggplot2::ylab(expression(K[iso](r) - K[theoretical](r)))
+
+plt
+
+ggplot2::ggsave(filename = "S2_slideseq_MLI2_ripleys.pdf",
+                plot = plt,
+                device = "pdf",
+                path = figpath,
+                scale = 1,
+                width = 8,
+                height = 6,
+                units = c("in"))
+
+```
+
+# SeqFish
+
+```{r}
+
+data(seq)
+
+figpath <- paste0(here::here(), "/plots/seqfish")
+
+## run ripley's K
+library(spatstat)
+## need to convert to these point process objects
+pp  <- spatstat.geom::ppp(x=seq$x, y=seq$y, 
+           window = owin(range(seq$x), range(seq$y)), 
+           marks=factor(seq$celltypes))
+plot(pp)
+
+test <- spatstat.explore::Kcross(pp,'Intermediate mesoderm','Lateral plate mesoderm')
+
+## "The standard interpretation of the plots of the K function is that
+## if the estimated K function curve lies above the theoretical curve, 
+## then the pattern is clustered, while if the estimated K lies below the theoretical curve, 
+## then the pattern is regular."
+plot(test)
+names(test)
+## plot isotropic-corrected minus theoretical across distances
+plot(x = test$r, y = test$iso - test$theo, type='l')
+
+```
+
+## Intermediate mesoderm
+
+```{r}
+
+results <- do.call(rbind, lapply(levels(pp$marks), function(x) {
+  test <- spatstat.explore::Kcross(pp,'Intermediate mesoderm',x)
+  ## isotropic-corrected minus theoretical
+  test$iso - test$theo
+}))
+rownames(results) <- levels(pp$marks)
+colnames(results) <- test$r
+
+results.melt.intmeso <- reshape2::melt(results)
+colnames(results.melt.intmeso) <- c("celltypes", "r", "K")
+
+results.melt.intmeso$ref <- "Intermediate mesoderm"
+
+```
+
+```{r}
+
+plt <- ggplot2::ggplot(data = results.melt.intmeso) +
+  ggplot2::geom_line(ggplot2::aes(x = r, y = K, color = celltypes)) +
+  ggplot2::theme_classic() +
+  ggplot2::theme(axis.text.x = ggplot2::element_text(size=12, color = "black", angle = -90, vjust = 0.5, hjust = 0),
+                   axis.text.y = ggplot2::element_text(size=12, color = "black"),
+                   axis.title.y = ggplot2::element_text(size=15),
+                   axis.title.x = ggplot2::element_text(size=15),
+                   axis.ticks.x = ggplot2::element_blank(),
+                   plot.title = ggplot2::element_text(size=15),
+                   plot.background = ggplot2::element_blank(),
+                   legend.background = ggplot2::element_blank(),
+                   panel.background = ggplot2::element_blank(),
+                   panel.grid.major =  ggplot2::element_line(size = 0.1, colour = "black"),
+                   panel.border = ggplot2::element_rect(colour = "black", fill=NA, size=1),
+                   axis.line = ggplot2::element_line(size = 0, colour = "black"),
+                   panel.spacing = ggplot2::unit(0.1, "lines"),
+                   strip.text = ggplot2::element_text(size = 12),
+                   legend.title = ggplot2::element_blank(),
+                   # legend.position="none"
+    ) +
+  ggplot2::ggtitle("Intermediate mesoderm") +
+  ggplot2::ylab(expression(K[iso](r) - K[theoretical](r))) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
+
+plt
+
+ggplot2::ggsave(filename = "S3_seqfish_intMeso_ripleys.pdf",
+                plot = plt,
+                device = "pdf",
+                path = figpath,
+                scale = 1,
+                width = 8,
+                height = 6,
+                units = c("in"))
+
+```
+
+```{r}
+
+dat <- results.melt.intmeso[results.melt.intmeso$celltypes %in% c("Lateral plate mesoderm", "Intermediate mesoderm"),]
+
+plt <- ggplot2::ggplot(data = dat) +
+  ggplot2::geom_line(ggplot2::aes(x = r, y = K, color = celltypes)) +
+  ggplot2::theme_classic() +
+  ggplot2::theme(axis.text.x = ggplot2::element_text(size=12, color = "black", angle = -90, vjust = 0.5, hjust = 0),
+                   axis.text.y = ggplot2::element_text(size=12, color = "black"),
+                   axis.title.y = ggplot2::element_text(size=15),
+                   axis.title.x = ggplot2::element_text(size=15),
+                   axis.ticks.x = ggplot2::element_blank(),
+                   plot.title = ggplot2::element_text(size=15),
+                   plot.background = ggplot2::element_blank(),
+                   legend.background = ggplot2::element_blank(),
+                   panel.background = ggplot2::element_blank(),
+                   panel.grid.major =  ggplot2::element_line(size = 0.1, colour = "black"),
+                   panel.border = ggplot2::element_rect(colour = "black", fill=NA, size=1),
+                   axis.line = ggplot2::element_line(size = 0, colour = "black"),
+                   panel.spacing = ggplot2::unit(0.1, "lines"),
+                   strip.text = ggplot2::element_text(size = 12),
+                   legend.title = ggplot2::element_blank(),
+                   # legend.position="none"
+    ) +
+  ggplot2::ggtitle("Intermediate mesoderm") +
+  ggplot2::ylab(expression(K[iso](r) - K[theoretical](r)))
+
+plt
+
+```
+
+## Endothelium
+
+```{r}
+
+results <- do.call(rbind, lapply(levels(pp$marks), function(x) {
+  test <- spatstat.explore::Kcross(pp,'Endothelium',x)
+  ## isotropic-corrected minus theoretical
+  test$iso - test$theo
+}))
+rownames(results) <- levels(pp$marks)
+colnames(results) <- test$r
+
+results.melt.endo <- reshape2::melt(results)
+colnames(results.melt.endo) <- c("celltypes", "r", "K")
+
+results.melt.endo$ref <- "Endothelium"
+
+```
+
+```{r}
+
+plt <- ggplot2::ggplot(data = results.melt.endo) +
+  ggplot2::geom_line(ggplot2::aes(x = r, y = K, color = celltypes)) +
+  ggplot2::theme_classic() +
+  ggplot2::theme(axis.text.x = ggplot2::element_text(size=12, color = "black", angle = -90, vjust = 0.5, hjust = 0),
+                   axis.text.y = ggplot2::element_text(size=12, color = "black"),
+                   axis.title.y = ggplot2::element_text(size=15),
+                   axis.title.x = ggplot2::element_text(size=15),
+                   axis.ticks.x = ggplot2::element_blank(),
+                   plot.title = ggplot2::element_text(size=15),
+                   plot.background = ggplot2::element_blank(),
+                   legend.background = ggplot2::element_blank(),
+                   panel.background = ggplot2::element_blank(),
+                   panel.grid.major =  ggplot2::element_line(size = 0.1, colour = "black"),
+                   panel.border = ggplot2::element_rect(colour = "black", fill=NA, size=1),
+                   axis.line = ggplot2::element_line(size = 0, colour = "black"),
+                   panel.spacing = ggplot2::unit(0.1, "lines"),
+                   strip.text = ggplot2::element_text(size = 12),
+                   legend.title = ggplot2::element_blank(),
+                   # legend.position="none"
+    ) +
+  ggplot2::ggtitle("Endothelium") +
+  ggplot2::ylab(expression(K[iso](r) - K[theoretical](r))) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
+
+plt
+
+ggplot2::ggsave(filename = "S3_seqfish_endo_ripleys.pdf",
+                plot = plt,
+                device = "pdf",
+                path = figpath,
+                scale = 1,
+                width = 8,
+                height = 6,
+                units = c("in"))
+
+```
+
+```{r}
+
+dat <- results.melt.endo[results.melt.endo$celltypes %in% c("Endothelium", "Haematoendothelial progenitors"),]
+
+plt <- ggplot2::ggplot(data = dat) +
+  ggplot2::geom_line(ggplot2::aes(x = r, y = K, color = celltypes)) +
+  ggplot2::theme_classic() +
+  ggplot2::theme(axis.text.x = ggplot2::element_text(size=12, color = "black", angle = -90, vjust = 0.5, hjust = 0),
+                   axis.text.y = ggplot2::element_text(size=12, color = "black"),
+                   axis.title.y = ggplot2::element_text(size=15),
+                   axis.title.x = ggplot2::element_text(size=15),
+                   axis.ticks.x = ggplot2::element_blank(),
+                   plot.title = ggplot2::element_text(size=15),
+                   plot.background = ggplot2::element_blank(),
+                   legend.background = ggplot2::element_blank(),
+                   panel.background = ggplot2::element_blank(),
+                   panel.grid.major =  ggplot2::element_line(size = 0.1, colour = "black"),
+                   panel.border = ggplot2::element_rect(colour = "black", fill=NA, size=1),
+                   axis.line = ggplot2::element_line(size = 0, colour = "black"),
+                   panel.spacing = ggplot2::unit(0.1, "lines"),
+                   strip.text = ggplot2::element_text(size = 12),
+                   legend.title = ggplot2::element_blank(),
+                   # legend.position="none"
+    ) +
+  ggplot2::ggtitle("Endothelium") +
+  ggplot2::ylab(expression(K[iso](r) - K[theoretical](r)))
+
+plt
+
+```
+
+## Lateral plate mesoderm
+
+```{r}
+
+results <- do.call(rbind, lapply(levels(pp$marks), function(x) {
+  test <- spatstat.explore::Kcross(pp,'Lateral plate mesoderm',x)
+  ## isotropic-corrected minus theoretical
+  test$iso - test$theo
+}))
+rownames(results) <- levels(pp$marks)
+colnames(results) <- test$r
+
+results.melt.latplate <- reshape2::melt(results)
+colnames(results.melt.latplate) <- c("celltypes", "r", "K")
+
+results.melt.latplate$ref <- "Lateral plate mesoderm"
+
+```
+
+```{r}
+
+plt <- ggplot2::ggplot(data = results.melt.latplate) +
+  ggplot2::geom_line(ggplot2::aes(x = r, y = K, color = celltypes)) +
+  ggplot2::theme_classic() +
+  ggplot2::theme(axis.text.x = ggplot2::element_text(size=12, color = "black", angle = -90, vjust = 0.5, hjust = 0),
+                   axis.text.y = ggplot2::element_text(size=12, color = "black"),
+                   axis.title.y = ggplot2::element_text(size=15),
+                   axis.title.x = ggplot2::element_text(size=15),
+                   axis.ticks.x = ggplot2::element_blank(),
+                   plot.title = ggplot2::element_text(size=15),
+                   plot.background = ggplot2::element_blank(),
+                   legend.background = ggplot2::element_blank(),
+                   panel.background = ggplot2::element_blank(),
+                   panel.grid.major =  ggplot2::element_line(size = 0.1, colour = "black"),
+                   panel.border = ggplot2::element_rect(colour = "black", fill=NA, size=1),
+                   axis.line = ggplot2::element_line(size = 0, colour = "black"),
+                   panel.spacing = ggplot2::unit(0.1, "lines"),
+                   strip.text = ggplot2::element_text(size = 12),
+                   legend.title = ggplot2::element_blank(),
+                   # legend.position="none"
+    ) +
+  ggplot2::ggtitle("Lateral plate mesoderm") +
+  ggplot2::ylab(expression(K[iso](r) - K[theoretical](r))) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
+
+plt
+
+ggplot2::ggsave(filename = "S3_seqfish_latplate_ripleys.pdf",
+                plot = plt,
+                device = "pdf",
+                path = figpath,
+                scale = 1,
+                width = 8,
+                height = 6,
+                units = c("in"))
+
+```
+
+## Haematoendothelial progenitors
+
+```{r}
+
+results <- do.call(rbind, lapply(levels(pp$marks), function(x) {
+  test <- spatstat.explore::Kcross(pp,'Haematoendothelial progenitors',x)
+  ## isotropic-corrected minus theoretical
+  test$iso - test$theo
+}))
+rownames(results) <- levels(pp$marks)
+colnames(results) <- test$r
+
+results.melt.haem <- reshape2::melt(results)
+colnames(results.melt.haem) <- c("celltypes", "r", "K")
+
+results.melt.haem$ref <- "Haematoendothelial progenitors"
+
+```
+
+```{r}
+
+plt <- ggplot2::ggplot(data = results.melt.haem) +
+  ggplot2::geom_line(ggplot2::aes(x = r, y = K, color = celltypes)) +
+  ggplot2::theme_classic() +
+  ggplot2::theme(axis.text.x = ggplot2::element_text(size=12, color = "black", angle = -90, vjust = 0.5, hjust = 0),
+                   axis.text.y = ggplot2::element_text(size=12, color = "black"),
+                   axis.title.y = ggplot2::element_text(size=15),
+                   axis.title.x = ggplot2::element_text(size=15),
+                   axis.ticks.x = ggplot2::element_blank(),
+                   plot.title = ggplot2::element_text(size=15),
+                   plot.background = ggplot2::element_blank(),
+                   legend.background = ggplot2::element_blank(),
+                   panel.background = ggplot2::element_blank(),
+                   panel.grid.major =  ggplot2::element_line(size = 0.1, colour = "black"),
+                   panel.border = ggplot2::element_rect(colour = "black", fill=NA, size=1),
+                   axis.line = ggplot2::element_line(size = 0, colour = "black"),
+                   panel.spacing = ggplot2::unit(0.1, "lines"),
+                   strip.text = ggplot2::element_text(size = 12),
+                   legend.title = ggplot2::element_blank(),
+                   # legend.position="none"
+    ) +
+  ggplot2::ggtitle("Haematoendothelial progenitors") +
+  ggplot2::ylab(expression(K[iso](r) - K[theoretical](r))) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
+
+plt
+
+ggplot2::ggsave(filename = "S3_seqfish_haem_ripleys.pdf",
+                plot = plt,
+                device = "pdf",
+                path = figpath,
+                scale = 1,
+                width = 8,
+                height = 6,
+                units = c("in"))
+
+```
+
+## merge
+
+```{r}
+
+results.melt.merge <- dplyr::bind_rows(
+  list(results.melt.intmeso, results.melt.endo, results.melt.latplate, results.melt.haem)
+)
+
+```
+
+```{r}
+
+dat <- results.melt.merge[results.melt.merge$celltypes %in% c("Intermediate mesoderm", "Endothelium", "Lateral plate mesoderm", "Haematoendothelial progenitors"),]
+
+dat1 <- results.melt.merge[results.melt.merge$celltypes %in% c("Intermediate mesoderm") & results.melt.merge$ref %in% c("Lateral plate mesoderm"),]
+dat2 <- results.melt.merge[results.melt.merge$celltypes %in% c("Haematoendothelial progenitors") & results.melt.merge$ref %in% c("Endothelium"),]
+
+# dat3 <- results.melt.merge[results.melt.merge$celltypes %in% c("Lateral plate mesoderm") & results.melt.merge$ref %in% c("Intermediate mesoderm"),]
+# dat4 <- results.melt.merge[results.melt.merge$celltypes %in% c("Endothelium") & results.melt.merge$ref %in% c("Haematoendothelial progenitors"),]
+
+plt <- ggplot2::ggplot() +
+  ggplot2::geom_line(data = dat1, ggplot2::aes(x = r, y = K), color = "#00BFC4") + # teal = mesoderms
+  ggplot2::geom_line(data = dat2, ggplot2::aes(x = r, y = K), color = "#F8766D") + # salmon = endothelials
+  # ggplot2::geom_line(data = dat3, ggplot2::aes(x = r, y = K), color = "#619CFF") +
+  # ggplot2::geom_line(data = dat4, ggplot2::aes(x = r, y = K), color = "red") +
+  ggplot2::theme_classic() +
+  ggplot2::theme(axis.text.x = ggplot2::element_text(size=12, color = "black", angle = -90, vjust = 0.5, hjust = 0),
+                   axis.text.y = ggplot2::element_text(size=12, color = "black"),
+                   axis.title.y = ggplot2::element_text(size=15),
+                   axis.title.x = ggplot2::element_text(size=15),
+                   axis.ticks.x = ggplot2::element_blank(),
+                   plot.title = ggplot2::element_text(size=15),
+                   plot.background = ggplot2::element_blank(),
+                   legend.background = ggplot2::element_blank(),
+                   panel.background = ggplot2::element_blank(),
+                   panel.grid.major =  ggplot2::element_line(size = 0.1, colour = "black"),
+                   panel.border = ggplot2::element_rect(colour = "black", fill=NA, size=1),
+                   axis.line = ggplot2::element_line(size = 0, colour = "black"),
+                   panel.spacing = ggplot2::unit(0.1, "lines"),
+                   strip.text = ggplot2::element_text(size = 12),
+                   legend.title = ggplot2::element_blank(),
+                   # legend.position="none"
+    ) +
+  ggplot2::ggtitle("merge") +
+  ggplot2::ylab(expression(K[iso](r) - K[theoretical](r))) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
+
+plt
+
+ggplot2::ggsave(filename = "S3_seqfish_merge_ripleys.pdf",
+                plot = plt,
+                device = "pdf",
+                path = figpath,
+                scale = 1,
+                width = 8,
+                height = 6,
+                units = c("in"))
+
+```
+
+

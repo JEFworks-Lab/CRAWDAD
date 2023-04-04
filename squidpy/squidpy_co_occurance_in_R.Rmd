@@ -69,7 +69,14 @@ ggplot2::ggplot(data = dat) +
 
 ```
 
-## Bergmann and Purkinje
+## Bergmann
+
+```{r}
+
+## folder on `brendan` branch
+figpath <- paste0(here::here(), "/plots/slideseq")
+
+```
 
 ```{r}
 
@@ -80,36 +87,184 @@ rownames(df) <- levels(slide$celltypes)
 df <- reshape2::melt(df)
 colnames(df) <- c("exp", "distance", "value")
 
-ggplot2::ggplot(data = df) +
-  ggplot2::geom_line(ggplot2::aes(x = distance, y = value, color = exp))
+plt <- ggplot2::ggplot(data = df) +
+  ggplot2::geom_line(ggplot2::aes(x = distance, y = value)) +
+  ggplot2::facet_wrap(. ~ exp) +
+  ggplot2::ggtitle(expression(frac("p(exp|Bergmann)", "p(exp)"))) +
+  ggplot2::theme_classic() +
+  ggplot2::theme(axis.text.x = ggplot2::element_text(size=12, color = "black", angle = -90, vjust = 0.5, hjust = 0),
+                   axis.text.y = ggplot2::element_text(size=12, color = "black"),
+                   axis.title.y = ggplot2::element_text(size=15),
+                   axis.title.x = ggplot2::element_text(size=15),
+                   axis.ticks.x = ggplot2::element_blank(),
+                   plot.title = ggplot2::element_text(size=15),
+                   plot.background = ggplot2::element_blank(),
+                   legend.background = ggplot2::element_blank(),
+                   panel.background = ggplot2::element_blank(),
+                   panel.grid.major =  ggplot2::element_line(size = 0.1, colour = "black"),
+                   panel.border = ggplot2::element_rect(colour = "black", fill=NA, size=1),
+                   axis.line = ggplot2::element_line(size = 0, colour = "black"),
+                   panel.spacing = ggplot2::unit(0.1, "lines"),
+                   strip.text = ggplot2::element_text(size = 12),
+                   legend.title = ggplot2::element_blank(),
+                   # legend.position="none"
+    )
+
+plt
+
+ggplot2::ggsave(filename = "S2_slideseq_berg_cooccurance.pdf",
+                plot = plt,
+                device = "pdf",
+                path = figpath,
+                scale = 1,
+                width = 8,
+                height = 6,
+                units = c("in"))
 
 
-dat <- df[df$exp %in% c("Purkinje", "Bergmann"),]
-ggplot2::ggplot(data = dat) +
-  ggplot2::geom_line(ggplot2::aes(x = distance, y = value, color = exp))
+# dat <- df[df$exp %in% c("Purkinje", "Bergmann", "MLI1", "MLI2"),]
+# ggplot2::ggplot(data = dat) +
+#   ggplot2::geom_line(ggplot2::aes(x = distance, y = value, color = exp))
 
 ```
 
-```{r}
-
 ## Purkinje
+
+```{r}
 
 df <- occ[18,,]
 rownames(df) <- levels(slide$celltypes)
 df <- reshape2::melt(df)
 colnames(df) <- c("exp", "distance", "value")
 
-ggplot2::ggplot(data = df) +
-  ggplot2::geom_line(ggplot2::aes(x = distance, y = value, color = exp))
+plt <- ggplot2::ggplot(data = df) +
+  ggplot2::geom_line(ggplot2::aes(x = distance, y = value)) +
+  ggplot2::facet_wrap(. ~ exp) +
+  ggplot2::ggtitle(expression(frac("p(exp|Purkinje)", "p(exp)"))) +
+  ggplot2::theme_classic() +
+  ggplot2::theme(axis.text.x = ggplot2::element_text(size=12, color = "black", angle = -90, vjust = 0.5, hjust = 0),
+                   axis.text.y = ggplot2::element_text(size=12, color = "black"),
+                   axis.title.y = ggplot2::element_text(size=15),
+                   axis.title.x = ggplot2::element_text(size=15),
+                   axis.ticks.x = ggplot2::element_blank(),
+                   plot.title = ggplot2::element_text(size=15),
+                   plot.background = ggplot2::element_blank(),
+                   legend.background = ggplot2::element_blank(),
+                   panel.background = ggplot2::element_blank(),
+                   panel.grid.major =  ggplot2::element_line(size = 0.1, colour = "black"),
+                   panel.border = ggplot2::element_rect(colour = "black", fill=NA, size=1),
+                   axis.line = ggplot2::element_line(size = 0, colour = "black"),
+                   panel.spacing = ggplot2::unit(0.1, "lines"),
+                   strip.text = ggplot2::element_text(size = 12),
+                   legend.title = ggplot2::element_blank(),
+                   # legend.position="none"
+    )
 
+plt
 
-dat <- df[df$exp %in% c("Purkinje", "Bergmann"),]
-ggplot2::ggplot(data = dat) +
-  ggplot2::geom_line(ggplot2::aes(x = distance, y = value, color = exp))
+ggplot2::ggsave(filename = "S2_slideseq_purk_cooccurance.pdf",
+                plot = plt,
+                device = "pdf",
+                path = figpath,
+                scale = 1,
+                width = 8,
+                height = 6,
+                units = c("in"))
 
 ```
 
-Pairwise cell type comparisons are identical. I don't necessarily see this symmetry with crawdad. What about the UBCs and Granule?
+## MLI1
+
+```{r}
+
+df <- occ[14,,]
+rownames(df) <- levels(slide$celltypes)
+df <- reshape2::melt(df)
+colnames(df) <- c("exp", "distance", "value")
+
+plt <- ggplot2::ggplot(data = df) +
+  ggplot2::geom_line(ggplot2::aes(x = distance, y = value)) +
+  ggplot2::facet_wrap(. ~ exp) +
+  ggplot2::ggtitle(expression(frac("p(exp|MLI1)", "p(exp)"))) +
+  ggplot2::theme_classic() +
+  ggplot2::theme(axis.text.x = ggplot2::element_text(size=12, color = "black", angle = -90, vjust = 0.5, hjust = 0),
+                   axis.text.y = ggplot2::element_text(size=12, color = "black"),
+                   axis.title.y = ggplot2::element_text(size=15),
+                   axis.title.x = ggplot2::element_text(size=15),
+                   axis.ticks.x = ggplot2::element_blank(),
+                   plot.title = ggplot2::element_text(size=15),
+                   plot.background = ggplot2::element_blank(),
+                   legend.background = ggplot2::element_blank(),
+                   panel.background = ggplot2::element_blank(),
+                   panel.grid.major =  ggplot2::element_line(size = 0.1, colour = "black"),
+                   panel.border = ggplot2::element_rect(colour = "black", fill=NA, size=1),
+                   axis.line = ggplot2::element_line(size = 0, colour = "black"),
+                   panel.spacing = ggplot2::unit(0.1, "lines"),
+                   strip.text = ggplot2::element_text(size = 12),
+                   legend.title = ggplot2::element_blank(),
+                   # legend.position="none"
+    )
+
+plt
+
+ggplot2::ggsave(filename = "S2_slideseq_mli1_cooccurance.pdf",
+                plot = plt,
+                device = "pdf",
+                path = figpath,
+                scale = 1,
+                width = 8,
+                height = 6,
+                units = c("in"))
+
+```
+
+## MLI2
+
+```{r}
+
+df <- occ[15,,]
+rownames(df) <- levels(slide$celltypes)
+df <- reshape2::melt(df)
+colnames(df) <- c("exp", "distance", "value")
+
+plt <- ggplot2::ggplot(data = df) +
+  ggplot2::geom_line(ggplot2::aes(x = distance, y = value)) +
+  ggplot2::facet_wrap(. ~ exp) +
+  ggplot2::ggtitle(expression(frac("p(exp|MLI2)", "p(exp)"))) +
+  ggplot2::theme_classic() +
+  ggplot2::theme(axis.text.x = ggplot2::element_text(size=12, color = "black", angle = -90, vjust = 0.5, hjust = 0),
+                   axis.text.y = ggplot2::element_text(size=12, color = "black"),
+                   axis.title.y = ggplot2::element_text(size=15),
+                   axis.title.x = ggplot2::element_text(size=15),
+                   axis.ticks.x = ggplot2::element_blank(),
+                   plot.title = ggplot2::element_text(size=15),
+                   plot.background = ggplot2::element_blank(),
+                   legend.background = ggplot2::element_blank(),
+                   panel.background = ggplot2::element_blank(),
+                   panel.grid.major =  ggplot2::element_line(size = 0.1, colour = "black"),
+                   panel.border = ggplot2::element_rect(colour = "black", fill=NA, size=1),
+                   axis.line = ggplot2::element_line(size = 0, colour = "black"),
+                   panel.spacing = ggplot2::unit(0.1, "lines"),
+                   strip.text = ggplot2::element_text(size = 12),
+                   legend.title = ggplot2::element_blank(),
+                   # legend.position="none"
+    )
+
+plt
+
+ggplot2::ggsave(filename = "S2_slideseq_mli2_cooccurance.pdf",
+                plot = plt,
+                device = "pdf",
+                path = figpath,
+                scale = 1,
+                width = 8,
+                height = 6,
+                units = c("in"))
+
+```
+
+
+Pairwise cell type comparisons are nearly identical. I don't necessarily see this symmetry with crawdad. What about the UBCs and Granule?
 
 ## Granule and UBCs
 
@@ -193,15 +348,229 @@ ggplot2::ggplot(data = dat) +
 
 # seqFISH co-occurance data
 
-note that the original seqFISH data in squidpy is in a difference scale, so might need to multiply intervals by 1000 to convert to micron scale
-
 ```{r}
+## the above dataset has been saved as an rda file and able to load here:
+data(seq)
 
-
+## convert to SP
+seq <- crawdad:::toSP(pos = seq[,c("x", "y")],
+                        celltypes = seq$celltypes)
+seq
 
 ```
 
+```{r}
+
+## folder on `brendan` branch
+figpath <- paste0(here::here(), "/plots/seqfish")
+
+```
+
+```{r}
+
+occ <- readRDS(file = "/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/multiscale_celltype_colocalization_analysis/data/seqfish/sp.seqfish.co_occurance_array.rds")
+occ[1,,]
+
+```
+
+## Intermediate mesoderm
+
+```{r}
+
+df <- occ[12,,]
+rownames(df) <- levels(seq$celltypes)
+df <- reshape2::melt(df)
+colnames(df) <- c("exp", "distance", "value")
+
+plt <- ggplot2::ggplot(data = df) +
+  ggplot2::geom_line(ggplot2::aes(x = distance, y = value)) +
+  ggplot2::facet_wrap(. ~ exp) +
+  ggplot2::ggtitle(expression(frac("p(exp|Intermediate mesoderm)", "p(exp)"))) +
+  ggplot2::theme_classic() +
+  ggplot2::theme(axis.text.x = ggplot2::element_text(size=12, color = "black", angle = -90, vjust = 0.5, hjust = 0),
+                   axis.text.y = ggplot2::element_text(size=12, color = "black"),
+                   axis.title.y = ggplot2::element_text(size=15),
+                   axis.title.x = ggplot2::element_text(size=15),
+                   axis.ticks.x = ggplot2::element_blank(),
+                   plot.title = ggplot2::element_text(size=15),
+                   plot.background = ggplot2::element_blank(),
+                   legend.background = ggplot2::element_blank(),
+                   panel.background = ggplot2::element_blank(),
+                   panel.grid.major =  ggplot2::element_line(size = 0.1, colour = "black"),
+                   panel.border = ggplot2::element_rect(colour = "black", fill=NA, size=1),
+                   axis.line = ggplot2::element_line(size = 0, colour = "black"),
+                   panel.spacing = ggplot2::unit(0.1, "lines"),
+                   strip.text = ggplot2::element_text(size = 6),
+                   legend.title = ggplot2::element_blank(),
+                   # legend.position="none"
+    )
+
+plt
+
+ggplot2::ggsave(filename = "S3_seqfish_intMeso_cooccurance.pdf",
+                plot = plt,
+                device = "pdf",
+                path = figpath,
+                scale = 1,
+                width = 8,
+                height = 6,
+                units = c("in"))
 
 
+# dat <- df[df$exp %in% c("Purkinje", "Bergmann", "MLI1", "MLI2"),]
+# ggplot2::ggplot(data = dat) +
+#   ggplot2::geom_line(ggplot2::aes(x = distance, y = value, color = exp))
+
+```
+
+## Lateral plate mesoderm
+
+```{r}
+
+df <- occ[13,,]
+rownames(df) <- levels(seq$celltypes)
+df <- reshape2::melt(df)
+colnames(df) <- c("exp", "distance", "value")
+
+plt <- ggplot2::ggplot(data = df) +
+  ggplot2::geom_line(ggplot2::aes(x = distance, y = value)) +
+  ggplot2::facet_wrap(. ~ exp) +
+  ggplot2::ggtitle(expression(frac("p(exp|Lateral plate mesoderm)", "p(exp)"))) +
+  ggplot2::theme_classic() +
+  ggplot2::theme(axis.text.x = ggplot2::element_text(size=12, color = "black", angle = -90, vjust = 0.5, hjust = 0),
+                   axis.text.y = ggplot2::element_text(size=12, color = "black"),
+                   axis.title.y = ggplot2::element_text(size=15),
+                   axis.title.x = ggplot2::element_text(size=15),
+                   axis.ticks.x = ggplot2::element_blank(),
+                   plot.title = ggplot2::element_text(size=15),
+                   plot.background = ggplot2::element_blank(),
+                   legend.background = ggplot2::element_blank(),
+                   panel.background = ggplot2::element_blank(),
+                   panel.grid.major =  ggplot2::element_line(size = 0.1, colour = "black"),
+                   panel.border = ggplot2::element_rect(colour = "black", fill=NA, size=1),
+                   axis.line = ggplot2::element_line(size = 0, colour = "black"),
+                   panel.spacing = ggplot2::unit(0.1, "lines"),
+                   strip.text = ggplot2::element_text(size = 6),
+                   legend.title = ggplot2::element_blank()
+                   # legend.position="none"
+    )
+
+plt
+
+ggplot2::ggsave(filename = "S3_seqfish_latMeso_cooccurance.pdf",
+                plot = plt,
+                device = "pdf",
+                path = figpath,
+                scale = 1,
+                width = 8,
+                height = 6,
+                units = c("in"))
+
+
+# dat <- df[df$exp %in% c("Purkinje", "Bergmann", "MLI1", "MLI2"),]
+# ggplot2::ggplot(data = dat) +
+#   ggplot2::geom_line(ggplot2::aes(x = distance, y = value, color = exp))
+
+```
+
+## Endothelium
+
+```{r}
+
+df <- occ[7,,]
+rownames(df) <- levels(seq$celltypes)
+df <- reshape2::melt(df)
+colnames(df) <- c("exp", "distance", "value")
+
+plt <- ggplot2::ggplot(data = df) +
+  ggplot2::geom_line(ggplot2::aes(x = distance, y = value)) +
+  ggplot2::facet_wrap(. ~ exp) +
+  ggplot2::ggtitle(expression(frac("p(exp|Endothelium)", "p(exp)"))) +
+  ggplot2::theme_classic() +
+  ggplot2::theme(axis.text.x = ggplot2::element_text(size=12, color = "black", angle = -90, vjust = 0.5, hjust = 0),
+                   axis.text.y = ggplot2::element_text(size=12, color = "black"),
+                   axis.title.y = ggplot2::element_text(size=15),
+                   axis.title.x = ggplot2::element_text(size=15),
+                   axis.ticks.x = ggplot2::element_blank(),
+                   plot.title = ggplot2::element_text(size=15),
+                   plot.background = ggplot2::element_blank(),
+                   legend.background = ggplot2::element_blank(),
+                   panel.background = ggplot2::element_blank(),
+                   panel.grid.major =  ggplot2::element_line(size = 0.1, colour = "black"),
+                   panel.border = ggplot2::element_rect(colour = "black", fill=NA, size=1),
+                   axis.line = ggplot2::element_line(size = 0, colour = "black"),
+                   panel.spacing = ggplot2::unit(0.1, "lines"),
+                   strip.text = ggplot2::element_text(size = 6),
+                   legend.title = ggplot2::element_blank()
+                   # legend.position="none"
+    )
+
+plt
+
+ggplot2::ggsave(filename = "S3_seqfish_endo_cooccurance.pdf",
+                plot = plt,
+                device = "pdf",
+                path = figpath,
+                scale = 1,
+                width = 8,
+                height = 6,
+                units = c("in"))
+
+
+# dat <- df[df$exp %in% c("Purkinje", "Bergmann", "MLI1", "MLI2"),]
+# ggplot2::ggplot(data = dat) +
+#   ggplot2::geom_line(ggplot2::aes(x = distance, y = value, color = exp))
+
+```
+
+## Haematoendothelial progenitors
+
+```{r}
+
+df <- occ[11,,]
+rownames(df) <- levels(seq$celltypes)
+df <- reshape2::melt(df)
+colnames(df) <- c("exp", "distance", "value")
+
+plt <- ggplot2::ggplot(data = df) +
+  ggplot2::geom_line(ggplot2::aes(x = distance, y = value)) +
+  ggplot2::facet_wrap(. ~ exp) +
+  ggplot2::ggtitle(expression(frac("p(exp|Haematoendothelial progenitors)", "p(exp)"))) +
+  ggplot2::theme_classic() +
+  ggplot2::theme(axis.text.x = ggplot2::element_text(size=12, color = "black", angle = -90, vjust = 0.5, hjust = 0),
+                   axis.text.y = ggplot2::element_text(size=12, color = "black"),
+                   axis.title.y = ggplot2::element_text(size=15),
+                   axis.title.x = ggplot2::element_text(size=15),
+                   axis.ticks.x = ggplot2::element_blank(),
+                   plot.title = ggplot2::element_text(size=15),
+                   plot.background = ggplot2::element_blank(),
+                   legend.background = ggplot2::element_blank(),
+                   panel.background = ggplot2::element_blank(),
+                   panel.grid.major =  ggplot2::element_line(size = 0.1, colour = "black"),
+                   panel.border = ggplot2::element_rect(colour = "black", fill=NA, size=1),
+                   axis.line = ggplot2::element_line(size = 0, colour = "black"),
+                   panel.spacing = ggplot2::unit(0.1, "lines"),
+                   strip.text = ggplot2::element_text(size = 6),
+                   legend.title = ggplot2::element_blank()
+                   # legend.position="none"
+    )
+
+plt
+
+ggplot2::ggsave(filename = "S3_seqfish_haem_cooccurance.pdf",
+                plot = plt,
+                device = "pdf",
+                path = figpath,
+                scale = 1,
+                width = 8,
+                height = 6,
+                units = c("in"))
+
+
+# dat <- df[df$exp %in% c("Purkinje", "Bergmann", "MLI1", "MLI2"),]
+# ggplot2::ggplot(data = dat) +
+#   ggplot2::geom_line(ggplot2::aes(x = distance, y = value, color = exp))
+
+```
 
 
