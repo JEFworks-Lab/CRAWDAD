@@ -52,3 +52,5 @@ Suggests:
   dplyr
 VignetteBuilder:
   knitr
+
+

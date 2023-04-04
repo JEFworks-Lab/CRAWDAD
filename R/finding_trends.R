@@ -379,8 +379,6 @@ selectSubsets <- function(binomMatrix,
 #'
 #' @return A list that contains a dataframe for each reference cell type, where the dataframe contains the significance values for each neighbor cell type at each resolution
 #' 
-#' @examples 
-#' 
 #' @export
 findTrends <- function(cells,
                        dist = 50,
