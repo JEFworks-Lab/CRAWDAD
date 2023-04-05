@@ -9,6 +9,10 @@
 #' @param ncores number of cores for parallelization (default 1)
 #' @param seed set seed for shuffling (if more than 1 permutation, each shuffling permutation has a seed equal to the permutation number)
 #' @param verbose Boolean for verbosity (default TRUE)
+#' 
+#' @examples  
+#' data(sim)
+#' makeShuffledCells(sim, resolutions = c(50, 100, 200, 300, 400, 500))
 #'
 #' @export
 makeShuffledCells <- function(cells,
@@ -68,7 +72,7 @@ makeShuffledCells <- function(cells,
       options(scipen = 999)
       
       ## shuffle within grid once
-      randcelltype <- unlist(parallel::mclapply(1:length(grid), function(i) {
+      randcelltype <- unlist(BiocParallel::bplapply(1:length(grid), function(i) {
         ## sometimes can be on boundary, so just pick first one
         int <- sf::st_intersection(cells, grid[[i]])
         
@@ -84,7 +88,7 @@ makeShuffledCells <- function(cells,
         shuffled_cells <- as.character(shuffled_cells)
         names(shuffled_cells) <- rownames(int)
         return(shuffled_cells)
-      }, mc.cores=ncores))
+      }, BPPARAM=BiocParallel::SnowParam(workers=ncores)))
       
       
       
@@ -165,7 +169,7 @@ evaluateSignificance <- function(cells,
   if(returnMeans){
     
     ## for each resolution:
-    results <- do.call(rbind, parallel::mclapply(randomcellslist, function(cellsAtRes){
+    results <- do.call(rbind, BiocParallel::bplapply(randomcellslist, function(cellsAtRes){
       
       ## Iterate through each permutation of a given resolution and 
       ## produce the scores for each neighbor cell type. 
@@ -210,13 +214,13 @@ evaluateSignificance <- function(cells,
       ## returning the mean Z score across permutations for the given resolution
       return(colMeans(scores))
       
-    }, mc.cores = ncores))
+    }, BPPARAM=BiocParallel::SnowParam(workers=ncores)))
   
     ## otherwise, returns a list
   } else {
     
     ## for each resolution:
-    results <- parallel::mclapply(randomcellslist, function(cellsAtRes){
+    results <- BiocParallel::bplapply(randomcellslist, function(cellsAtRes){
       
       ## Iterate through each permutation of a given resolution and 
       ## produce the scores for each neighbor cell type. 
@@ -261,7 +265,7 @@ evaluateSignificance <- function(cells,
       ## returning the data.frame of Z scores for each permutation (row)
       return(scores)
       
-    }, mc.cores = ncores)
+    }, BPPARAM=BiocParallel::SnowParam(workers=ncores))
     
     ## will be list of data.frame in this case
     ## each data.frame is a resolution
@@ -332,7 +336,7 @@ binomialTestMatrix <- function(cells,
   ## compute pvals for a binomial test for each cell type neighbor
   ## As we loop through each cell, add the pvals for each cell type as a new row of a matrix
   message("Performing tests...")
-  results <- do.call(rbind, parallel::mclapply(rownames(cells), function(c){
+  results <- do.call(rbind, BiocParallel::bplapply(rownames(cells), function(c){
     
     cells.inbuffer <- sf::st_intersection(cells, refs.buffer[c,]$geometry)
     x <- table(cells.inbuffer$celltypes)
@@ -342,7 +346,7 @@ binomialTestMatrix <- function(cells,
     pvals <- mapply(binom, x, n, p)
     pvals
     
-  }, mc.cores = ncores))
+  }, BPPARAM=BiocParallel::SnowParam(workers=ncores)))
   
   rownames(results) <- rownames(cells)
   colnames(results) <- names(p)
@@ -396,7 +400,7 @@ selectSubsets <- function(binomMatrix,
     id
   }))
   
-  subsets <- parallel::mclapply(rownames(combos), function(i){
+  subsets <- BiocParallel::bplapply(rownames(combos), function(i){
     
     cells.ref.ix <- levels(cell.types)[as.numeric(combos[i,1])]
     cells.neighbors.ix <- levels(cell.types)[as.numeric(combos[i,2])]
@@ -423,7 +427,7 @@ selectSubsets <- function(binomMatrix,
     
     return(sub.cells)
     
-  }, mc.cores = ncores)
+  }, BPPARAM=BiocParallel::SnowParam(workers=ncores))
   
   if(verbose){
     total_t <- round(difftime(Sys.time(), start_time, units = "mins"), 2)
@@ -454,7 +458,10 @@ selectSubsets <- function(binomMatrix,
 #'
 #' @return A list that contains a dataframe for each reference cell type, where the dataframe contains the significance values for each neighbor cell type at each resolution
 #' 
-#' @examples 
+#' @examples
+#' data(sim)
+#' shuffle.list <- makeShuffledCells(sim, resolutions = c(50, 100, 200, 300, 400, 500))
+#' findTrends(sim, dist = 100, shuffle.list = shuffle.list, ncores = 2)
 #' 
 #' @export
 findTrends <- function(cells,

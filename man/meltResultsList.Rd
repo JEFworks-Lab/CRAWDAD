@@ -7,7 +7,7 @@
 meltResultsList(resultsList, id = NA, withPerms = FALSE)
 }
 \arguments{
-\item{resultsList}{list output from findTrendsv2}
+\item{resultsList}{list output from \code{findTrends()}}
 
 \item{id}{id desired, can add a column that contains an additional identifier for the results. Can use these for plotting and comparing different things}
 

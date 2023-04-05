@@ -5,6 +5,9 @@ date: "9/29/2022"
 output: html_document
 ---
 
+This code extracts the protein expression matrix and cell type annotations and spatial coordinates from each Seurat object and saves them as csv.gz files.
+The cell type meta data csv files are stored; `/data/spleen/` on both `brendan` and `devel` branch. Note that the names of these files have been changed slightly to the 4 letter code only as a file prefix.
+
 ```{r}
 
 d <- t(as.matrix(HBM389.PKHL.936@assays$RawExpr@counts))

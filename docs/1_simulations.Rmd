@@ -116,7 +116,7 @@ plt <- crawdad::vizAllClusters(cells = p,
   ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
 plt
 
-# ggplot2::ggsave(filename = "1A_sim_tissue_legend.pdf",
+# ggplot2::ggsave(filename = "1B_sim_tissue_legend.pdf",
 #                 plot = plt,
 #                 device = "pdf",
 #                 path = figpath,
@@ -198,7 +198,7 @@ plt <- ggplot2::ggplot(dat, ggplot2::aes(x=resolution, y=Z, col=neighbor)) +
     )
 plt
 
-ggplot2::ggsave(filename = "1B_sim_tissue_trends.pdf",
+ggplot2::ggsave(filename = "1C_sim_tissue_trends.pdf",
                 plot = plt,
                 device = "pdf",
                 path = figpath,
@@ -209,159 +209,19 @@ ggplot2::ggsave(filename = "1B_sim_tissue_trends.pdf",
 
 ```
 
-
-# ==========================
-# OLD
-
 ```{r}
 
-repoPath <- "/Users/brendan/Desktop/PostDoc/work/HuBMAP/repos/multiscale_celltype_colocalization_analysis/"
-
-```
-
-```{r}
-
-figPath <- paste0(repoPath, "plots/sim/")
-
-```
-
-```{r}
-
-library(parallel)
-library(sf)
-library(sp)
-library(ggplot2)
-library(assertthat)
-library(reshape2)
-library(MASS)
-library(stats)
-library(dplyr)
-
-source(paste0(repoPath, "R/functions.R"))
-
-```
-
-## pairwise simulation
-
-```{r}
-
-## initialize circle params
-
-locs <- list(
-  c(0.5, 0.5)
-  )
-
-cts <- list(
-  list(outer = "B", inner = c("C"))
-  )
-
-probs <- list(
-  list(outer = c(1), inner = c(1))
-  )
-
-## background params
-s <- 5000
-cb <- c("A")
-pb <- c(1)
-
-## outer ring approx 0.10 or 3100um = 310 micron width
-## inner approx 310 microns across (3100*0.10)
-rads <- replicate(1, list(outer = 0.15, inner = 0.05), simplify=FALSE)
-
-
-pos <- simulate_circles(simulate_background(size = s, cts = cb, prob = pb),
-                        locs, radii = rads, cts, probs)
-
-
-pos$x <- pos$x * 3100
-pos$y <- pos$y * 3100
-
-plt <- vizAllClusters(object = pos[,c("x", "y")],
-              clusters = pos[,c("type")], s = 3)
-
+plt <- vizTrends.heatmap(dat = results)
 plt
 
-ggplot2::ggsave(plot = plt,
-                filename = paste0(figPath, "sim.pairwise.circle.png"),
-                device = "png",
-                dpi = 300,
+ggplot2::ggsave(filename = "1C_sim_tissue_trends_heatmap.pdf",
+                plot = plt,
+                device = "pdf",
+                path = figpath,
                 scale = 1,
-                width = 6,
+                width = 8,
                 height = 6,
-                units = c("in")
-                )
-
-
-resolutions <- c(100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000, 6000)
-
-```
-
-# subset simulation
-
-```{r}
-
-## initialize circle params
-
-## one circle; but set up for two rings
-## so have two circles with same center
-## make first circle the largest
-## then place the second smaller circle in the center
-
-locs <- list(
-  c(0.5, 0.5),
-  c(0.5, 0.5)
-  )
-
-cts <- list(
-  list(outer = c("C"), inner = c("C")),
-  list(outer = c("A"), inner = c("B"))
-  )
-
-probs <- list(
-  list(outer = c(1), inner = c(1)),
-  list(outer = c(1), inner = c(1))
-  )
-
-replacement <- list(
-  list(outer = TRUE, inner = TRUE),
-  list(outer = TRUE, inner = TRUE)
-  )
-
-rads <- list(
-  list(outer = c(0.14), inner = c(0.10)),
-  list(outer = c(0.10), inner = c(0.08))
-)
-
-## background params
-s <- 5000
-cb <- c("A", "B", "C")
-pb <- c(0.36, 0.30, 0.34)
-
-pos_subset <- simulate_circles(pos = simulate_background(size = s, cts = cb, prob = pb),
-                        locs = locs, radii = rads, cts = cts, probs = probs)
-
-
-pos_subset$x <- pos_subset$x * 3100
-pos_subset$y <- pos_subset$y * 3100
-
-plt <- vizAllClusters(object = pos_subset[,c("x", "y")],
-                      clusters = pos_subset[,c("type")], s = 3)
-
-plt
-
-ggplot2::ggsave(plot = plt,
-                filename = paste0(figPath, "sim.subset.circle.png"),
-                device = "png",
-                dpi = 300,
-                scale = 1,
-                width = 6,
-                height = 6,
-                units = c("in")
-                )
-
-resolutions <- c(100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000, 6000)
-sub.dist <- 300
-neigh.dist <- 100
+                units = c("in"))
 
 ```
 

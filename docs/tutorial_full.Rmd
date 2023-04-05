@@ -1,7 +1,7 @@
 ---
 title: "CRAWDAD Tutorial"
 author: "Brendan F. Miller, Jean Fan"
-date: "3/16/2023"
+date: "2/15/2023"
 output: html_document
 vignette: >
   %\VignetteIndexEntry{CRAWDAD Vignette}
@@ -50,6 +50,100 @@ ncores <- 7
 ```
 
 ## Make simulated dataset
+
+```{r, eval=FALSE}
+
+## cells
+set.seed(1)
+size <- 5000
+x <- runif(size, min = 0, max = 1000)
+y <- runif(size, min = 0, max = 1000)
+p <- data.frame(x = x, y = y, type='D')
+rownames(p) <- paste0('cell', 1:size)
+
+## structures
+
+## large A circles
+as <- c(250, 250, 750, 750)
+bs <- c(250, 750, 250, 750)
+invisible(sapply(1:4, function(i) {
+  a <- as[i]
+  b <- bs[i]
+  ro <- 150
+  co <- 'A'
+  po <- 1
+  c1o <- rownames(p[((p$x-a)^2 + (p$y - b)^2 < ro^2),])
+  p[c1o,]$type <<- sample(co, size = length(c1o), replace = TRUE, prob = po)
+}))
+
+## B blobs inside A blobs
+invisible(sapply(1:4, function(i) {
+  ro <- 80
+  co <- 'B'
+  po <- 1
+  
+  ## inside structure
+  a <- as[i]
+  b <- bs[i]
+  c1o <- rownames(p[((p$x-a)^2 + (p$y - b)^2 < ro^2),])
+  p[c1o,]$type <<- sample(co, size = length(c1o), replace = TRUE, prob = po)
+}))
+
+## add some small B blobs elsewhere
+as2 <- c(100, 100, 900, 900)
+bs2 <- c(100, 900, 100, 900)
+invisible(sapply(1:4, function(i) {
+  ro <- 50
+  co <- 'B'
+  po <- 1
+  ## outside structure
+  a <- as2[i]
+  b <- bs2[i]
+  c1o <- rownames(p[((p$x-a)^2 + (p$y - b)^2 < ro^2),])
+  p[c1o,]$type <<- sample(co, size = length(c1o), replace = TRUE, prob = po)
+}))
+
+## add smaller C blobs in the B blobs in the A blobs
+invisible(sapply(1:4, function(i) {
+  ro <- 40
+  co <- 'C'
+  po <- 1
+  
+  ## inside structure
+  a <- as[i]
+  b <- bs[i]
+  c1o <- rownames(p[((p$x-a)^2 + (p$y - b)^2 < ro^2),])
+  p[c1o,]$type <<- sample(co, size = length(c1o), replace = TRUE, prob = po)
+}))
+
+## add some small C blobs elsewhere
+as3 <- c(100, 500, 500, 900)
+bs3 <- c(500, 100, 900, 500)
+invisible(sapply(1:4, function(i) {
+  ro <- 50
+  co <- 'C'
+  po <- 1
+  ## outside structure
+  a <- as3[i]
+  b <- bs3[i]
+  c1o <- rownames(p[((p$x-a)^2 + (p$y - b)^2 < ro^2),])
+  p[c1o,]$type <<- sample(co, size = length(c1o), replace = TRUE, prob = po)
+}))
+
+## visualize
+plt <- crawdad::vizAllClusters(cells = p,
+                               coms = p$type,
+                               title = "sim",
+                               axisAdj = 1, s = 6, a = 0.5) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
+plt
+
+## convert to SP
+cells <- crawdad::toSP(pos = p[,c("x", "y")],
+                        celltypes = p$type)
+cells
+
+```
 
 ```{r}
 
