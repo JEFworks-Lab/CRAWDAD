@@ -157,7 +157,130 @@ Note that the `.gitignore` files for each branch reflect the differences in the 
 │   └── vizTrends.Rd
 ├── plots
 │   ├── seqfish
-│   └── slideseq
+│   │   ├── 2B_endothelium_tissue_grid.pdf
+│   │   ├── 2B_mesoderm_tissue_grid.pdf
+│   │   ├── 2_seqfish_endothelium_tissue.pdf
+│   │   ├── 2_seqfish_endothelium_tissue_legend.pdf
+│   │   ├── 2_seqfish_endothelium_tissue_zoom.pdf
+│   │   ├── 2_seqfish_mesoderm_tissue.pdf
+│   │   ├── 2_seqfish_mesoderm_tissue_legend.pdf
+│   │   ├── 2_seqfish_mesoderm_tissue_zoom.pdf
+│   │   ├── 2_seqfish_trends_permutations.pdf
+│   │   ├── 2_seqfish_trends_permutations_legend.pdf
+│   │   ├── 2_slideseq_trends_heatmap.pdf
+│   │   ├── S3_seqfish_endo_cooccurance.pdf
+│   │   ├── S3_seqfish_endo_ripleys.pdf
+│   │   ├── S3_seqfish_haem_cooccurance.pdf
+│   │   ├── S3_seqfish_haem_ripleys.pdf
+│   │   ├── S3_seqfish_intMeso_cooccurance.pdf
+│   │   ├── S3_seqfish_intMeso_ripleys.pdf
+│   │   ├── S3_seqfish_latMeso_cooccurance.pdf
+│   │   ├── S3_seqfish_latplate_ripleys.pdf
+│   │   └── S3_seqfish_merge_ripleys.pdf
+│   ├── sim
+│   │   ├── 1A_sim_tissue_legend.pdf
+│   │   ├── 1B_sim_tissue_trends.pdf
+│   │   └── 1B_sim_tissue_trends_heatmap.pdf
+│   ├── slideseq
+│   │   ├── 2A_slideseq_purk_berg_tissue_grid.pdf
+│   │   ├── 2_slideseq_bergmann_trends.pdf
+│   │   ├── 2_slideseq_mli1_trends.pdf
+│   │   ├── 2_slideseq_mli2_trends.pdf
+│   │   ├── 2_slideseq_purk_berg_mli_trends_heatmap.pdf
+│   │   ├── 2_slideseq_purk_berg_tissue.pdf
+│   │   ├── 2_slideseq_purk_berg_tissue_legend.pdf
+│   │   ├── 2_slideseq_purk_berg_tissue_zoom.pdf
+│   │   ├── 2_slideseq_purkinje_trends.pdf
+│   │   ├── S1_slideseq_bergmann_trends_all.pdf
+│   │   ├── S1_slideseq_mli1_trends_all.pdf
+│   │   ├── S1_slideseq_mli2_trends_all.pdf
+│   │   ├── S1_slideseq_purk_berg_mli_trends_heatmap_all.pdf
+│   │   ├── S1_slideseq_purk_berg_tissue_sep.pdf
+│   │   ├── S1_slideseq_purk_berg_tissue_sep_legend.pdf
+│   │   ├── S1_slideseq_purkinje_trends_all.pdf
+│   │   ├── S2_slideseq_berg_cooccurance.pdf
+│   │   ├── S2_slideseq_berg_ripleys.pdf
+│   │   ├── S2_slideseq_mli1_cooccurance.pdf
+│   │   ├── S2_slideseq_mli1_ripleys.pdf
+│   │   ├── S2_slideseq_mli2_cooccurance.pdf
+│   │   ├── S2_slideseq_mli2_ripleys.pdf
+│   │   ├── S2_slideseq_purk_cooccurance.pdf
+│   │   └── S2_slideseq_purk_ripleys.pdf
+│   ├── spleen
+│   │   ├── 3B_spleen_pkhl_all_trends_heatmap.pdf
+│   │   ├── 3B_spleen_pkhl_grid_tissue.pdf
+│   │   ├── 3_spleen_pkhl_cd4_near_folB_trends.pdf
+│   │   ├── 3_spleen_pkhl_cd4_near_neutro_trends.pdf
+│   │   ├── 3_spleen_pkhl_cd4_subset_trends_heatmap.pdf
+│   │   ├── 3_spleen_pkhl_cd4_subsets_tissue.pdf
+│   │   ├── 3_spleen_pkhl_cd4_subsets_tissue_legend.pdf
+│   │   ├── 3_spleen_pkhl_cd4_trends.pdf
+│   │   ├── 3_spleen_pkhl_cd4_trends_heatmap.pdf
+│   │   ├── 3_spleen_pkhl_grid_38_39_tissue_zoom.pdf
+│   │   ├── 3_spleen_pkhl_grid_66_77_tissue_zoom.pdf
+│   │   ├── 3_spleen_pkhl_tissue.pdf
+│   │   ├── 3_spleen_pkhl_tissue_legend.pdf
+│   │   ├── S11_spleen_fsld_tissue.pdf
+│   │   ├── S11_spleen_ksfb_tissue.pdf
+│   │   ├── S11_spleen_ngpl_tissue.pdf
+│   │   ├── S11_spleen_pbvn_tissue.pdf
+│   │   ├── S11_spleen_xxcd_tissue.pdf
+│   │   ├── S12_spleen_cd4_near_folB_trends_fsld.pdf
+│   │   ├── S12_spleen_cd4_near_folB_trends_heatmap.pdf
+│   │   ├── S12_spleen_cd4_near_folB_trends_ksfb.pdf
+│   │   ├── S12_spleen_cd4_near_folB_trends_ngpl.pdf
+│   │   ├── S12_spleen_cd4_near_folB_trends_pbvn.pdf
+│   │   ├── S12_spleen_cd4_near_folB_trends_xxcd.pdf
+│   │   ├── S12_spleen_cd4_near_neutro_trends_fsld.pdf
+│   │   ├── S12_spleen_cd4_near_neutro_trends_heatmap.pdf
+│   │   ├── S12_spleen_cd4_near_neutro_trends_ksfb.pdf
+│   │   ├── S12_spleen_cd4_near_neutro_trends_ngpl.pdf
+│   │   ├── S12_spleen_cd4_near_neutro_trends_pbvn.pdf
+│   │   ├── S12_spleen_cd4_near_neutro_trends_xxcd.pdf
+│   │   ├── S12_spleen_cd4_trends_heatmap.pdf
+│   │   ├── S12_spleen_fsld_cd4_folB_podo_trends.pdf
+│   │   ├── S12_spleen_ksfb_cd4_folB_podo_trends.pdf
+│   │   ├── S12_spleen_ngpl_cd4_folB_podo_trends.pdf
+│   │   ├── S12_spleen_pbvn_cd4_folB_podo_trends.pdf
+│   │   ├── S12_spleen_xxcd_cd4_folB_podo_trends.pdf
+│   │   ├── S4_spleen_pkhl_tissue_all.pdf
+│   │   └── S4_spleen_pkhl_tissue_all_legend.pdf
+│   ├── squidpy
+│   │   ├── seqfish.nhood.r100.pdf
+│   │   └── slideseq.nhood.r100.png
+│   └── supplementary
+│       ├── cluster_corr_heatmap_KSFB_vs_NGPL.pdf
+│       ├── cluster_corr_heatmap_PBVN_vs_FSLD.pdf
+│       ├── cluster_corr_heatmap_PKHL_vs_KSFB.pdf
+│       ├── cluster_corr_heatmap_PKHL_vs_PBVN.pdf
+│       ├── cluster_corr_heatmap_PKHL_vs_XXCD.pdf
+│       ├── cluster_exp_FSLD_annot.pdf
+│       ├── cluster_exp_KSFB_annot.pdf
+│       ├── cluster_exp_NGPL_annot.pdf
+│       ├── cluster_exp_PBVN_annot.pdf
+│       ├── cluster_exp_PKHL_annot.pdf
+│       ├── cluster_exp_PKHL_clusters.pdf
+│       ├── cluster_exp_XXCD_annot.pdf
+│       ├── lda_FSLD.predictedBy.PBVN_harmonizedTo_FSLD_posterior.pdf
+│       ├── lda_KSFB.predictedBy.PKHL_posterior.pdf
+│       ├── lda_NGPL.predictedBy.KSFB_harmonizedTo_NGPL_posterior.pdf
+│       ├── lda_PBVN.predictedBy.PKHL_posterior.pdf
+│       ├── lda_XXCD.predictedBy.PKHL_posterior.pdf
+│       ├── spleen_tissue_FSLD_annots.pdf
+│       ├── spleen_tissue_KSFB_annots.pdf
+│       ├── spleen_tissue_NGPL_annots.pdf
+│       ├── spleen_tissue_PBVN_annots.pdf
+│       ├── spleen_tissue_PKHL_annots.pdf
+│       ├── spleen_tissue_PKHL_clusters.pdf
+│       ├── spleen_tissue_XXCD_annots.pdf
+│       ├── spleen_tsne_datasets_FSLD_annots_beforeHarmonyTsne.pdf
+│       ├── spleen_tsne_datasets_KSFB_annots_beforeHarmonyTsne.pdf
+│       ├── spleen_tsne_datasets_NGPL_annots_beforeHarmonyTsne.pdf
+│       ├── spleen_tsne_datasets_PBVN_annots_beforeHarmonyTsne.pdf
+│       ├── spleen_tsne_datasets_PKHL_annots_beforeHarmonyTsne.pdf
+│       ├── spleen_tsne_datasets_XXCD_annots_beforeHarmonyTsne.pdf
+│       ├── spleen_tsne_datasets_all_beforeHarmonyTsne.pdf
+│       └── spleen_tsne_datasets_separate_beforeHarmonyTsne.pdf
 └── vignettes
     └── tutorial.Rmd
 ```
@@ -167,6 +290,7 @@ Note that the `.gitignore` files for each branch reflect the differences in the 
 ```
 ├── DESCRIPTION
 ├── NAMESPACE
+├── NEWS.md
 ├── R
 │   ├── comparing_trends.R
 │   ├── data.R
@@ -176,12 +300,23 @@ Note that the `.gitignore` files for each branch reflect the differences in the 
 │   ├── simulations.R
 │   └── visualization.R
 ├── README.md
+├── codex
+│   ├── codex_akoya_data_functions.R
+│   ├── codex_annotation.Rmd
+│   └── codex_data_to_csv.Rmd
 ├── data
+│   ├── CODEX
+│   │   ├── ProposedAnnotations.xlsx
+│   │   ├── README.md
+│   │   ├── akoya_output_paths.csv
+│   │   └── metadata.xlsx
 │   ├── pkhl.rda
 │   ├── seq.rda
 │   ├── seqfish
+│   │   ├── seqfish.meta.csv
 │   │   ├── seqfish.meta.csv.gz
 │   │   ├── sp.seqfish.binomMat.near.subdist100.rds
+│   │   ├── sp.seqfish.co_occurance_array.rds
 │   │   ├── sp.seqfish.pairwise.50-300.results.res100-6000.removeDups.rds
 │   │   ├── sp.seqfish.pairwise.results.dist100.res100-6000.rds
 │   │   ├── sp.seqfish.shuffled_res100-6000.rds
@@ -204,19 +339,26 @@ Note that the `.gitignore` files for each branch reflect the differences in the 
 │   │   ├── sim.subsets.triplet.near.binom.subdist100.dist100.results.res100-6000.removeDups.rds
 │   │   ├── sim.subsets.triplet.near.binom.subdist300.dist300.results.res100-6000.removeDups.rds
 │   │   └── sim.subsets.triplet.near.binom.subdist50.dist50.results.res100-6000.removeDups.rds
+│   ├── sim.rda
 │   ├── slide.rda
 │   ├── slideseq
+│   │   ├── slideseq.puck190926_08.rctd.co_occurance_array.rds
+│   │   ├── slideseq.puck190926_08.rctd.co_occurance_intervals.rds
 │   │   ├── slideseq.puck190926_08.rctd.meta.csv.gz
 │   │   ├── slideseqPuck.190926_08.binomMat.near.subdist100.rds
+│   │   ├── slideseqPuck.190926_08.pairwise.results.dist100.res100-6000.rds
 │   │   ├── slideseqPuck.190926_08.pairwise.results.dist100.res30-6000.rds
 │   │   ├── slideseqPuck.190926_08.rctd.near.binom.subdist100.dist100.results.removeDups.rds
 │   │   ├── slideseqPuck.190926_08.rctd.pairwise.30-300.results.removeDups.rds
 │   │   ├── slideseqPuck.190926_08.rctd.shuffled_res30-6000.rds
 │   │   ├── slideseqPuck.190926_08.rctd.subsets.near.subdist100.rds
 │   │   ├── slideseqPuck.190926_08.rctd.subsets.near.subdist200.rds
+│   │   ├── slideseqPuck.190926_08.shuffled_res100-6000.rds
 │   │   ├── slideseqPuck.190926_08.shuffled_res30-6000.rds
+│   │   ├── slideseqPuck.190926_08.subset.results.dist100.res100-6000.rds
 │   │   ├── slideseqPuck.190926_08.subset.results.dist100.res30-6000.rds
-│   │   └── slideseqPuck.190926_08.subsets.near.subdist100.rds
+│   │   ├── slideseqPuck.190926_08.subsets.near.subdist100.rds
+│   │   └── sp.seqfish.co_occurance_intervals.rds
 │   └── spleen
 │       ├── FSLD
 │       │   ├── fsld.folBcombined.shuffled_res100-6000.rds
@@ -264,14 +406,21 @@ Note that the `.gitignore` files for each branch reflect the differences in the 
 ├── docs
 │   ├── 1_simulations.Rmd
 │   ├── 2_seqfish.Rmd
-│   ├── 3_slideseq.Rmd
-│   ├── 4_spleen.Rmd
+│   ├── 2_slideseq.Rmd
+│   ├── 3_spleen.Rmd
 │   ├── _config.yml
-│   └── index.md
+│   ├── index.md
+│   └── tutorial_full.Rmd
+├── inst
+│   └── CITATION
 ├── man
 │   ├── binomialTestMatrix.Rd
 │   ├── diffTrendTesting.Rd
 │   ├── evaluateSignificance.Rd
+│   ├── filterCells.Rd
+│   ├── filterChangeTrends.Rd
+│   ├── filterCoTrends.Rd
+│   ├── filterSepTrends.Rd
 │   ├── findTrends.Rd
 │   ├── getNeighbors.Rd
 │   ├── makeShuffledCells.Rd
@@ -282,6 +431,8 @@ Note that the `.gitignore` files for each branch reflect the differences in the 
 │   ├── selectLabels.Rd
 │   ├── selectSubsets.Rd
 │   ├── seq.Rd
+│   ├── seuratToSP.Rd
+│   ├── sim.Rd
 │   ├── simulate_background.Rd
 │   ├── simulate_circles.Rd
 │   ├── slide.Rd
@@ -289,78 +440,140 @@ Note that the `.gitignore` files for each branch reflect the differences in the 
 │   ├── toSP.Rd
 │   ├── vizAllClusters.Rd
 │   ├── vizEachCluster.Rd
-│   └── vizTrends.Rd
+│   ├── vizTrends.Rd
+│   └── vizTrends.heatmap.Rd
 ├── misc
+│   ├── compare_ripleys.R
+│   ├── compare_ripleys.Rmd
 │   ├── misc.R
 │   └── xenium_init.R
+├── multiscale_celltype_colocalization_analysis.Rproj
 ├── plots
 │   ├── seqfish
-│   │   ├── 2A_endothelium_tissue_legend.pdf
-│   │   ├── 2A_endothelium_tissue_zoom.pdf
-│   │   ├── 2A_mesoderm_tissue.pdf
-│   │   ├── 2A_mesoderm_tissue_legend.pdf
-│   │   ├── 2A_mesoderm_tissue_zoom.pdf
-│   │   ├── 2B_endothelium_trends.pdf
-│   │   └── 2B_mesoderm_trends.pdf
+│   │   ├── 2B_endothelium_tissue_grid.pdf
+│   │   ├── 2B_mesoderm_tissue_grid.pdf
+│   │   ├── 2_seqfish_endothelium_tissue.pdf
+│   │   ├── 2_seqfish_endothelium_tissue_legend.pdf
+│   │   ├── 2_seqfish_endothelium_tissue_zoom.pdf
+│   │   ├── 2_seqfish_mesoderm_tissue.pdf
+│   │   ├── 2_seqfish_mesoderm_tissue_legend.pdf
+│   │   ├── 2_seqfish_mesoderm_tissue_zoom.pdf
+│   │   ├── 2_seqfish_trends_permutations.pdf
+│   │   ├── 2_seqfish_trends_permutations_legend.pdf
+│   │   ├── 2_slideseq_trends_heatmap.pdf
+│   │   ├── S3_seqfish_endo_cooccurance.pdf
+│   │   ├── S3_seqfish_endo_ripleys.pdf
+│   │   ├── S3_seqfish_haem_cooccurance.pdf
+│   │   ├── S3_seqfish_haem_ripleys.pdf
+│   │   ├── S3_seqfish_intMeso_cooccurance.pdf
+│   │   ├── S3_seqfish_intMeso_ripleys.pdf
+│   │   ├── S3_seqfish_latMeso_cooccurance.pdf
+│   │   ├── S3_seqfish_latplate_ripleys.pdf
+│   │   └── S3_seqfish_merge_ripleys.pdf
 │   ├── sim
-│   │   ├── sim.pairwise.circle.png
-│   │   ├── sim.pairwise.d100.trends.pdf
-│   │   ├── sim.subset.circle.png
-│   │   ├── sim.subsets.pairwise.d100.trends.pdf
-│   │   ├── sim.subsets.pairwise.d200.trends.pdf
-│   │   ├── sim.subsets.pairwise.d50.trends.pdf
-│   │   ├── sim.subsets.triplet.d100.sd100.trends.pdf
-│   │   ├── sim.subsets.triplet.d300.sd300.trends.pdf
-│   │   └── sim.subsets.triplet.d50.sd50.trends.pdf
+│   │   ├── 1A_sim_tissue_legend.pdf
+│   │   ├── 1B_sim_tissue_trends.pdf
+│   │   └── 1B_sim_tissue_trends_heatmap.pdf
 │   ├── slideseq
-│   │   ├── 3A_UBCs_tissue.pdf
-│   │   ├── 3A_UBCs_tissue_zoom.pdf
-│   │   ├── 3A_purk_berg_tissue.pdf
-│   │   ├── 3A_purk_berg_tissue_zoom.pdf
-│   │   ├── 3B_berg_trends.pdf
-│   │   ├── 3B_granule_trends.pdf
-│   │   ├── 3B_purk_trends.pdf
-│   │   ├── 3B_ubc_trends.pdf
-│   │   ├── slideseq.pairwise.d100.trends.pdf
-│   │   ├── slideseq.rctd.pairwise.dist30-300.removeDups.pdf
-│   │   ├── slideseq.rctd.pairwise.dist30-300.withDups.pdf
-│   │   ├── slideseq.rctd.pairwise.dist30.dupsVsNoDups.pdf
-│   │   ├── slideseq.rctd.pairwise.dist30.removeDups.overlay.pdf
-│   │   ├── slideseqPuck.190926_08.rctd.pairwise.d100.neighDupVsRemoveDup.pdf
-│   │   ├── slideseqPuck.190926_08.rctd.pairwise.d200.neighDupVsRemoveDup.pdf
-│   │   ├── slideseqPuck.190926_08.rctd.pairwise.d50.neighDupVsRemoveDup.pdf
-│   │   ├── slideseqPuck.190926_08.rctd.pairwise.pdf
-│   │   ├── slideseqPuck.190926_08_dist100_subDist100.subsets.berg.pdf
-│   │   ├── slideseqPuck.190926_08_dist100_subDist100.subsets.gran.overlay.pdf
-│   │   ├── slideseqPuck.190926_08_dist100_subDist100.subsets.gran.pdf
-│   │   ├── slideseqPuck.190926_08_dist100_subDist100.subsets.purk.overlay.pdf
-│   │   └── slideseqPuck.190926_08_dist100_subDist100.subsets.purk.pdf
-│   └── spleen
-│       ├── 4A_ksfb_tissue.pdf
-│       ├── 4A_pkhl_grid_38_39_tissue_zoom.pdf
-│       ├── 4A_pkhl_grid_66_77_tissue_zoom.pdf
-│       ├── 4A_pkhl_tissue.pdf
-│       ├── 4B_cd4_subsets_trends.pdf
-│       ├── 4B_cd4_trends.pdf
-│       ├── 4B_folB_subsets_trends.pdf
-│       ├── 4B_folB_trends.pdf
-│       ├── 4B_ksfb_cd4_trends.pdf
-│       ├── 4B_ksfb_folB_trends.pdf
-│       ├── 4B_ksfb_podo_trends.pdf
-│       ├── 4B_podo_subsets_trends.pdf
-│       ├── 4B_podo_trends.pdf
-│       ├── pkhl.cd4_near.d100.subd100.results.res100-6000.removeDups.pdf
-│       ├── pkhl.cd4_subs.d100.subd100.removeDups.cd4_podo_folb.overlay.pdf
-│       ├── pkhl.folb_near.d100.subd100.results.res100-6000.removeDups.pdf
-│       ├── pkhl.folb_subs.d100.subd100.removeDups.cd4_podo_folb.overlay.pdf
-│       ├── pkhl.pairwise.100-200.results.res100-6000.removeDups.pdf
-│       ├── pkhl.pairwise.100-200.results.res100-6000.withDups.pdf
-│       ├── pkhl.pairwise.d100.removeDups.overlay.pdf
-│       ├── pkhl.pairwise.d100.results.res100-6000.dupsVsNoDups.pdf
-│       ├── pkhl.pairwise.d100.trends.pdf
-│       ├── pkhl.podo_near.d100.subd100.results.res100-6000.removeDups.pdf
-│       ├── pkhl.podo_subs.d100.sd100.trends.pdf
-│       └── pkhl.podo_subs.d100.subd100.removeDups.cd4_podo_folb.overlay.pdf
+│   │   ├── 2A_slideseq_purk_berg_tissue_grid.pdf
+│   │   ├── 2_slideseq_bergmann_trends.pdf
+│   │   ├── 2_slideseq_mli1_trends.pdf
+│   │   ├── 2_slideseq_mli2_trends.pdf
+│   │   ├── 2_slideseq_purk_berg_mli_trends_heatmap.pdf
+│   │   ├── 2_slideseq_purk_berg_tissue.pdf
+│   │   ├── 2_slideseq_purk_berg_tissue_legend.pdf
+│   │   ├── 2_slideseq_purk_berg_tissue_zoom.pdf
+│   │   ├── 2_slideseq_purkinje_trends.pdf
+│   │   ├── S1_slideseq_bergmann_trends_all.pdf
+│   │   ├── S1_slideseq_mli1_trends_all.pdf
+│   │   ├── S1_slideseq_mli2_trends_all.pdf
+│   │   ├── S1_slideseq_purk_berg_mli_trends_heatmap_all.pdf
+│   │   ├── S1_slideseq_purk_berg_tissue_sep.pdf
+│   │   ├── S1_slideseq_purk_berg_tissue_sep_legend.pdf
+│   │   ├── S1_slideseq_purkinje_trends_all.pdf
+│   │   ├── S2_slideseq_berg_cooccurance.pdf
+│   │   ├── S2_slideseq_berg_ripleys.pdf
+│   │   ├── S2_slideseq_mli1_cooccurance.pdf
+│   │   ├── S2_slideseq_mli1_ripleys.pdf
+│   │   ├── S2_slideseq_mli2_cooccurance.pdf
+│   │   ├── S2_slideseq_mli2_ripleys.pdf
+│   │   ├── S2_slideseq_purk_cooccurance.pdf
+│   │   └── S2_slideseq_purk_ripleys.pdf
+│   ├── spleen
+│   │   ├── 3B_spleen_pkhl_all_trends_heatmap.pdf
+│   │   ├── 3B_spleen_pkhl_grid_tissue.pdf
+│   │   ├── 3_spleen_pkhl_cd4_near_folB_trends.pdf
+│   │   ├── 3_spleen_pkhl_cd4_near_neutro_trends.pdf
+│   │   ├── 3_spleen_pkhl_cd4_subset_trends_heatmap.pdf
+│   │   ├── 3_spleen_pkhl_cd4_subsets_tissue.pdf
+│   │   ├── 3_spleen_pkhl_cd4_subsets_tissue_legend.pdf
+│   │   ├── 3_spleen_pkhl_cd4_trends.pdf
+│   │   ├── 3_spleen_pkhl_cd4_trends_heatmap.pdf
+│   │   ├── 3_spleen_pkhl_grid_38_39_tissue_zoom.pdf
+│   │   ├── 3_spleen_pkhl_grid_66_77_tissue_zoom.pdf
+│   │   ├── 3_spleen_pkhl_tissue.pdf
+│   │   ├── 3_spleen_pkhl_tissue_legend.pdf
+│   │   ├── S11_spleen_fsld_tissue.pdf
+│   │   ├── S11_spleen_ksfb_tissue.pdf
+│   │   ├── S11_spleen_ngpl_tissue.pdf
+│   │   ├── S11_spleen_pbvn_tissue.pdf
+│   │   ├── S11_spleen_xxcd_tissue.pdf
+│   │   ├── S12_spleen_cd4_near_folB_trends_fsld.pdf
+│   │   ├── S12_spleen_cd4_near_folB_trends_heatmap.pdf
+│   │   ├── S12_spleen_cd4_near_folB_trends_ksfb.pdf
+│   │   ├── S12_spleen_cd4_near_folB_trends_ngpl.pdf
+│   │   ├── S12_spleen_cd4_near_folB_trends_pbvn.pdf
+│   │   ├── S12_spleen_cd4_near_folB_trends_xxcd.pdf
+│   │   ├── S12_spleen_cd4_near_neutro_trends_fsld.pdf
+│   │   ├── S12_spleen_cd4_near_neutro_trends_heatmap.pdf
+│   │   ├── S12_spleen_cd4_near_neutro_trends_ksfb.pdf
+│   │   ├── S12_spleen_cd4_near_neutro_trends_ngpl.pdf
+│   │   ├── S12_spleen_cd4_near_neutro_trends_pbvn.pdf
+│   │   ├── S12_spleen_cd4_near_neutro_trends_xxcd.pdf
+│   │   ├── S12_spleen_cd4_trends_heatmap.pdf
+│   │   ├── S12_spleen_fsld_cd4_folB_podo_trends.pdf
+│   │   ├── S12_spleen_ksfb_cd4_folB_podo_trends.pdf
+│   │   ├── S12_spleen_ngpl_cd4_folB_podo_trends.pdf
+│   │   ├── S12_spleen_pbvn_cd4_folB_podo_trends.pdf
+│   │   ├── S12_spleen_xxcd_cd4_folB_podo_trends.pdf
+│   │   ├── S4_spleen_pkhl_tissue_all.pdf
+│   │   └── S4_spleen_pkhl_tissue_all_legend.pdf
+│   ├── squidpy
+│   │   ├── seqfish.nhood.r100.pdf
+│   │   └── slideseq.nhood.r100.png
+│   └── supplementary
+│       ├── cluster_corr_heatmap_KSFB_vs_NGPL.pdf
+│       ├── cluster_corr_heatmap_PBVN_vs_FSLD.pdf
+│       ├── cluster_corr_heatmap_PKHL_vs_KSFB.pdf
+│       ├── cluster_corr_heatmap_PKHL_vs_PBVN.pdf
+│       ├── cluster_corr_heatmap_PKHL_vs_XXCD.pdf
+│       ├── cluster_exp_FSLD_annot.pdf
+│       ├── cluster_exp_KSFB_annot.pdf
+│       ├── cluster_exp_NGPL_annot.pdf
+│       ├── cluster_exp_PBVN_annot.pdf
+│       ├── cluster_exp_PKHL_annot.pdf
+│       ├── cluster_exp_PKHL_clusters.pdf
+│       ├── cluster_exp_XXCD_annot.pdf
+│       ├── lda_FSLD.predictedBy.PBVN_harmonizedTo_FSLD_posterior.pdf
+│       ├── lda_KSFB.predictedBy.PKHL_posterior.pdf
+│       ├── lda_NGPL.predictedBy.KSFB_harmonizedTo_NGPL_posterior.pdf
+│       ├── lda_PBVN.predictedBy.PKHL_posterior.pdf
+│       ├── lda_XXCD.predictedBy.PKHL_posterior.pdf
+│       ├── spleen_tissue_FSLD_annots.pdf
+│       ├── spleen_tissue_KSFB_annots.pdf
+│       ├── spleen_tissue_NGPL_annots.pdf
+│       ├── spleen_tissue_PBVN_annots.pdf
+│       ├── spleen_tissue_PKHL_annots.pdf
+│       ├── spleen_tissue_PKHL_clusters.pdf
+│       ├── spleen_tissue_XXCD_annots.pdf
+│       ├── spleen_tsne_datasets_FSLD_annots_beforeHarmonyTsne.pdf
+│       ├── spleen_tsne_datasets_KSFB_annots_beforeHarmonyTsne.pdf
+│       ├── spleen_tsne_datasets_NGPL_annots_beforeHarmonyTsne.pdf
+│       ├── spleen_tsne_datasets_PBVN_annots_beforeHarmonyTsne.pdf
+│       ├── spleen_tsne_datasets_PKHL_annots_beforeHarmonyTsne.pdf
+│       ├── spleen_tsne_datasets_XXCD_annots_beforeHarmonyTsne.pdf
+│       ├── spleen_tsne_datasets_all_beforeHarmonyTsne.pdf
+│       └── spleen_tsne_datasets_separate_beforeHarmonyTsne.pdf
 ├── rockfish_hpc
 │   └── multiscale_trend_analysis
 │       ├── makeSubsets.r
@@ -376,9 +589,11 @@ Note that the `.gitignore` files for each branch reflect the differences in the 
 │   ├── compute_ripley.ipynb
 │   ├── seqfish.ipynb
 │   ├── slideseq_rctd.ipynb
+│   ├── squidpy_co_occurance_in_R.Rmd
 │   ├── squidpy_imc.ipynb
 │   ├── squidpy_pkhl.ipynb
 │   └── squidpy_slideseq.ipynb
+├── tests
 └── vignettes
     └── tutorial.Rmd
 ```
