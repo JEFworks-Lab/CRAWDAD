@@ -157,7 +157,130 @@ Note that the `.gitignore` files for each branch reflect the differences in the 
 │   └── vizTrends.Rd
 ├── plots
 │   ├── seqfish
-│   └── slideseq
+│   │   ├── 2B_endothelium_tissue_grid.pdf
+│   │   ├── 2B_mesoderm_tissue_grid.pdf
+│   │   ├── 2_seqfish_endothelium_tissue.pdf
+│   │   ├── 2_seqfish_endothelium_tissue_legend.pdf
+│   │   ├── 2_seqfish_endothelium_tissue_zoom.pdf
+│   │   ├── 2_seqfish_mesoderm_tissue.pdf
+│   │   ├── 2_seqfish_mesoderm_tissue_legend.pdf
+│   │   ├── 2_seqfish_mesoderm_tissue_zoom.pdf
+│   │   ├── 2_seqfish_trends_permutations.pdf
+│   │   ├── 2_seqfish_trends_permutations_legend.pdf
+│   │   ├── 2_slideseq_trends_heatmap.pdf
+│   │   ├── S3_seqfish_endo_cooccurance.pdf
+│   │   ├── S3_seqfish_endo_ripleys.pdf
+│   │   ├── S3_seqfish_haem_cooccurance.pdf
+│   │   ├── S3_seqfish_haem_ripleys.pdf
+│   │   ├── S3_seqfish_intMeso_cooccurance.pdf
+│   │   ├── S3_seqfish_intMeso_ripleys.pdf
+│   │   ├── S3_seqfish_latMeso_cooccurance.pdf
+│   │   ├── S3_seqfish_latplate_ripleys.pdf
+│   │   └── S3_seqfish_merge_ripleys.pdf
+│   ├── sim
+│   │   ├── 1A_sim_tissue_legend.pdf
+│   │   ├── 1B_sim_tissue_trends.pdf
+│   │   └── 1B_sim_tissue_trends_heatmap.pdf
+│   ├── slideseq
+│   │   ├── 2A_slideseq_purk_berg_tissue_grid.pdf
+│   │   ├── 2_slideseq_bergmann_trends.pdf
+│   │   ├── 2_slideseq_mli1_trends.pdf
+│   │   ├── 2_slideseq_mli2_trends.pdf
+│   │   ├── 2_slideseq_purk_berg_mli_trends_heatmap.pdf
+│   │   ├── 2_slideseq_purk_berg_tissue.pdf
+│   │   ├── 2_slideseq_purk_berg_tissue_legend.pdf
+│   │   ├── 2_slideseq_purk_berg_tissue_zoom.pdf
+│   │   ├── 2_slideseq_purkinje_trends.pdf
+│   │   ├── S1_slideseq_bergmann_trends_all.pdf
+│   │   ├── S1_slideseq_mli1_trends_all.pdf
+│   │   ├── S1_slideseq_mli2_trends_all.pdf
+│   │   ├── S1_slideseq_purk_berg_mli_trends_heatmap_all.pdf
+│   │   ├── S1_slideseq_purk_berg_tissue_sep.pdf
+│   │   ├── S1_slideseq_purk_berg_tissue_sep_legend.pdf
+│   │   ├── S1_slideseq_purkinje_trends_all.pdf
+│   │   ├── S2_slideseq_berg_cooccurance.pdf
+│   │   ├── S2_slideseq_berg_ripleys.pdf
+│   │   ├── S2_slideseq_mli1_cooccurance.pdf
+│   │   ├── S2_slideseq_mli1_ripleys.pdf
+│   │   ├── S2_slideseq_mli2_cooccurance.pdf
+│   │   ├── S2_slideseq_mli2_ripleys.pdf
+│   │   ├── S2_slideseq_purk_cooccurance.pdf
+│   │   └── S2_slideseq_purk_ripleys.pdf
+│   ├── spleen
+│   │   ├── 3B_spleen_pkhl_all_trends_heatmap.pdf
+│   │   ├── 3B_spleen_pkhl_grid_tissue.pdf
+│   │   ├── 3_spleen_pkhl_cd4_near_folB_trends.pdf
+│   │   ├── 3_spleen_pkhl_cd4_near_neutro_trends.pdf
+│   │   ├── 3_spleen_pkhl_cd4_subset_trends_heatmap.pdf
+│   │   ├── 3_spleen_pkhl_cd4_subsets_tissue.pdf
+│   │   ├── 3_spleen_pkhl_cd4_subsets_tissue_legend.pdf
+│   │   ├── 3_spleen_pkhl_cd4_trends.pdf
+│   │   ├── 3_spleen_pkhl_cd4_trends_heatmap.pdf
+│   │   ├── 3_spleen_pkhl_grid_38_39_tissue_zoom.pdf
+│   │   ├── 3_spleen_pkhl_grid_66_77_tissue_zoom.pdf
+│   │   ├── 3_spleen_pkhl_tissue.pdf
+│   │   ├── 3_spleen_pkhl_tissue_legend.pdf
+│   │   ├── S11_spleen_fsld_tissue.pdf
+│   │   ├── S11_spleen_ksfb_tissue.pdf
+│   │   ├── S11_spleen_ngpl_tissue.pdf
+│   │   ├── S11_spleen_pbvn_tissue.pdf
+│   │   ├── S11_spleen_xxcd_tissue.pdf
+│   │   ├── S12_spleen_cd4_near_folB_trends_fsld.pdf
+│   │   ├── S12_spleen_cd4_near_folB_trends_heatmap.pdf
+│   │   ├── S12_spleen_cd4_near_folB_trends_ksfb.pdf
+│   │   ├── S12_spleen_cd4_near_folB_trends_ngpl.pdf
+│   │   ├── S12_spleen_cd4_near_folB_trends_pbvn.pdf
+│   │   ├── S12_spleen_cd4_near_folB_trends_xxcd.pdf
+│   │   ├── S12_spleen_cd4_near_neutro_trends_fsld.pdf
+│   │   ├── S12_spleen_cd4_near_neutro_trends_heatmap.pdf
+│   │   ├── S12_spleen_cd4_near_neutro_trends_ksfb.pdf
+│   │   ├── S12_spleen_cd4_near_neutro_trends_ngpl.pdf
+│   │   ├── S12_spleen_cd4_near_neutro_trends_pbvn.pdf
+│   │   ├── S12_spleen_cd4_near_neutro_trends_xxcd.pdf
+│   │   ├── S12_spleen_cd4_trends_heatmap.pdf
+│   │   ├── S12_spleen_fsld_cd4_folB_podo_trends.pdf
+│   │   ├── S12_spleen_ksfb_cd4_folB_podo_trends.pdf
+│   │   ├── S12_spleen_ngpl_cd4_folB_podo_trends.pdf
+│   │   ├── S12_spleen_pbvn_cd4_folB_podo_trends.pdf
+│   │   ├── S12_spleen_xxcd_cd4_folB_podo_trends.pdf
+│   │   ├── S4_spleen_pkhl_tissue_all.pdf
+│   │   └── S4_spleen_pkhl_tissue_all_legend.pdf
+│   ├── squidpy
+│   │   ├── seqfish.nhood.r100.pdf
+│   │   └── slideseq.nhood.r100.png
+│   └── supplementary
+│       ├── cluster_corr_heatmap_KSFB_vs_NGPL.pdf
+│       ├── cluster_corr_heatmap_PBVN_vs_FSLD.pdf
+│       ├── cluster_corr_heatmap_PKHL_vs_KSFB.pdf
+│       ├── cluster_corr_heatmap_PKHL_vs_PBVN.pdf
+│       ├── cluster_corr_heatmap_PKHL_vs_XXCD.pdf
+│       ├── cluster_exp_FSLD_annot.pdf
+│       ├── cluster_exp_KSFB_annot.pdf
+│       ├── cluster_exp_NGPL_annot.pdf
+│       ├── cluster_exp_PBVN_annot.pdf
+│       ├── cluster_exp_PKHL_annot.pdf
+│       ├── cluster_exp_PKHL_clusters.pdf
+│       ├── cluster_exp_XXCD_annot.pdf
+│       ├── lda_FSLD.predictedBy.PBVN_harmonizedTo_FSLD_posterior.pdf
+│       ├── lda_KSFB.predictedBy.PKHL_posterior.pdf
+│       ├── lda_NGPL.predictedBy.KSFB_harmonizedTo_NGPL_posterior.pdf
+│       ├── lda_PBVN.predictedBy.PKHL_posterior.pdf
+│       ├── lda_XXCD.predictedBy.PKHL_posterior.pdf
+│       ├── spleen_tissue_FSLD_annots.pdf
+│       ├── spleen_tissue_KSFB_annots.pdf
+│       ├── spleen_tissue_NGPL_annots.pdf
+│       ├── spleen_tissue_PBVN_annots.pdf
+│       ├── spleen_tissue_PKHL_annots.pdf
+│       ├── spleen_tissue_PKHL_clusters.pdf
+│       ├── spleen_tissue_XXCD_annots.pdf
+│       ├── spleen_tsne_datasets_FSLD_annots_beforeHarmonyTsne.pdf
+│       ├── spleen_tsne_datasets_KSFB_annots_beforeHarmonyTsne.pdf
+│       ├── spleen_tsne_datasets_NGPL_annots_beforeHarmonyTsne.pdf
+│       ├── spleen_tsne_datasets_PBVN_annots_beforeHarmonyTsne.pdf
+│       ├── spleen_tsne_datasets_PKHL_annots_beforeHarmonyTsne.pdf
+│       ├── spleen_tsne_datasets_XXCD_annots_beforeHarmonyTsne.pdf
+│       ├── spleen_tsne_datasets_all_beforeHarmonyTsne.pdf
+│       └── spleen_tsne_datasets_separate_beforeHarmonyTsne.pdf
 └── vignettes
     └── tutorial.Rmd
 ```
