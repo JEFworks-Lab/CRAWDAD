@@ -400,6 +400,8 @@ selectSubsets <- function(binomMatrix,
     id
   }))
   
+  binomMat <- binomMatrix
+  
   subsets <- BiocParallel::bplapply(rownames(combos), function(i){
     
     cells.ref.ix <- levels(cell.types)[as.numeric(combos[i,1])]
@@ -408,7 +410,7 @@ selectSubsets <- function(binomMatrix,
     message("computing subsets for ", id)
     
     ## get reference cell rows
-    ref.cells <- binomMatrix[which(cell.types == cells.ref.ix),]
+    ref.cells <- binomMat[which(cell.types == cells.ref.ix),]
     
     ## subset reference cells whose pval is below thresh for given neighbor cell type
     ## return cells that were significant
