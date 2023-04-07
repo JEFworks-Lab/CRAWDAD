@@ -1,0 +1,459 @@
+---
+title: "Offsetting"
+author: "Rafael dos Santos Peixoto"
+date: "2023-04-04"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load package and data
+
+
+
+```{r crawdad}
+library(crawdad)
+
+p <- readRDS('../data/sim/tutorial_celltypes.rds')
+
+crawdad::vizAllClusters(cells = p,
+                        coms = p$type,
+                        title = "sim",
+                        axisAdj = 1, s = 6, a = 0.5) +
+  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
+```
+
+```{r}
+## convert to SP
+cells <- crawdad:::toSP(pos = p[,c("x", "y")],
+                        celltypes = p$type)
+cells
+```
+
+## Find trends
+
+Find trends for specific resolutions. These trends will be compared to the offsetted version.
+
+```{r}
+ncores <- 16
+```
+
+```{r}
+shuffle.list <- crawdad:::makeShuffledCells(cells,
+                          resolutions = c(100, 200, 250, 500, 1000),
+                          perms = 1,
+                          ncores = ncores,
+                          seed = 1,
+                          verbose = F)
+```
+
+```{r}
+## find trends, passing background as parameter
+results <- crawdad::findTrends(cells,
+                        dist = 100,
+                        shuffle.list = shuffle.list,
+                        ncores = ncores,
+                        verbose = F)
+```
+
+```{r, fig.height=5}
+dat <- crawdad::meltResultsList(results)
+vizTrends(dat = dat)
+```
+
+```{r}
+dat
+```
+
+
+
+## Investigating other scales
+
+```{r}
+shuffle.list_diff <- crawdad:::makeShuffledCells(cells,
+                          resolutions = c(150, 300, 600, 750, 800, 1100),
+                          perms = 1,
+                          ncores = ncores,
+                          seed = 1,
+                          verbose = F)
+```
+
+```{r}
+results_diff <- crawdad::findTrends(cells,
+                        dist = 100,
+                        shuffle.list = shuffle.list_diff,
+                        ncores = ncores,
+                        verbose = F)
+```
+
+```{r, fig.height=5}
+
+dat_diff <- crawdad::meltResultsList(results_diff)
+
+vizTrends(dat = dat_diff)
+```
+
+```{r}
+dat_diff
+```
+
+
+
+## Comparing trends
+
+```{r}
+library(tidyverse, quietly = T)
+
+dat$id <- 'org'
+dat_diff$id <- 'diff'
+
+df <- rbind(dat, dat_diff)
+```
+
+```{r, fig.height = 9}
+df %>% 
+  ggplot(aes(x = resolution, y = Z, color = id)) +
+  geom_line() + 
+  facet_wrap(reference ~ neighbor, scales = "free") + 
+  geom_hline(yintercept = 2, size = 0.5, linetype = "dotted") + 
+  geom_hline(yintercept = -2, size = 0.5, linetype = "dotted")
+```
+
+
+
+## Cecking for the linear combination
+
+For the 1000 and 1100, they should have equal values.
+
+```{r}
+x <- df %>% filter(resolution %in% c(1000)) %>% pull(Z)
+y <- df %>% filter(resolution %in% c(1100)) %>% pull(Z)
+
+all(x == y)
+```
+
+I cannot really check because there will be parts of the grid which Z score have not been computed yet. There are no Z value for the purple sections bellow.
+
+```{r}
+ggplot() + 
+  geom_rect(aes(xmin = 0, xmax = 750, ymin = 0, ymax = 750), 
+            fill = "blue", alpha = 0.4) + 
+  geom_rect(aes(xmin = 750, xmax = 1000, ymin = 750, ymax = 1000), 
+            fill = "green", alpha = 0.4) + 
+  geom_rect(aes(xmin = 0, xmax = 750, ymin = 750, ymax = 1000), 
+            fill = "purple", alpha = 0.4) + 
+  geom_rect(aes(xmin = 750, xmax = 1000, ymin = 0, ymax = 750), 
+            fill = "purple", alpha = 0.4)
+```
+
+
+
+## Offsetting
+
+Create a set of offsets as the same number of permutations. Then create a new offset grid for each permutation.
+
+```{r}
+makeShuffledCells <- function(cells,
+                              resolutions = c(50, 100, 200, 300, 400, 500),
+                              perms = 1,
+                              ncores = 1,
+                              seed = 0,
+                              verbose = TRUE){
+  
+  ## effectively will make a list of lists of randomly shuffled cell labels.
+  ## a list for each resolution that contains factors of shuffled cell labels for each permutation
+  ## use the cell labels to reorder the labels of the `cells`
+  
+  ## check if cells is an `sp::SpatialPointsDataFrame object`
+  if( !any(class(cells) == "sf") ){
+    stop("`cells` needs to be an `sf` object. You can make this using `toSP()`")
+  }
+  
+  if( !any(grepl("celltypes", colnames(cells))) ){
+    stop("`cells` needs a column named `celltypes`. You can make this using `toSP()`")
+  }
+  
+  if(verbose){
+    start_time <- Sys.time()
+  }
+  
+  randomcellslist <- lapply(resolutions, function(r) {
+    
+    ## create list of offsets for the permutations
+    offsets <- -seq(from = 0, to = r, by = r/perms)
+    
+    permutations <- lapply(1:perms, function(i){
+      
+      ## if only 1 permutation, use the set seed. Otherwise seed is equal to permutation number
+      if (perms == 1){
+        s <- seed
+      } else if (perms > 1){
+        s <- i
+      }
+      
+      if(verbose){
+        message("shuffling permutation ", i, " using seed ", s)
+      }
+      
+      ## create grid after going into permutations
+      grid <- sf::st_make_grid(cells, cellsize = r, 
+                               offset = c(offsets[i], offsets[i]))
+      
+      if(verbose){
+        message(r, " unit resolution")
+        message(length(grid), " tiles to shuffle...")
+      }
+      
+      ## disable scientific notation.
+      ## apparently, when I sort the names by converting to numeric then back to characters
+      ## some numerics are written in scientific notation but then the notation and not
+      ## the exact number is converted back to character.
+      ## for example: 1e+5 comes back as "1e+5".
+      ## this effectively results in NA values and loss of cells
+      ## subsequently there is a discrepancy between the number of cells in the shuffled list
+      ## vs the cells of the actual data.
+      options(scipen = 999)
+      
+      ## shuffle within grid once
+      randcelltype <- unlist(parallel::mclapply(1:length(grid), function(i) {
+        ## sometimes can be on boundary, so just pick first one
+        int <- sf::st_intersection(cells, grid[[i]])
+        
+        # randomly grab cell labels for cell in the grid (this is a factor)
+        set.seed(s)
+        shuffled_cells <- sample(int$celltypes)
+        # assign the cell ids to the randomly sampled cell labels
+        
+        ## convert to named character vector
+        ## the factor levels get lost later on
+        ## when trying to combine the removed dups
+        ## and selected dups
+        shuffled_cells <- as.character(shuffled_cells)
+        names(shuffled_cells) <- rownames(int)
+        return(shuffled_cells)
+      }, mc.cores=ncores))
+      
+      
+      
+      # reorder so cells are "1", "2", etc. and not in the order based on grids
+      randcelltype <- randcelltype[as.character(sort(as.numeric(names(randcelltype))))]
+      #print(length(randcelltype))
+      
+      ## apparently, some cells can end up in multiple grids thus leading to double counting
+      ## this is problematic because later on, the celltype names in the original cell dataframe
+      ## are replaced with the shuffled values, but if different length, will cause an error
+      ## so need to deal with cells that are counted more than once
+      
+      ## find the duplicates in each case and pick one of them to use
+      n_occur <- data.frame(table(names(randcelltype)))
+      dups <- as.character(n_occur[n_occur$Freq > 1,]$Var1)
+      #print(length(dups))
+      removedDups <- randcelltype[!names(randcelltype) %in% dups]
+      #print(length(removedDups))
+      
+      ## deal with duplicates by picking the first one
+      selectedDups <- unlist(lapply(dups, function(dup){
+        randcelltype[names(randcelltype) == dup][1]
+      }))
+      #print(length(selectedDups))
+      
+      ## recombine the unique cells and the selected duplicate cells
+      randcelltype2 <- c(removedDups, selectedDups)
+      
+      ## reorder 1,2,3, etc like done previously
+      randcelltype2 <- randcelltype2[as.character(sort(as.numeric(names(randcelltype2))))]
+      #print(length(randcelltype2))
+      randcelltype2
+    })
+    
+    names(permutations) <- 1:perms
+    return(permutations)
+  })
+  
+  if(verbose){
+    total_t <- round(difftime(Sys.time(), start_time, units="mins"), 2)
+    message(sprintf("Time was %s mins", total_t))
+  }
+  
+  names(randomcellslist) <- resolutions
+  return(randomcellslist)
+}
+```
+
+Find trends.
+
+```{r}
+shuffle.list_os <- makeShuffledCells(cells,
+                          resolutions = c(150, 300, 600, 750, 800, 1100),
+                          perms = 10,
+                          ncores = ncores,
+                          seed = 1,
+                          verbose = F)
+```
+
+```{r}
+results_os <- crawdad::findTrends(cells,
+                        dist = 100,
+                        shuffle.list = shuffle.list_os,
+                        ncores = ncores,
+                        verbose = F)
+```
+
+```{r, fig.height=5}
+
+dat_os <- crawdad::meltResultsList(results_os)
+
+vizTrends(dat = dat_os)
+```
+
+## Compare offsetting
+
+```{r}
+dat$id <- 'org'
+dat_diff$id <- 'diff'
+dat_os$id <- 'os'
+
+df <- rbind(dat, dat_diff, dat_os)
+```
+
+```{r, fig.height = 9}
+df %>% 
+  ggplot(aes(x = resolution, y = Z, color = id)) +
+  geom_line() + 
+  facet_wrap(reference ~ neighbor, scales = "free") + 
+  geom_hline(yintercept = 2, size = 0.5, linetype = "dotted") + 
+  geom_hline(yintercept = -2, size = 0.5, linetype = "dotted")
+```
+
+Find trends on original resolutions.
+
+```{r}
+shuffle.list_os <- makeShuffledCells(cells,
+                          resolutions = c(100, 200, 250, 500, 1000),
+                          perms = 10,
+                          ncores = ncores,
+                          seed = 1,
+                          verbose = F)
+```
+
+```{r}
+results_os <- crawdad::findTrends(cells,
+                        dist = 100,
+                        shuffle.list = shuffle.list_os,
+                        ncores = ncores,
+                        verbose = F)
+```
+
+```{r}
+dat_os <- crawdad::meltResultsList(results_os)
+```
+
+```{r}
+dat$id <- 'org'
+dat_diff$id <- 'diff'
+dat_os$id <- 'os'
+
+df <- rbind(dat, dat_diff, dat_os)
+```
+
+```{r, fig.height = 9}
+df %>% 
+  ggplot(aes(x = resolution, y = Z, color = id)) +
+  geom_line() + 
+  facet_wrap(reference ~ neighbor, scales = "free") + 
+  geom_hline(yintercept = 2, size = 0.5, linetype = "dotted") + 
+  geom_hline(yintercept = -2, size = 0.5, linetype = "dotted")
+```
+
+
+
+## Smooth
+
+```{r}
+shuffle.list_sm <- makeShuffledCells(cells,
+                          resolutions = c(100, 200, 300, 400, 500,
+                                          600, 700, 800, 900, 1000),
+                          perms = 1,
+                          ncores = ncores,
+                          seed = 1,
+                          verbose = F)
+```
+
+```{r}
+results_sm <- crawdad::findTrends(cells,
+                        dist = 100,
+                        shuffle.list = shuffle.list_sm,
+                        ncores = ncores,
+                        verbose = F)
+```
+
+```{r}
+dat_sm <- crawdad::meltResultsList(results_sm)
+```
+
+With permutations.
+
+```{r}
+shuffle.list_smp <- makeShuffledCells(cells,
+                          resolutions = c(100, 200, 300, 400, 500,
+                                          600, 700, 800, 900, 1000),
+                          perms = 10,
+                          ncores = ncores,
+                          seed = 1,
+                          verbose = F)
+```
+
+```{r}
+results_smp <- crawdad::findTrends(cells,
+                        dist = 100,
+                        shuffle.list = shuffle.list_smp,
+                        ncores = ncores,
+                        verbose = F)
+```
+
+```{r}
+dat_smp <- crawdad::meltResultsList(results_smp)
+```
+
+Plot smooth lines.
+
+```{r}
+dat_sm$id <- 'sm'
+dat_smp$id <- 'smp'
+
+df <- rbind(dat_sm, dat_smp)
+```
+
+```{r, fig.height = 9}
+df %>% 
+  ggplot(aes(x = resolution, y = Z, color = id)) +
+  geom_line() + 
+  facet_wrap(reference ~ neighbor, scales = "free") + 
+  geom_hline(yintercept = 2, size = 0.5, linetype = "dotted") + 
+  geom_hline(yintercept = -2, size = 0.5, linetype = "dotted")
+```
+
+Smooth lines.
+
+```{r, fig.height = 9}
+
+ggplot() +
+  geom_smooth(data = filter(df, id == 'sm'),
+              aes(x = resolution, y = Z, color = id)) +
+  # geom_line(data = filter(df, id == 'sm'),
+  #             aes(x = resolution, y = Z, color = id)) + 
+  geom_line(data = filter(df, id == 'smp'),
+            aes(x = resolution, y = Z, color = id)) + 
+  facet_wrap(reference ~ neighbor, scales = "free") + 
+  geom_hline(yintercept = 2, size = 0.5, linetype = "dotted") + 
+  geom_hline(yintercept = -2, size = 0.5, linetype = "dotted")
+```
+
+
+
+
+
+
+
