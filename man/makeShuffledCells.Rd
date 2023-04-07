@@ -31,3 +31,9 @@ for each resolution, and for i number of permutations, shuffle the celltype labe
 Returns a list of lists, where each list is a factor of the shuffled celltype labels.
 Outer list is for each resolution of shuffling, and each inner list is for a given permutation with a given seed.
 }
+\examples{
+ 
+data(sim)
+makeShuffledCells(sim, resolutions = c(50, 100, 200, 300, 400, 500))
+
+}

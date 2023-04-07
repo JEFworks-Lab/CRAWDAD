@@ -1,6 +1,7 @@
 ---
 title: "CRAWDAD Tutorial"
 author: "Brendan F. Miller, Jean Fan"
+date: "3/16/2023"
 output: html_document
 vignette: >
   %\VignetteIndexEntry{CRAWDAD Vignette}
@@ -50,107 +51,13 @@ ncores <- 7
 
 ## Make simulated dataset
 
-```{r, eval=FALSE}
-
-## cells
-set.seed(1)
-size <- 5000
-x <- runif(size, min = 0, max = 1000)
-y <- runif(size, min = 0, max = 1000)
-p <- data.frame(x = x, y = y, type='D')
-rownames(p) <- paste0('cell', 1:size)
-
-## structures
-
-## large A circles
-as <- c(250, 250, 750, 750)
-bs <- c(250, 750, 250, 750)
-invisible(sapply(1:4, function(i) {
-  a <- as[i]
-  b <- bs[i]
-  ro <- 150
-  co <- 'A'
-  po <- 1
-  c1o <- rownames(p[((p$x-a)^2 + (p$y - b)^2 < ro^2),])
-  p[c1o,]$type <<- sample(co, size = length(c1o), replace = TRUE, prob = po)
-}))
-
-## B blobs inside A blobs
-invisible(sapply(1:4, function(i) {
-  ro <- 80
-  co <- 'B'
-  po <- 1
-  
-  ## inside structure
-  a <- as[i]
-  b <- bs[i]
-  c1o <- rownames(p[((p$x-a)^2 + (p$y - b)^2 < ro^2),])
-  p[c1o,]$type <<- sample(co, size = length(c1o), replace = TRUE, prob = po)
-}))
-
-## add some small B blobs elsewhere
-as2 <- c(100, 100, 900, 900)
-bs2 <- c(100, 900, 100, 900)
-invisible(sapply(1:4, function(i) {
-  ro <- 50
-  co <- 'B'
-  po <- 1
-  ## outside structure
-  a <- as2[i]
-  b <- bs2[i]
-  c1o <- rownames(p[((p$x-a)^2 + (p$y - b)^2 < ro^2),])
-  p[c1o,]$type <<- sample(co, size = length(c1o), replace = TRUE, prob = po)
-}))
-
-## add smaller C blobs in the B blobs in the A blobs
-invisible(sapply(1:4, function(i) {
-  ro <- 40
-  co <- 'C'
-  po <- 1
-  
-  ## inside structure
-  a <- as[i]
-  b <- bs[i]
-  c1o <- rownames(p[((p$x-a)^2 + (p$y - b)^2 < ro^2),])
-  p[c1o,]$type <<- sample(co, size = length(c1o), replace = TRUE, prob = po)
-}))
-
-## add some small C blobs elsewhere
-as3 <- c(100, 500, 500, 900)
-bs3 <- c(500, 100, 900, 500)
-invisible(sapply(1:4, function(i) {
-  ro <- 50
-  co <- 'C'
-  po <- 1
-  ## outside structure
-  a <- as3[i]
-  b <- bs3[i]
-  c1o <- rownames(p[((p$x-a)^2 + (p$y - b)^2 < ro^2),])
-  p[c1o,]$type <<- sample(co, size = length(c1o), replace = TRUE, prob = po)
-}))
-
-## visualize
-plt <- crawdad::vizAllClusters(cells = p,
-                               coms = p$type,
-                               title = "sim",
-                               axisAdj = 1, s = 6, a = 0.5) +
-  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
-plt
-
-## convert to SP
-cells <- crawdad::toSP(pos = p[,c("x", "y")],
-                        celltypes = p$type)
-cells
-
-```
-
 ```{r}
 
 data(sim)
 
 ## visualize
 plt <- crawdad::vizAllClusters(cells = sim,
-                               coms = p$type,
+                               coms = sim$type,
                                title = "sim",
                                axisAdj = 1, s = 6, a = 0.5) +
   ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
@@ -158,7 +65,7 @@ plt
 
 ## convert to SP
 cells <- crawdad::toSP(pos = sim[,c("x", "y")],
-                        celltypes = p$type)
+                        celltypes = sim$type)
 cells
 
 ```
@@ -198,47 +105,15 @@ results <- crawdad::findTrends(cells,
 
 We can now visualize trends for different pairwise cell type combinations using the following code:
 
-```{r}
-
-crawdad::plotTrends(results = results["A"])
-
-```
-
-We can also visualize all trends at once by first melting the results list into a data.frame. We can add an extra `id` column that will append an additional feature to label the trends. We can label this as the distance we used to define neighbors in this analysis, but we can choose whatever you want it to be. This can be useful if we want to compare results from different analyses in which the parameters, like neighbor distance, may have been different. After melting each results and labeling their respective `id` columns, the data.frames can be combined and plotted with `plotTrends()`, and trends lines for a given pairwise cell type combination will be colored based on the analysis they are associated with.
-
-```{r, fig.width=12, fig.height=12}
-
-dat <- crawdad::meltResultsList(results, id = "dist_100")
-
-crawdad::plotTrends(results = dat, idcol = "id", legend = TRUE)
-
-```
-
-And we can also save the plot as a pdf.
-
-```{r, eval=FALSE}
-
-dat <- crawdad::meltResultsList(results, id = "dist_100")
-
-grDevices::pdf(file = "tutorial_pairwise_trends.pdf", width = 12, height = 12)
-crawdad::plotTrends(results = dat, idcol = "id", legend = TRUE)
-dev.off()
-
-```
-
-The function `vizTrends()` is another plotting function that is built around `ggplot2`. This requires the results list from `findTrends()` to be melted via `meltResultsList`, but provides additional functionality. 
-
 By default, `vizTrends()` is setup to facet wrap reference and neighbor cell type trends. Reference cell types are column headers and neighbor cell types are row headers.
 
 ```{r}
 
-dat <- crawdad::meltResultsList(results)
-
-plt <- crawdad::vizTrends(dat = dat)
+plt <- crawdad::vizTrends(dat = results)
 plt 
 
 ## because the output is a `ggplot2` object, we can perform additional manipulations, like log-transformation of the x-axis:
-plt <- crawdad::vizTrends(dat = dat) +
+plt <- crawdad::vizTrends(dat = results) +
   ggplot2::scale_x_log10()
 plt 
 
@@ -272,6 +147,56 @@ d <- dplyr::bind_rows(list(d1, d2))
 
 plt <- crawdad::vizTrends(dat = d, facet = FALSE) +
   ggplot2::scale_x_log10()
+plt 
+
+```
+
+Instead, of plotting trends, we can also visualize the Z scores across resolutions as heatmaps:
+
+```{r}
+
+plt <- crawdad::vizTrends.heatmap(dat = results, annotation = TRUE,
+                                  z_limit = 20, # Z score limits (default +/- 20). Winsorize values to these limits
+                                  sig.thresh = 1.96, # Z score significance threshold (default: 1.96). Non-significant values < 1.96 and > -1.96 colored white
+                                  ncols = 4 # specify number of columns in facet wrap (default: 4)
+                                  )
+plt 
+
+```
+
+And likewise, we can also choose to visualize specific cell type. For example, just reference cell type A and its neighbor interactions with cell types A and B:
+
+```{r}
+
+## melt the results into a data.frame
+dat <- crawdad::meltResultsList(results)
+
+## select different trend combinations
+dat <- dat[dat$reference == "A" & dat$neighbor %in% c("A", "B"),]
+
+plt <- crawdad::vizTrends.heatmap(dat = dat)
+plt
+
+```
+
+## Filtering trends
+
+We can filter down the different cell type interactions to those that are significantly colocalized (positive significant Z score for at least one resolution), those that are significantly separated (negative significant Z score for at least one resolution), or those that shift between being colocalized and separated at different resolutions (at least one positive and negative significant Z score for different resolutions).
+
+```{r}
+
+results.coloc <- crawdad::filterCoTrends(results = results, alpha = 0.05)
+results.sep <- crawdad::filterSepTrends(results = results, alpha = 0.05)
+results.change <- crawdad::filterChangeTrends(results = results, alpha = 0.05)
+
+```
+
+```{r}
+
+plt <- crawdad::vizTrends.heatmap(dat = results.coloc, title = "Significant colocalized cell types")
+plt 
+
+plt <- crawdad::vizTrends.heatmap(dat = results.sep, title = "Significant separated cell types")
 plt 
 
 ```
@@ -393,7 +318,7 @@ annots_temp <- crawdad::selectLabels(df = cells,
 ## visualize the new data.frame with the temporary annotations that specifically labels the neighbor cells and the selected subset
 plt <- crawdad::vizAllClusters(cells = cells,
                                coms = annots_temp,
-                               title = "C_near_B and their neighbors",
+                               title = "C_near_B and their neighbors within dist=100",
                                axisAdj = 1, s = 6, a = 0.5) +
   ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
 
@@ -455,8 +380,8 @@ results2 <- crawdad::findTrends(cells,
 
 ```{r}
 
-## plot just some
-crawdad::plotTrends(results = results2["C_near_B"])
+plt <- crawdad::vizTrends.heatmap(dat = results2)
+plt 
 
 ```
 

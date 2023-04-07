@@ -8,7 +8,7 @@ vizTrends(
   dat,
   id = "id",
   yaxis = "Z",
-  sig.thresh = 2,
+  sig.thresh = 1.96,
   nc = length(unique(dat[[id]])),
   colors = rainbow(nc),
   title = NULL,
@@ -25,7 +25,7 @@ vizTrends(
 
 \item{yaxis}{column that has significance value across resolutions (default: "Z")}
 
-\item{sig.thresh}{threshold for significance, ie Z score significance threshold (default: 2).}
+\item{sig.thresh}{threshold for significance, ie Z score significance threshold (default: 1.96).}
 
 \item{nc}{number of colors to use for labeling features in id column}
 
