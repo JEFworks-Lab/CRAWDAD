@@ -39,14 +39,12 @@ makeShuffledCells <- function(cells,
     start_time <- Sys.time()
   }
   
+  cells_df <- crawdad::spToDF(cells)
+  
   randomcellslist <- lapply(resolutions, function(r) {
     
-    grid <- sf::st_make_grid(cells, cellsize = r)
-    
-    if(verbose){
-      message(r, " unit resolution")
-      message(length(grid), " tiles to shuffle...")
-    }
+    ## create list of offsets for the permutations
+    offsets <- -seq(from = 0, to = r, by = r/perms)
     
     permutations <- lapply(1:perms, function(i){
       
@@ -59,6 +57,15 @@ makeShuffledCells <- function(cells,
       
       if(verbose){
         message("shuffling permutation ", i, " using seed ", s)
+      }
+      
+      ## create grid after going into permutations
+      grid <- sf::st_make_grid(cells, cellsize = r, 
+                               offset = c(min(cells_df$x) + offsets[i], min(cells_df$y) + offsets[i]))
+      
+      if(verbose){
+        message(r, " unit resolution")
+        message(length(grid), " tiles to shuffle...")
       }
       
       ## disable scientific notation.

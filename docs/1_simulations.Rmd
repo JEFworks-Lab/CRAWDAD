@@ -67,47 +67,6 @@ invisible(sapply(1:4, function(i) {
   p[c1o,]$type <<- sample(co, size = length(c1o), replace = TRUE, prob = po)
 }))
 
-# ## add some small B blobs elsewhere
-# as2 <- c(100, 100, 900, 900)
-# bs2 <- c(100, 900, 100, 900)
-# invisible(sapply(1:4, function(i) {
-#   ro <- 50
-#   co <- 'B'
-#   po <- 1
-#   ## outside structure
-#   a <- as2[i]
-#   b <- bs2[i]
-#   c1o <- rownames(p[((p$x-a)^2 + (p$y - b)^2 < ro^2),])
-#   p[c1o,]$type <<- sample(co, size = length(c1o), replace = TRUE, prob = po)
-# }))
-
-# ## add smaller C blobs in the B blobs in the A blobs
-# invisible(sapply(1:4, function(i) {
-#   ro <- 40
-#   co <- 'C'
-#   po <- 1
-#   
-#   ## inside structure
-#   a <- as[i]
-#   b <- bs[i]
-#   c1o <- rownames(p[((p$x-a)^2 + (p$y - b)^2 < ro^2),])
-#   p[c1o,]$type <<- sample(co, size = length(c1o), replace = TRUE, prob = po)
-# }))
-
-# ## add some small C blobs elsewhere
-# as3 <- c(100, 500, 500, 900)
-# bs3 <- c(500, 100, 900, 500)
-# invisible(sapply(1:4, function(i) {
-#   ro <- 50
-#   co <- 'C'
-#   po <- 1
-#   ## outside structure
-#   a <- as3[i]
-#   b <- bs3[i]
-#   c1o <- rownames(p[((p$x-a)^2 + (p$y - b)^2 < ro^2),])
-#   p[c1o,]$type <<- sample(co, size = length(c1o), replace = TRUE, prob = po)
-# }))
-
 ## visualize
 plt <- crawdad::vizAllClusters(cells = p,
                                coms = p$type,
@@ -116,14 +75,14 @@ plt <- crawdad::vizAllClusters(cells = p,
   ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
 plt
 
-# ggplot2::ggsave(filename = "1B_sim_tissue_legend.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 6,
-#                 height = 6,
-#                 units = c("in"))
+ggplot2::ggsave(filename = "1_sim_tissue_legend.pdf",
+                plot = plt,
+                device = "pdf",
+                path = figpath,
+                scale = 1,
+                width = 6,
+                height = 6,
+                units = c("in"))
 
 ```
 
@@ -143,6 +102,10 @@ cells
 `CRAWDAD` identifies cell type spatial relationships by comparing cell type organizational patterns in the real data to a set of null distributions, which are a datasets in which cell labels have been shuffled at different scales, or resolutions. We can generate this list of shuffled datasets with the following code:
 
 ```{r}
+
+oldw <- getOption("warn")
+options(warn = -1)
+
 ## generate background
 shuffle.list <- crawdad:::makeShuffledCells(cells,
                           resolutions = c(150, 250, 500, 750, 1000, 1500, 2000),
@@ -150,6 +113,9 @@ shuffle.list <- crawdad:::makeShuffledCells(cells,
                           ncores = ncores,
                           seed = 1,
                           verbose = TRUE)
+
+options(warn = oldw)
+
 ```
 
 ## Run pairwise analysis
@@ -158,12 +124,17 @@ We can identify trends that describe spatial relationships between pairwise comb
 
 ```{r}
 
+oldw <- getOption("warn")
+options(warn = -1)
+
 ## find trends, passing background as parameter
 results <- crawdad::findTrends(cells,
                         dist = 100,
                         shuffle.list = shuffle.list,
                         ncores = ncores,
                         verbose = TRUE)
+
+options(warn = oldw)
 
 ```
 
@@ -198,7 +169,7 @@ plt <- ggplot2::ggplot(dat, ggplot2::aes(x=resolution, y=Z, col=neighbor)) +
     )
 plt
 
-ggplot2::ggsave(filename = "1C_sim_tissue_trends.pdf",
+ggplot2::ggsave(filename = "1_sim_trends.pdf",
                 plot = plt,
                 device = "pdf",
                 path = figpath,
@@ -214,7 +185,29 @@ ggplot2::ggsave(filename = "1C_sim_tissue_trends.pdf",
 plt <- vizTrends.heatmap(dat = results)
 plt
 
-ggplot2::ggsave(filename = "1C_sim_tissue_trends_heatmap.pdf",
+ggplot2::ggsave(filename = "S1_sim_trends_heatmap.pdf",
+                plot = plt,
+                device = "pdf",
+                path = figpath,
+                scale = 1,
+                width = 6,
+                height = 2,
+                units = c("in"))
+
+```
+
+
+```{r}
+
+dat <- crawdad::meltResultsList(results)
+
+dat <- dat[dat$reference %in% c("A", "B", "C") & dat$neighbor %in% c("A", "B", "C"),]
+
+plt <- vizTrends(dat = dat) +
+  ggplot2::scale_x_log10()
+plt
+
+ggplot2::ggsave(filename = "1_sim_trends_selected.pdf",
                 plot = plt,
                 device = "pdf",
                 path = figpath,
@@ -224,4 +217,6 @@ ggplot2::ggsave(filename = "1C_sim_tissue_trends_heatmap.pdf",
                 units = c("in"))
 
 ```
+
+
 

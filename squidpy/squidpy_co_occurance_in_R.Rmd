@@ -87,7 +87,11 @@ rownames(df) <- levels(slide$celltypes)
 df <- reshape2::melt(df)
 colnames(df) <- c("exp", "distance", "value")
 
-plt <- ggplot2::ggplot(data = df) +
+ignore <- c("Choroid", "Candelabrum", "Ependymal", "Globular", "Macrophages")
+dat <- df
+dat <- dat[!dat$exp %in% c(ignore),]
+
+plt <- ggplot2::ggplot(data = dat) +
   ggplot2::geom_line(ggplot2::aes(x = distance, y = value)) +
   ggplot2::facet_wrap(. ~ exp) +
   ggplot2::ggtitle(expression(frac("p(exp|Bergmann)", "p(exp)"))) +
@@ -112,7 +116,7 @@ plt <- ggplot2::ggplot(data = df) +
 
 plt
 
-ggplot2::ggsave(filename = "S2_slideseq_berg_cooccurance.pdf",
+ggplot2::ggsave(filename = "S4_slideseq_berg_cooccurance.pdf",
                 plot = plt,
                 device = "pdf",
                 path = figpath,
@@ -137,7 +141,11 @@ rownames(df) <- levels(slide$celltypes)
 df <- reshape2::melt(df)
 colnames(df) <- c("exp", "distance", "value")
 
-plt <- ggplot2::ggplot(data = df) +
+ignore <- c("Choroid", "Candelabrum", "Ependymal", "Globular", "Macrophages")
+dat <- df
+dat <- dat[!dat$exp %in% c(ignore),]
+
+plt <- ggplot2::ggplot(data = dat) +
   ggplot2::geom_line(ggplot2::aes(x = distance, y = value)) +
   ggplot2::facet_wrap(. ~ exp) +
   ggplot2::ggtitle(expression(frac("p(exp|Purkinje)", "p(exp)"))) +
@@ -162,7 +170,7 @@ plt <- ggplot2::ggplot(data = df) +
 
 plt
 
-ggplot2::ggsave(filename = "S2_slideseq_purk_cooccurance.pdf",
+ggplot2::ggsave(filename = "S4_slideseq_purk_cooccurance.pdf",
                 plot = plt,
                 device = "pdf",
                 path = figpath,
@@ -182,7 +190,11 @@ rownames(df) <- levels(slide$celltypes)
 df <- reshape2::melt(df)
 colnames(df) <- c("exp", "distance", "value")
 
-plt <- ggplot2::ggplot(data = df) +
+ignore <- c("Choroid", "Candelabrum", "Ependymal", "Globular", "Macrophages")
+dat <- df
+dat <- dat[!dat$exp %in% c(ignore),]
+
+plt <- ggplot2::ggplot(data = dat) +
   ggplot2::geom_line(ggplot2::aes(x = distance, y = value)) +
   ggplot2::facet_wrap(. ~ exp) +
   ggplot2::ggtitle(expression(frac("p(exp|MLI1)", "p(exp)"))) +
@@ -207,7 +219,7 @@ plt <- ggplot2::ggplot(data = df) +
 
 plt
 
-ggplot2::ggsave(filename = "S2_slideseq_mli1_cooccurance.pdf",
+ggplot2::ggsave(filename = "S4_slideseq_mli1_cooccurance.pdf",
                 plot = plt,
                 device = "pdf",
                 path = figpath,
@@ -227,7 +239,11 @@ rownames(df) <- levels(slide$celltypes)
 df <- reshape2::melt(df)
 colnames(df) <- c("exp", "distance", "value")
 
-plt <- ggplot2::ggplot(data = df) +
+ignore <- c("Choroid", "Candelabrum", "Ependymal", "Globular", "Macrophages")
+dat <- df
+dat <- dat[!dat$exp %in% c(ignore),]
+
+plt <- ggplot2::ggplot(data = dat) +
   ggplot2::geom_line(ggplot2::aes(x = distance, y = value)) +
   ggplot2::facet_wrap(. ~ exp) +
   ggplot2::ggtitle(expression(frac("p(exp|MLI2)", "p(exp)"))) +
@@ -252,7 +268,7 @@ plt <- ggplot2::ggplot(data = df) +
 
 plt
 
-ggplot2::ggsave(filename = "S2_slideseq_mli2_cooccurance.pdf",
+ggplot2::ggsave(filename = "S4_slideseq_mli2_cooccurance.pdf",
                 plot = plt,
                 device = "pdf",
                 path = figpath,
@@ -407,7 +423,7 @@ plt <- ggplot2::ggplot(data = df) +
 
 plt
 
-ggplot2::ggsave(filename = "S3_seqfish_intMeso_cooccurance.pdf",
+ggplot2::ggsave(filename = "S5_seqfish_intMeso_cooccurance.pdf",
                 plot = plt,
                 device = "pdf",
                 path = figpath,
@@ -457,7 +473,7 @@ plt <- ggplot2::ggplot(data = df) +
 
 plt
 
-ggplot2::ggsave(filename = "S3_seqfish_latMeso_cooccurance.pdf",
+ggplot2::ggsave(filename = "S5_seqfish_latMeso_cooccurance.pdf",
                 plot = plt,
                 device = "pdf",
                 path = figpath,
@@ -507,7 +523,7 @@ plt <- ggplot2::ggplot(data = df) +
 
 plt
 
-ggplot2::ggsave(filename = "S3_seqfish_endo_cooccurance.pdf",
+ggplot2::ggsave(filename = "S5_seqfish_endo_cooccurance.pdf",
                 plot = plt,
                 device = "pdf",
                 path = figpath,
@@ -557,7 +573,7 @@ plt <- ggplot2::ggplot(data = df) +
 
 plt
 
-ggplot2::ggsave(filename = "S3_seqfish_haem_cooccurance.pdf",
+ggplot2::ggsave(filename = "S5_seqfish_haem_cooccurance.pdf",
                 plot = plt,
                 device = "pdf",
                 path = figpath,

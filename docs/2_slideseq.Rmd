@@ -65,26 +65,6 @@ crawdad::vizEachCluster(cells = slide,
 
 ```
 
-```{r}
-
-table(slide$celltypes)
-
-```
-
-Ignore poorly represented celltypes like:
-Choroid, Candelabrum, Ependymal, Globular, Macrophages
-
-```{r}
-
-slide.filt <- slide[!slide$celltypes %in% c("Choroid", "Candelabrum", "Ependymal", "Globular", "Macrophages"),]
-
-## convert to SP
-slide.filt <- crawdad:::toSP(pos = slide.filt[,c("x", "y")],
-                        celltypes = slide.filt$celltypes)
-slide.filt
-
-```
-
 # Make shuffled background
 
 ```{r}
@@ -94,13 +74,19 @@ resolutions <- c(100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1200, 1500, 
 ```
 
 ```{r}
+
+oldw <- getOption("warn")
+options(warn = -1)
+
 ## generate background
-shuffle.list <- crawdad:::makeShuffledCells(slide.filt,
+shuffle.list <- crawdad:::makeShuffledCells(slide,
                           resolutions = resolutions,
                           perms = 1,
                           ncores = ncores,
                           seed = 1,
                           verbose = TRUE)
+
+options(warn = oldw)
 
 ## note: 0.34 minutes with 7 cores, 2.3 GHz Quad-Core Intel Core i7
 ```
@@ -118,12 +104,18 @@ saveRDS(shuffle.list, paste0(here::here(), "/data/slideseq/slideseqPuck.190926_0
 
 ```{r}
 
+oldw <- getOption("warn")
+options(warn = -1)
+
 ## find trends, passing background as parameter
-results <- crawdad::findTrends(slide.filt,
+results <- crawdad::findTrends(slide,
                         dist = 100,
                         shuffle.list = shuffle.list,
                         ncores = ncores,
                         verbose = TRUE)
+
+
+options(warn = oldw)
 
 ## note: 1.3 minutes with 7 cores, 2.3 GHz Quad-Core Intel Core i7
 
@@ -139,6 +131,15 @@ saveRDS(results, paste0(here::here(), "/data/slideseq/slideseqPuck.190926_08.pai
 ```
 
 # Filter trends
+
+```{r}
+
+table(slide$celltypes)
+
+```
+
+Ignore poorly represented cell types like:
+Choroid, Candelabrum, Ependymal, Globular, Macrophages
 
 ```{r}
 
@@ -183,14 +184,36 @@ results.change$`MLI2`
 
 ```{r}
 
-sum(unlist(lapply(results.coloc, function(x){
-  ncol(x)
+ignore <- c("Choroid", "Candelabrum", "Ependymal", "Globular", "Macrophages")
+
+length(unlist(lapply(names(results.coloc), function(ct){
+  if(!ct %in% ignore){
+    df <- results.coloc[[ct]]
+    cts <- setdiff(colnames(df), ignore)
+    return(cts)
+  } else {
+    NULL
+  }
 })))
-sum(unlist(lapply(results.sep, function(x){
-  ncol(x)
+
+length(unlist(lapply(names(results.sep), function(ct){
+  if(!ct %in% ignore){
+    df <- results.sep[[ct]]
+    cts <- setdiff(colnames(df), ignore)
+    return(cts)
+  } else {
+    NULL
+  }
 })))
-sum(unlist(lapply(results.change, function(x){
-  ncol(x)
+
+length(unlist(lapply(names(results.change), function(ct){
+  if(!ct %in% ignore){
+    df <- results.change[[ct]]
+    cts <- setdiff(colnames(df), ignore)
+    return(cts)
+  } else {
+    NULL
+  }
 })))
 
 ```
@@ -213,12 +236,17 @@ crawdad::plotTrends(results = results["Bergmann"], idcol = "dist")
 
 ```{r}
 
+oldw <- getOption("warn")
+options(warn = -1)
+
 binomMat <- crawdad::binomialTestMatrix(slide,
                                neigh.dist = 100,
                                ncores = ncores,
                                verbose = TRUE)
 
 head(binomMat)
+
+options(warn = oldw)
 
 ## note: 0.8 minutes with 7 cores, 2.3 GHz Quad-Core Intel Core i7
 ## previous code iteration on rockfish took 3:56 minutes with 32 cores! much better now 
@@ -234,12 +262,17 @@ saveRDS(binomMat, paste0(here::here(), "/data/slideseq/slideseqPuck.190926_08.bi
 
 ```{r}
 
+oldw <- getOption("warn")
+options(warn = -1)
+
 subset.list <- crawdad::selectSubsets(binomMat,
                              slide$celltypes,
                              sub.type = "near",
                              sub.thresh = 0.05,
                              ncores = ncores,
                              verbose = TRUE)
+
+options(warn = oldw)
 
 ```
 
@@ -256,12 +289,17 @@ saveRDS(subset.list, paste0(here::here(), "/data/slideseq/slideseqPuck.190926_08
 
 ```{r}
 
+oldw <- getOption("warn")
+options(warn = -1)
+
 results.subsets <- crawdad::findTrends(slide,
                         dist = 100,
                         shuffle.list = shuffle.list,
                         subset.list = subset.list,
                         ncores = ncores,
                         verbose = TRUE)
+
+options(warn = oldw)
 
 ## note: 27.85 minutes with 7 cores, 2.3 GHz Quad-Core Intel Core i7; vs 2:46 minutes 14 cores on rockfish
 
@@ -414,7 +452,61 @@ plt
 
 ```
 
+```{r}
+
+## pull out cells in specific grid regions
+int <- sf::st_intersection(slide, grid[[14]])
+cells2 <- slide[rownames(int),]
+
+## grid 11 real
+plt <- crawdad::vizAllClusters(cells = cells2,
+                               coms = cells2$celltypes,
+                               ofInterest = c("Bergmann", "MLI1", "MLI2", "Purkinje", "Granule", "Oligodendrocytes"),
+                               title = "grid14",
+                               axisAdj = 1, s = 10, a = 0.5) +
+  # ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
+  ggplot2::theme(legend.position="none") +
+  ggplot2::labs(x = "x",
+                y = "y")
+
+ggplot2::ggsave(filename = "2_slideseq_purk_berg_tissue_sep_zoom.pdf",
+                plot = plt,
+                device = "pdf",
+                path = figpath,
+                scale = 1,
+                width = 6,
+                height = 6,
+                units = c("in"))
+
+plt
+
+```
+
 ## Fig 2 - trends
+
+### all
+
+```{r}
+
+ignore <- c("Choroid", "Candelabrum", "Ependymal", "Globular", "Macrophages")
+
+dat <- crawdad::meltResultsList(results)
+
+dat <- dat[!dat$reference %in% c(ignore) & !dat$neighbor %in% c(ignore),]
+
+plt <- vizTrends.heatmap(dat = dat, annotation = FALSE)
+plt
+
+ggplot2::ggsave(filename = "2_slideseq_all_trends_heatmap.pdf",
+                plot = plt,
+                device = "pdf",
+                path = figpath,
+                scale = 1,
+                width = 12,
+                height = 10,
+                units = c("in"))
+
+```
 
 ### Purkinje
 
@@ -468,13 +560,53 @@ ggplot2::ggsave(filename = "2_slideseq_purkinje_trends.pdf",
 
 dat <- crawdad::meltResultsList(results)
 
+d1 <- dat[dat$reference == "Purkinje" & dat$neighbor == "Granule",]
+plt <- vizTrends(dat = d1) +
+  ggplot2::scale_x_log10()
+plt 
+
+d2 <- dat[dat$reference == "Purkinje" & dat$neighbor == "Oligodendrocytes",]
+plt <- vizTrends(dat = d2) +
+  ggplot2::scale_x_log10()
+plt 
+
+
+## combine the trends into one data.frame, and have the "id" column label the combo, plot both lines on same plot
+## turn off the facet wrap so just coloring the two trends, which are labeled using the "id" column
+
+d1$id <- "Granule"
+d2$id <- "Oligodendrocytes"
+
+d <- dplyr::bind_rows(list(d1, d2))
+
+plt <- vizTrends(dat = d, facet = FALSE) +
+  ggplot2::scale_x_log10() +
+  # ggplot2::theme(legend.position="none") +
+  ggplot2::ggtitle("Purkinje")
+plt 
+
+ggplot2::ggsave(filename = "2_slideseq_purkinje_trends_sep.pdf",
+                plot = plt,
+                device = "pdf",
+                path = figpath,
+                scale = 1,
+                width = 4,
+                height = 4,
+                units = c("in"))
+
+```
+
+```{r}
+
+dat <- crawdad::meltResultsList(results)
+
 d1 <- dat[dat$reference == "Purkinje",]
 plt <- vizTrends(dat = d1, facet = FALSE, id = "neighbor") +
   ggplot2::scale_x_log10() +
   ggplot2::ggtitle("Purkinje")
 plt
 
-ggplot2::ggsave(filename = "S1_slideseq_purkinje_trends_all.pdf",
+ggplot2::ggsave(filename = "S3_slideseq_purkinje_trends_all.pdf",
                 plot = plt,
                 device = "pdf",
                 path = figpath,
@@ -544,7 +676,7 @@ plt <- vizTrends(dat = d1, facet = FALSE, id = "neighbor") +
   ggplot2::ggtitle("Bergmann")
 plt
 
-ggplot2::ggsave(filename = "S1_slideseq_bergmann_trends_all.pdf",
+ggplot2::ggsave(filename = "S3_slideseq_bergmann_trends_all.pdf",
                 plot = plt,
                 device = "pdf",
                 path = figpath,
@@ -614,7 +746,7 @@ plt <- vizTrends(dat = d1, facet = FALSE, id = "neighbor") +
   ggplot2::ggtitle("MLI1")
 plt
 
-ggplot2::ggsave(filename = "S1_slideseq_mli1_trends_all.pdf",
+ggplot2::ggsave(filename = "S3_slideseq_mli1_trends_all.pdf",
                 plot = plt,
                 device = "pdf",
                 path = figpath,
@@ -684,7 +816,7 @@ plt <- vizTrends(dat = d1, facet = FALSE, id = "neighbor") +
   ggplot2::ggtitle("MLI2")
 plt
 
-ggplot2::ggsave(filename = "S1_slideseq_mli2_trends_all.pdf",
+ggplot2::ggsave(filename = "S3_slideseq_mli2_trends_all.pdf",
                 plot = plt,
                 device = "pdf",
                 path = figpath,

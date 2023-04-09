@@ -8,13 +8,14 @@ output: html_document
 ```{r}
 
 library(crawdad)
-data(slide)
 
 ```
 
 # SlideSeq
 
 ```{r}
+
+data(slide)
 
 figpath <- paste0(here::here(), "/plots/slideseq")
 
@@ -89,13 +90,57 @@ plt <- ggplot2::ggplot(data = results.melt.berg) +
 
 plt
 
-ggplot2::ggsave(filename = "S2_slideseq_berg_ripleys.pdf",
+ggplot2::ggsave(filename = "S4_slideseq_berg_ripleys.pdf",
                 plot = plt,
                 device = "pdf",
                 path = figpath,
                 scale = 1,
                 width = 8,
                 height = 6,
+                units = c("in"))
+
+```
+
+```{r}
+
+ignore <- c("Choroid", "Candelabrum", "Ependymal", "Globular", "Macrophages")
+
+dat <- results.melt.berg
+dat <- dat[!dat$celltypes %in% c(ignore),]
+
+plt <- ggplot2::ggplot(data = dat) +
+  ggplot2::geom_line(ggplot2::aes(x = r, y = K, color = celltypes)) +
+  ggplot2::facet_wrap(~celltypes) +
+  ggplot2::theme_classic() +
+  ggplot2::theme(axis.text.x = ggplot2::element_text(size=12, color = "black", angle = -90, vjust = 0.5, hjust = 0),
+                   axis.text.y = ggplot2::element_text(size=12, color = "black"),
+                   axis.title.y = ggplot2::element_text(size=15),
+                   axis.title.x = ggplot2::element_text(size=15),
+                   axis.ticks.x = ggplot2::element_blank(),
+                   plot.title = ggplot2::element_text(size=15),
+                   plot.background = ggplot2::element_blank(),
+                   legend.background = ggplot2::element_blank(),
+                   panel.background = ggplot2::element_blank(),
+                   panel.grid.major =  ggplot2::element_line(size = 0.1, colour = "black"),
+                   panel.border = ggplot2::element_rect(colour = "black", fill=NA, size=1),
+                   axis.line = ggplot2::element_line(size = 0, colour = "black"),
+                   panel.spacing = ggplot2::unit(0.1, "lines"),
+                   strip.text = ggplot2::element_text(size = 12),
+                   legend.title = ggplot2::element_blank(),
+                   legend.position="none"
+    ) +
+  ggplot2::ggtitle("Bergmann") +
+  ggplot2::ylab(expression(K[iso](r) - K[theoretical](r)))
+
+plt
+
+ggplot2::ggsave(filename = "S4_slideseq_berg_ripleys_facet.pdf",
+                plot = plt,
+                device = "pdf",
+                path = figpath,
+                scale = 1,
+                width = 10,
+                height = 10,
                 units = c("in"))
 
 ```
@@ -119,8 +164,14 @@ colnames(results.melt.purk) <- c("celltypes", "r", "K")
 
 ```{r}
 
-plt <- ggplot2::ggplot(data = results.melt.purk) +
+ignore <- c("Choroid", "Candelabrum", "Ependymal", "Globular", "Macrophages")
+
+dat <- results.melt.purk
+dat <- dat[!dat$celltypes %in% c(ignore),]
+
+plt <- ggplot2::ggplot(data = dat) +
   ggplot2::geom_line(ggplot2::aes(x = r, y = K, color = celltypes)) +
+  ggplot2::facet_wrap(~celltypes) +
   ggplot2::theme_classic() +
   ggplot2::theme(axis.text.x = ggplot2::element_text(size=12, color = "black", angle = -90, vjust = 0.5, hjust = 0),
                    axis.text.y = ggplot2::element_text(size=12, color = "black"),
@@ -137,52 +188,21 @@ plt <- ggplot2::ggplot(data = results.melt.purk) +
                    panel.spacing = ggplot2::unit(0.1, "lines"),
                    strip.text = ggplot2::element_text(size = 12),
                    legend.title = ggplot2::element_blank(),
-                   # legend.position="none"
+                   legend.position="none"
     ) +
   ggplot2::ggtitle("Purkinje") +
   ggplot2::ylab(expression(K[iso](r) - K[theoretical](r)))
 
 plt
 
-ggplot2::ggsave(filename = "S2_slideseq_purk_ripleys.pdf",
+ggplot2::ggsave(filename = "S4_slideseq_purk_ripleys_facet.pdf",
                 plot = plt,
                 device = "pdf",
                 path = figpath,
                 scale = 1,
-                width = 8,
-                height = 6,
+                width = 10,
+                height = 10,
                 units = c("in"))
-
-```
-
-```{r}
-
-dat <- results.melt.purk[results.melt.purk$celltypes %in% c("Ependymal", "Choroid", "Granule", "Oligodendrocytes"),]
-
-plt <- ggplot2::ggplot(data = dat) +
-  ggplot2::geom_line(ggplot2::aes(x = r, y = K, color = celltypes)) +
-  ggplot2::theme_classic() +
-  ggplot2::theme(axis.text.x = ggplot2::element_text(size=12, color = "black", angle = -90, vjust = 0.5, hjust = 0),
-                   axis.text.y = ggplot2::element_text(size=12, color = "black"),
-                   axis.title.y = ggplot2::element_text(size=15),
-                   axis.title.x = ggplot2::element_text(size=15),
-                   axis.ticks.x = ggplot2::element_blank(),
-                   plot.title = ggplot2::element_text(size=15),
-                   plot.background = ggplot2::element_blank(),
-                   legend.background = ggplot2::element_blank(),
-                   panel.background = ggplot2::element_blank(),
-                   panel.grid.major =  ggplot2::element_line(size = 0.1, colour = "black"),
-                   panel.border = ggplot2::element_rect(colour = "black", fill=NA, size=1),
-                   axis.line = ggplot2::element_line(size = 0, colour = "black"),
-                   panel.spacing = ggplot2::unit(0.1, "lines"),
-                   strip.text = ggplot2::element_text(size = 12),
-                   legend.title = ggplot2::element_blank(),
-                   # legend.position="none"
-    ) +
-  ggplot2::ggtitle("Purkinje") +
-  ggplot2::ylab(expression(K[iso](r) - K[theoretical](r)))
-
-plt
 
 ```
 
@@ -205,8 +225,14 @@ colnames(results.melt.mli1) <- c("celltypes", "r", "K")
 
 ```{r}
 
-plt <- ggplot2::ggplot(data = results.melt.mli1) +
+ignore <- c("Choroid", "Candelabrum", "Ependymal", "Globular", "Macrophages")
+
+dat <- results.melt.mli1
+dat <- dat[!dat$celltypes %in% c(ignore),]
+
+plt <- ggplot2::ggplot(data = dat) +
   ggplot2::geom_line(ggplot2::aes(x = r, y = K, color = celltypes)) +
+  ggplot2::facet_wrap(~celltypes) +
   ggplot2::theme_classic() +
   ggplot2::theme(axis.text.x = ggplot2::element_text(size=12, color = "black", angle = -90, vjust = 0.5, hjust = 0),
                    axis.text.y = ggplot2::element_text(size=12, color = "black"),
@@ -223,20 +249,20 @@ plt <- ggplot2::ggplot(data = results.melt.mli1) +
                    panel.spacing = ggplot2::unit(0.1, "lines"),
                    strip.text = ggplot2::element_text(size = 12),
                    legend.title = ggplot2::element_blank(),
-                   # legend.position="none"
+                   legend.position="none"
     ) +
   ggplot2::ggtitle("MLI1") +
   ggplot2::ylab(expression(K[iso](r) - K[theoretical](r)))
 
 plt
 
-ggplot2::ggsave(filename = "S2_slideseq_mli1_ripleys.pdf",
+ggplot2::ggsave(filename = "S4_slideseq_mli1_ripleys_facet.pdf",
                 plot = plt,
                 device = "pdf",
                 path = figpath,
                 scale = 1,
-                width = 8,
-                height = 6,
+                width = 10,
+                height = 10,
                 units = c("in"))
 
 ```
@@ -260,8 +286,14 @@ colnames(results.melt.mli2) <- c("celltypes", "r", "K")
 
 ```{r}
 
-plt <- ggplot2::ggplot(data = results.melt.mli2) +
+ignore <- c("Choroid", "Candelabrum", "Ependymal", "Globular", "Macrophages")
+
+dat <- results.melt.mli2
+dat <- dat[!dat$celltypes %in% c(ignore),]
+
+plt <- ggplot2::ggplot(data = dat) +
   ggplot2::geom_line(ggplot2::aes(x = r, y = K, color = celltypes)) +
+  ggplot2::facet_wrap(~celltypes) +
   ggplot2::theme_classic() +
   ggplot2::theme(axis.text.x = ggplot2::element_text(size=12, color = "black", angle = -90, vjust = 0.5, hjust = 0),
                    axis.text.y = ggplot2::element_text(size=12, color = "black"),
@@ -278,20 +310,20 @@ plt <- ggplot2::ggplot(data = results.melt.mli2) +
                    panel.spacing = ggplot2::unit(0.1, "lines"),
                    strip.text = ggplot2::element_text(size = 12),
                    legend.title = ggplot2::element_blank(),
-                   # legend.position="none"
+                   legend.position="none"
     ) +
   ggplot2::ggtitle("MLI2") +
   ggplot2::ylab(expression(K[iso](r) - K[theoretical](r)))
 
 plt
 
-ggplot2::ggsave(filename = "S2_slideseq_MLI2_ripleys.pdf",
+ggplot2::ggsave(filename = "S4_slideseq_mli2_ripleys_facet.pdf",
                 plot = plt,
                 device = "pdf",
                 path = figpath,
                 scale = 1,
-                width = 8,
-                height = 6,
+                width = 10,
+                height = 10,
                 units = c("in"))
 
 ```
@@ -346,8 +378,12 @@ results.melt.intmeso$ref <- "Intermediate mesoderm"
 
 ```{r}
 
-plt <- ggplot2::ggplot(data = results.melt.intmeso) +
+dat <- results.melt.intmeso
+dat <- dat[!dat$celltypes %in% c(ignore),]
+
+plt <- ggplot2::ggplot(data = dat) +
   ggplot2::geom_line(ggplot2::aes(x = r, y = K, color = celltypes)) +
+  ggplot2::facet_wrap(~celltypes) +
   ggplot2::theme_classic() +
   ggplot2::theme(axis.text.x = ggplot2::element_text(size=12, color = "black", angle = -90, vjust = 0.5, hjust = 0),
                    axis.text.y = ggplot2::element_text(size=12, color = "black"),
@@ -362,9 +398,9 @@ plt <- ggplot2::ggplot(data = results.melt.intmeso) +
                    panel.border = ggplot2::element_rect(colour = "black", fill=NA, size=1),
                    axis.line = ggplot2::element_line(size = 0, colour = "black"),
                    panel.spacing = ggplot2::unit(0.1, "lines"),
-                   strip.text = ggplot2::element_text(size = 12),
+                   strip.text = ggplot2::element_text(size = 8),
                    legend.title = ggplot2::element_blank(),
-                   # legend.position="none"
+                   legend.position="none"
     ) +
   ggplot2::ggtitle("Intermediate mesoderm") +
   ggplot2::ylab(expression(K[iso](r) - K[theoretical](r))) +
@@ -372,13 +408,13 @@ plt <- ggplot2::ggplot(data = results.melt.intmeso) +
 
 plt
 
-ggplot2::ggsave(filename = "S3_seqfish_intMeso_ripleys.pdf",
+ggplot2::ggsave(filename = "S5_seqfish_intMeso_ripleys_facet.pdf",
                 plot = plt,
                 device = "pdf",
                 path = figpath,
                 scale = 1,
-                width = 8,
-                height = 6,
+                width = 10,
+                height = 10,
                 units = c("in"))
 
 ```
@@ -435,8 +471,12 @@ results.melt.endo$ref <- "Endothelium"
 
 ```{r}
 
-plt <- ggplot2::ggplot(data = results.melt.endo) +
+dat <- results.melt.endo
+dat <- dat[!dat$celltypes %in% c(ignore),]
+
+plt <- ggplot2::ggplot(data = dat) +
   ggplot2::geom_line(ggplot2::aes(x = r, y = K, color = celltypes)) +
+  ggplot2::facet_wrap(~celltypes) +
   ggplot2::theme_classic() +
   ggplot2::theme(axis.text.x = ggplot2::element_text(size=12, color = "black", angle = -90, vjust = 0.5, hjust = 0),
                    axis.text.y = ggplot2::element_text(size=12, color = "black"),
@@ -451,9 +491,9 @@ plt <- ggplot2::ggplot(data = results.melt.endo) +
                    panel.border = ggplot2::element_rect(colour = "black", fill=NA, size=1),
                    axis.line = ggplot2::element_line(size = 0, colour = "black"),
                    panel.spacing = ggplot2::unit(0.1, "lines"),
-                   strip.text = ggplot2::element_text(size = 12),
+                   strip.text = ggplot2::element_text(size = 8),
                    legend.title = ggplot2::element_blank(),
-                   # legend.position="none"
+                   legend.position="none"
     ) +
   ggplot2::ggtitle("Endothelium") +
   ggplot2::ylab(expression(K[iso](r) - K[theoretical](r))) +
@@ -461,13 +501,13 @@ plt <- ggplot2::ggplot(data = results.melt.endo) +
 
 plt
 
-ggplot2::ggsave(filename = "S3_seqfish_endo_ripleys.pdf",
+ggplot2::ggsave(filename = "S5_seqfish_endo_ripleys_endo_facet.pdf",
                 plot = plt,
                 device = "pdf",
                 path = figpath,
                 scale = 1,
-                width = 8,
-                height = 6,
+                width = 10,
+                height = 10,
                 units = c("in"))
 
 ```
@@ -524,8 +564,12 @@ results.melt.latplate$ref <- "Lateral plate mesoderm"
 
 ```{r}
 
-plt <- ggplot2::ggplot(data = results.melt.latplate) +
+dat <- results.melt.latplate
+dat <- dat[!dat$celltypes %in% c(ignore),]
+
+plt <- ggplot2::ggplot(data = dat) +
   ggplot2::geom_line(ggplot2::aes(x = r, y = K, color = celltypes)) +
+  ggplot2::facet_wrap(~celltypes) +
   ggplot2::theme_classic() +
   ggplot2::theme(axis.text.x = ggplot2::element_text(size=12, color = "black", angle = -90, vjust = 0.5, hjust = 0),
                    axis.text.y = ggplot2::element_text(size=12, color = "black"),
@@ -540,9 +584,9 @@ plt <- ggplot2::ggplot(data = results.melt.latplate) +
                    panel.border = ggplot2::element_rect(colour = "black", fill=NA, size=1),
                    axis.line = ggplot2::element_line(size = 0, colour = "black"),
                    panel.spacing = ggplot2::unit(0.1, "lines"),
-                   strip.text = ggplot2::element_text(size = 12),
+                   strip.text = ggplot2::element_text(size = 8),
                    legend.title = ggplot2::element_blank(),
-                   # legend.position="none"
+                   legend.position="none"
     ) +
   ggplot2::ggtitle("Lateral plate mesoderm") +
   ggplot2::ylab(expression(K[iso](r) - K[theoretical](r))) +
@@ -550,13 +594,13 @@ plt <- ggplot2::ggplot(data = results.melt.latplate) +
 
 plt
 
-ggplot2::ggsave(filename = "S3_seqfish_latplate_ripleys.pdf",
+ggplot2::ggsave(filename = "S5_seqfish_latplate_ripleys_facet.pdf",
                 plot = plt,
                 device = "pdf",
                 path = figpath,
                 scale = 1,
-                width = 8,
-                height = 6,
+                width = 10,
+                height = 10,
                 units = c("in"))
 
 ```
@@ -582,8 +626,12 @@ results.melt.haem$ref <- "Haematoendothelial progenitors"
 
 ```{r}
 
-plt <- ggplot2::ggplot(data = results.melt.haem) +
+dat <- results.melt.haem
+dat <- dat[!dat$celltypes %in% c(ignore),]
+
+plt <- ggplot2::ggplot(data = dat) +
   ggplot2::geom_line(ggplot2::aes(x = r, y = K, color = celltypes)) +
+  ggplot2::facet_wrap(~celltypes) +
   ggplot2::theme_classic() +
   ggplot2::theme(axis.text.x = ggplot2::element_text(size=12, color = "black", angle = -90, vjust = 0.5, hjust = 0),
                    axis.text.y = ggplot2::element_text(size=12, color = "black"),
@@ -598,9 +646,9 @@ plt <- ggplot2::ggplot(data = results.melt.haem) +
                    panel.border = ggplot2::element_rect(colour = "black", fill=NA, size=1),
                    axis.line = ggplot2::element_line(size = 0, colour = "black"),
                    panel.spacing = ggplot2::unit(0.1, "lines"),
-                   strip.text = ggplot2::element_text(size = 12),
+                   strip.text = ggplot2::element_text(size = 8),
                    legend.title = ggplot2::element_blank(),
-                   # legend.position="none"
+                   legend.position="none"
     ) +
   ggplot2::ggtitle("Haematoendothelial progenitors") +
   ggplot2::ylab(expression(K[iso](r) - K[theoretical](r))) +
@@ -608,13 +656,13 @@ plt <- ggplot2::ggplot(data = results.melt.haem) +
 
 plt
 
-ggplot2::ggsave(filename = "S3_seqfish_haem_ripleys.pdf",
+ggplot2::ggsave(filename = "S5_seqfish_haem_ripleys_facet.pdf",
                 plot = plt,
                 device = "pdf",
                 path = figpath,
                 scale = 1,
-                width = 8,
-                height = 6,
+                width = 10,
+                height = 10,
                 units = c("in"))
 
 ```
@@ -668,7 +716,7 @@ plt <- ggplot2::ggplot() +
 
 plt
 
-ggplot2::ggsave(filename = "S3_seqfish_merge_ripleys.pdf",
+ggplot2::ggsave(filename = "S5_seqfish_merge_ripleys.pdf",
                 plot = plt,
                 device = "pdf",
                 path = figpath,
