@@ -453,6 +453,98 @@ Likewise, we will also harmonize HBM825.PBVN.284 and HBM342.FSLD.938, and then t
 
 HBM825.PBVN.284 -\> HBM342.FSLD.938
 
+## PKHL only embedding
+
+```{r}
+
+pkhl_tsne <- Rtsne::Rtsne(dat5_scale, 
+                    is_distance=FALSE, 
+                    perplexity=30, 
+                    num_threads=7,
+                    verbose=FALSE)$Y 
+rownames(pkhl_tsne) <- rownames(dat5_scale)
+
+```
+
+```{r}
+
+data(pkhl)
+
+figpath <- paste0(here::here(), "/plots/spleen")
+
+rownames(pkhl_tsne) <- rownames(pkhl)
+colnames(pkhl_tsne) <- c("x", "y")
+
+## cluster labels
+cent.pos <- do.call(rbind, tapply(1:nrow(pkhl_tsne),  as.factor(pkhl$celltypes), function(ii) apply(pkhl_tsne[ii,,drop=F],2,median)))
+cent.pos <- as.data.frame(cent.pos)
+colnames(cent.pos) <- c("x", "y")
+cent.pos$cluster <- rownames(cent.pos)
+cent.pos <- na.omit(cent.pos)
+
+plt <- crawdad::vizAllClusters(cells = pkhl_tsne,
+                        coms = as.factor(pkhl$celltypes),
+                        s = 1) +
+  
+  ggplot2::geom_text(data = cent.pos,
+                     ggplot2::aes(x = x, y = y, label = cluster),
+                     fontface = "bold", size = 3) +
+  
+  ggplot2::xlab("tSNE 1") +
+  ggplot2::ylab("tSNE 2") +
+  ggplot2::theme(legend.position="none")
+  # ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
+
+ggplot2::ggsave(filename = "3_spleen_pkhl_tsne_labs.pdf",
+                plot = plt,
+                device = "pdf",
+                path = figpath,
+                scale = 1,
+                width = 6,
+                height = 6,
+                units = c("in"))
+plt
+
+```
+
+```{r}
+
+pkhl_umap <- uwot::umap(dat5_scale,
+                  n_neighbors = 30,
+                  min_dist = 0.001, ## try to pack points into clusters 
+                  spread = 2,
+                  n_threads = 7)
+rownames(pkhl_umap) <- rownames(dat5_scale)
+
+```
+
+```{r}
+
+figpath <- paste0(here::here(), "/plots/spleen")
+
+rownames(pkhl_umap) <- rownames(pkhl)
+colnames(pkhl_umap) <- c("x", "y")
+
+plt <- crawdad::vizAllClusters(cells = pkhl_umap,
+                        coms = as.factor(pkhl$celltypes),
+                        s = 1) +
+  ggplot2::xlab("UMAP 1") +
+  ggplot2::ylab("UMAP 2") +
+  ggplot2::theme(legend.position="none")
+  # ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
+
+ggplot2::ggsave(filename = "3_spleen_pkhl_umap.pdf",
+                plot = plt,
+                device = "pdf",
+                path = figpath,
+                scale = 1,
+                width = 6,
+                height = 6,
+                units = c("in"))
+plt
+
+```
+
 ## A) harmonize datasets
 
 ### KSFB and NGPL

@@ -1,7 +1,7 @@
 ---
 title: "CRAWDAD Tutorial"
 author: "Brendan F. Miller, Jean Fan"
-date: "3/16/2023"
+date: "4/10/2023"
 output: html_document
 vignette: >
   %\VignetteIndexEntry{CRAWDAD Vignette}
@@ -45,7 +45,7 @@ library(dplyr)
 
 ```{r}
 
-ncores <- 7
+ncores <- 2
 
 ```
 
@@ -77,6 +77,10 @@ Convert the data.frame of cells to an `sp::SpatialPointsDataFrame` object. This 
 `CRAWDAD` identifies cell type spatial relationships by comparing cell type organizational patterns in the real data to a set of null distributions, which are a datasets in which cell labels have been shuffled at different scales, or resolutions. We can generate this list of shuffled datasets with the following code:
 
 ```{r}
+
+oldw <- getOption("warn")
+options(warn = -1)
+
 ## generate background
 shuffle.list <- crawdad::makeShuffledCells(cells,
                           resolutions = c(100, 200, 500, 800, 1000),
@@ -84,6 +88,9 @@ shuffle.list <- crawdad::makeShuffledCells(cells,
                           ncores = ncores,
                           seed = 1,
                           verbose = TRUE)
+
+options(warn = oldw)
+
 ```
 
 ## Run pairwise analysis
@@ -92,12 +99,17 @@ We can identify trends that describe spatial relationships between pairwise comb
 
 ```{r}
 
+oldw <- getOption("warn")
+options(warn = -1)
+
 ## find trends, passing background as parameter
 results <- crawdad::findTrends(cells,
                         dist = 100,
                         shuffle.list = shuffle.list,
                         ncores = ncores,
                         verbose = TRUE)
+
+options(warn = oldw)
 
 ```
 
@@ -211,12 +223,17 @@ First, we generate a probability matrix where rows are each cell in the dataset,
 
 ```{r}
 
+oldw <- getOption("warn")
+options(warn = -1)
+
 binomMat <- crawdad::binomialTestMatrix(cells,
                                neigh.dist = 100,
                                ncores = ncores,
                                verbose = TRUE)
 
 head(binomMat)
+
+options(warn = oldw)
 
 ```
 
@@ -228,6 +245,9 @@ In this tutorial, we will define subsets of cell types whose neighbors are enric
 
 ```{r}
 
+oldw <- getOption("warn")
+options(warn = -1)
+
 subset.list <- crawdad::selectSubsets(binomMat,
                              cells$celltypes,
                              sub.type = "near",
@@ -236,6 +256,8 @@ subset.list <- crawdad::selectSubsets(binomMat,
                              verbose = TRUE)
 
 subset.list["C_near_B"]
+
+options(warn = oldw)
 
 ```
 
@@ -369,12 +391,17 @@ We can also analyze cell type colocalization patterns for the defined subsets. F
 
 ```{r}
 
+oldw <- getOption("warn")
+options(warn = -1)
+
 results2 <- crawdad::findTrends(cells,
                         dist = 100,
                         shuffle.list = shuffle.list,
                         subset.list = subset.list,
                         ncores = ncores,
                         verbose = TRUE)
+
+options(warn = oldw)
 
 ```
 

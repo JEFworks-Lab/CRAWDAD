@@ -16,3 +16,10 @@ toSP(pos, celltypes, verbose = TRUE)
 \description{
 Go from positions and celltype annotations to spatialpointsdataframe object
 }
+\examples{
+\dontrun{
+data(sim)
+cells <- toSP(pos = sim[,c("x", "y")], celltypes = slide$type)
+}
+
+}

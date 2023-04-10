@@ -8,7 +8,7 @@
 #' 
 #' @return data.frame of x, y coordinates of each point, and column type indicating its cell type
 #'
-#' @export
+#' @noRd
 simulate_background <- function(size = 10000, cts = c("A"), prob = c(1), seed = 1, scale = 1){
   set.seed(seed)
   x <- runif(size, min = 0, max = 1)
@@ -37,7 +37,7 @@ simulate_background <- function(size = 10000, cts = c("A"), prob = c(1), seed = 
 #' @param cts same format as radii, but "inner" and "outer" are vectors of cell types present in core and ring
 #' @param probs same format as radii, but "inner" and "outer" are vectors of cell types proportions 
 #' 
-#' @export
+#' @noRd
 simulate_circles <- function(pos, locs, radii, cts, probs){
   
   p <- pos

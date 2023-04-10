@@ -9,7 +9,7 @@
 #'
 #' @return nothing
 #'
-#' @export
+#' @noRd
 plotTrends <- function(results,
                        idcol = "id",
                        legend = FALSE,
@@ -132,7 +132,7 @@ plotTrends <- function(results,
 #' 
 #' @return nothing
 #' 
-#' @export
+#' @noRd
 plotTrendsOverlay <- function(results,
                               ...){
   
@@ -258,8 +258,10 @@ plotTrendsOverlay <- function(results,
 #' @return plot
 #' 
 #' @examples
+#' \dontrun{
 #' data(slide)
 #' vizAllClusters(slide, coms = slide$celltypes)
+#' }
 #' 
 #' @export
 vizAllClusters <- function(cells, coms, ofInterest = NULL,
@@ -386,8 +388,10 @@ vizAllClusters <- function(cells, coms, ofInterest = NULL,
 #' @return plot where each panel is a different celltype
 #' 
 #' @examples 
+#' \dontrun{
 #' data(slide)
-#' vizEachCluster(slide, coms = slide$celltypes, ofInterest = c("Bergmann", "Purkinje"))
+#' vizEachCluster(slide, coms = slide$celltypes)
+#' }
 #' 
 #' @export
 vizEachCluster <- function(cells, coms, axisAdj = 1, s = 0.5, a = 1,
@@ -505,6 +509,15 @@ vizEachCluster <- function(cells, coms, axisAdj = 1, s = 0.5, a = 1,
 #' @param points boolean to plot points (default: TRUE)
 #' @param withPerms if the results list is a list of lists using `returnMeans = FALSE` in `findTrends()`, then column order is different and this flag is needed (default: FALSE)
 #' 
+#' @examples 
+#' \dontrun{
+#' data(sim)
+#' cells <- toSP(pos = sim[,c("x", "y")], celltypes = slide$type)
+#' shuffle.list <- makeShuffledCells(cells, resolutions = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
+#' results <- findTrends(cells, dist = 100, shuffle.list = shuffle.list, ncores = 2)
+#' vizTrends(dat = results)
+#' }
+#' 
 #' @export
 vizTrends <- function(dat, id = "id", yaxis = "Z",
                       sig.thresh = 1.96, # -log10(0.05/nrow(dat)), ## sig thresh for num tests
@@ -577,6 +590,15 @@ vizTrends <- function(dat, id = "id", yaxis = "Z",
 #' @param withPerms if the results list is a list of lists using `returnMeans = FALSE` in `findTrends()`, then column order is different and this flag is needed (default: FALSE)
 #' @param annotation boolean to show the Z score values in the squares of the heatmap (default: FALSE)
 #' @param ncols specify number of columns in facet wrap (default: 4)
+#' 
+#' @examples 
+#' \dontrun{
+#' data(sim)
+#' cells <- toSP(pos = sim[,c("x", "y")], celltypes = slide$type)
+#' shuffle.list <- makeShuffledCells(cells, resolutions = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
+#' results <- findTrends(cells, dist = 100, shuffle.list = shuffle.list, ncores = 2)
+#' vizTrends.heatmap(dat = results)
+#' }
 #' 
 #' @export
 vizTrends.heatmap <- function(dat,
@@ -662,6 +684,16 @@ vizTrends.heatmap <- function(dat,
 #' @param subsetIDs vector of susbet cell type labels to include in output (names of vectors in `subset_list`) (default: NA)
 #'
 #' @return factor of specific cell type labels for visualizing with `vizAllClusters()` in the parameter: `clusters`
+#' 
+#' @examples 
+#' \dontrun{
+#' data(sim)
+#' cells <- toSP(pos = sim[,c("x", "y")], celltypes = slide$type)
+#' shuffle.list <- makeShuffledCells(cells, resolutions = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
+#' binomMat <- binomialTestMatrix(cells, neigh.dist = 100, ncores = 2)
+#' subset.list <- selectSubsets(binomMat, cells$celltypes, sub.type = "near", sub.thresh = 0.05)
+#' annots_temp <- selectLabels(df = cells, com = cells$celltypes, subset_list = subset.list, cellIDs = c("A", "B", "C", "D"), subsetIDs = c("C_near_B"))
+#' }
 #' 
 #' @export
 selectLabels <- function(df,

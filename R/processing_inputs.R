@@ -4,6 +4,12 @@
 #' @param celltypes character vector; the cell type of each cell provided in pos
 #' @param verbose Boolean; verbosity (default TRUE)
 #' 
+#' @examples 
+#' \dontrun{
+#' data(sim)
+#' cells <- toSP(pos = sim[,c("x", "y")], celltypes = slide$type)
+#' }
+#' 
 #' @export
 toSP <- function(pos, celltypes, verbose=TRUE){
   
@@ -101,13 +107,13 @@ seuratToSP <- function(obj, coms, posIDs = c("x", "y"), verbose=TRUE){
 }
 
 
-#' remove celltypes that have few cells in the datset
+#' remove celltypes that have few cells in the dataset
 #' 
 #' @param cells sp::SpatialPointsDataFrame object, with celltypes features column
 #' @param thresh threshold to remove cell types that contribute less than this fraction to the dataset (default: 0.0)
 #' @param verbose Boolean; verbosity (default TRUE)
 #' 
-#' @export
+#' @noRd
 filterCells <- function(cells, thresh = 0.0, verbose = TRUE){
   
   cellCounts <- table(cells$celltypes)
