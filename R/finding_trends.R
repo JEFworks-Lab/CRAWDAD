@@ -11,8 +11,10 @@
 #' @param verbose Boolean for verbosity (default TRUE)
 #' 
 #' @examples  
+#' \dontrun{
 #' data(sim)
-#' makeShuffledCells(sim, resolutions = c(50, 100, 200, 300, 400, 500))
+#' makeShuffledCells(sim, resolutions = c(50, 100, 200, 300, 400, 500), ncores = 2)
+#' }
 #'
 #' @export
 makeShuffledCells <- function(cells,
@@ -298,6 +300,14 @@ evaluateSignificance <- function(cells,
 #' 
 #' @return matrix where rows are cells, columns are cell types and values are p-values whether or not a cell is enriched in neighbors of a given cell type based on a binomial test.
 #' 
+#' @examples 
+#' \dontrun{
+#' data(sim)
+#' cells <- toSP(pos = sim[,c("x", "y")], celltypes = slide$type)
+#' shuffle.list <- makeShuffledCells(cells, resolutions = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
+#' binomMat <- binomialTestMatrix(cells, neigh.dist = 100, ncores = 2)
+#' }
+#' 
 #' @export
 binomialTestMatrix <- function(cells,
                                neigh.dist = 100,
@@ -378,6 +388,15 @@ binomialTestMatrix <- function(cells,
 #' @param verbose Boolean for verbosity (default TRUE)
 #' 
 #' @return list where each entry is a subset and the values are the cell ids determined to be in the subset
+#' 
+#' @examples 
+#' \dontrun{
+#' data(sim)
+#' cells <- toSP(pos = sim[,c("x", "y")], celltypes = slide$type)
+#' shuffle.list <- makeShuffledCells(cells, resolutions = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
+#' binomMat <- binomialTestMatrix(cells, neigh.dist = 100, ncores = 2)
+#' subset.list <- selectSubsets(binomMat, cells$celltypes, sub.type = "near", sub.thresh = 0.05) 
+#' }
 #' 
 #' @export
 selectSubsets <- function(binomMatrix,
@@ -468,9 +487,11 @@ selectSubsets <- function(binomMatrix,
 #' @return A list that contains a dataframe for each reference cell type, where the dataframe contains the significance values for each neighbor cell type at each resolution
 #' 
 #' @examples
+#' \dontrun{
 #' data(sim)
 #' shuffle.list <- makeShuffledCells(sim, resolutions = c(50, 100, 200, 300, 400, 500))
 #' findTrends(sim, dist = 100, shuffle.list = shuffle.list, ncores = 2)
+#' }
 #' 
 #' @export
 findTrends <- function(cells,

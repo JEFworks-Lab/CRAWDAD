@@ -31,3 +31,14 @@ get neighbor cells defined as being a distance away from a set of reference cell
 ex: rownames(cells)\link{which(cells$celltypes == "A")}
 or can be an entry in a subset list from \code{selectSubsets()}
 }
+\examples{
+\dontrun{
+data(sim)
+cells <- toSP(pos = sim[,c("x", "y")], celltypes = slide$type)
+shuffle.list <- makeShuffledCells(cells, resolutions = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
+binomMat <- binomialTestMatrix(cells, neigh.dist = 100, ncores = 2)
+subset.list <- selectSubsets(binomMat, cells$celltypes, sub.type = "near", sub.thresh = 0.05)
+neighCells <- getNeighbors(cells = cells, reference.ids = subset.list[["C_near_B"]],  dist = 100)
+}
+
+}

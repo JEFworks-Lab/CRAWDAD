@@ -37,7 +37,9 @@ Returns a gridExtra of grobs.
 A single plot where each panel is a different cluster highlighted on the tissue
 }
 \examples{
+\dontrun{
 data(slide)
-vizEachCluster(slide, coms = slide$celltypes, ofInterest = c("Bergmann", "Purkinje"))
+vizEachCluster(slide, coms = slide$celltypes)
+}
 
 }

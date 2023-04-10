@@ -1,7 +1,7 @@
 ---
 title: "CRAWDAD Tutorial"
 author: "Brendan F. Miller, Jean Fan"
-date: "3/16/2023"
+date: "4/10/2023"
 output: html_document
 vignette: >
   %\VignetteIndexEntry{CRAWDAD Vignette}
@@ -45,7 +45,7 @@ library(dplyr)
 
 ```{r}
 
-ncores <- 7
+ncores <- 2
 
 ```
 
@@ -392,7 +392,7 @@ We can also analyze cell type colocalization patterns for the defined subsets. F
 ```{r}
 
 oldw <- getOption("warn")
-options(warn = -1)oldw <- getOption("warn")
+options(warn = -1)
 
 results2 <- crawdad::findTrends(cells,
                         dist = 100,

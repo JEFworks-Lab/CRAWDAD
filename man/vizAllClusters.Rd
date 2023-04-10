@@ -39,7 +39,9 @@ plot
 uses the x and y position information and a chosen set of communities
 }
 \examples{
+\dontrun{
 data(slide)
 vizAllClusters(slide, coms = slide$celltypes)
+}
 
 }

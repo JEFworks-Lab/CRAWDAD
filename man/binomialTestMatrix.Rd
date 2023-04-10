@@ -21,3 +21,12 @@ matrix where rows are cells, columns are cell types and values are p-values whet
 \description{
 pvalues are based on a binomial test and neighbors are defined within a given distance from a cell
 }
+\examples{
+\dontrun{
+data(sim)
+cells <- toSP(pos = sim[,c("x", "y")], celltypes = slide$type)
+shuffle.list <- makeShuffledCells(cells, resolutions = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
+binomMat <- binomialTestMatrix(cells, neigh.dist = 100, ncores = 2)
+}
+
+}

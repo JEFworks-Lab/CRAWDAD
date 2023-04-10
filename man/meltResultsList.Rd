@@ -25,3 +25,13 @@ The id column for each dataframe can be set to "100" and "200", respectively.
 Then both dataframes can be combined into one final dataframe.
 Now you have identifiers that include: resolution, neighbor, reference, and "id" (ie neighbor distance).
 }
+\examples{
+\dontrun{
+data(sim)
+cells <- toSP(pos = sim[,c("x", "y")], celltypes = slide$type)
+shuffle.list <- makeShuffledCells(cells, resolutions = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
+results <- findTrends(cells, dist = 100, shuffle.list = shuffle.list, ncores = 2)
+meltResultsList(results)
+}
+
+}

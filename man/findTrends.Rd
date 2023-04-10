@@ -42,8 +42,10 @@ This is done at difference resolutions, where a resolution is whether the cell t
 Trends are essentially built from significance values. The significance test basically asks if two cell types are localized or separated by assessing if the proportion of the neighboring cell type is significantly greater, or less than, random chance.
 }
 \examples{
+\dontrun{
 data(sim)
 shuffle.list <- makeShuffledCells(sim, resolutions = c(50, 100, 200, 300, 400, 500))
 findTrends(sim, dist = 100, shuffle.list = shuffle.list, ncores = 2)
+}
 
 }

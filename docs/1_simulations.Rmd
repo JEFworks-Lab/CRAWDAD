@@ -1,8 +1,12 @@
 ---
 title: "1_simulations"
 author: "Brendan F. Miller"
-date: "2/15/2023"
+date: "4/10/2023"
 output: html_document
+vignette: >
+  %\VignetteIndexEntry{CRAWDAD Vignette}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
 ---
 
 ```{r}
@@ -14,7 +18,7 @@ library(dplyr)
 
 ```{r}
 
-ncores = 7
+ncores = 2
 
 ```
 
@@ -75,14 +79,14 @@ plt <- crawdad::vizAllClusters(cells = p,
   ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
 plt
 
-ggplot2::ggsave(filename = "1_sim_tissue_legend.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 6,
-                height = 6,
-                units = c("in"))
+# ggplot2::ggsave(filename = "1_sim_tissue_legend.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 6,
+#                 height = 6,
+#                 units = c("in"))
 
 ```
 
@@ -91,7 +95,7 @@ Convert the data.frame of cells to an `sp::SpatialPointsDataFrame` object. This 
 ```{r}
 
 ## convert to SP
-cells <- crawdad:::toSP(pos = p[,c("x", "y")],
+cells <- crawdad::toSP(pos = p[,c("x", "y")],
                         celltypes = p$type)
 cells
 
@@ -107,7 +111,7 @@ oldw <- getOption("warn")
 options(warn = -1)
 
 ## generate background
-shuffle.list <- crawdad:::makeShuffledCells(cells,
+shuffle.list <- crawdad::makeShuffledCells(cells,
                           resolutions = c(150, 250, 500, 750, 1000, 1500, 2000),
                           perms = 1,
                           ncores = ncores,
@@ -169,14 +173,14 @@ plt <- ggplot2::ggplot(dat, ggplot2::aes(x=resolution, y=Z, col=neighbor)) +
     )
 plt
 
-ggplot2::ggsave(filename = "1_sim_trends.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 8,
-                height = 6,
-                units = c("in"))
+# ggplot2::ggsave(filename = "1_sim_trends.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 8,
+#                 height = 6,
+#                 units = c("in"))
 
 ```
 
@@ -185,17 +189,16 @@ ggplot2::ggsave(filename = "1_sim_trends.pdf",
 plt <- vizTrends.heatmap(dat = results)
 plt
 
-ggplot2::ggsave(filename = "S1_sim_trends_heatmap.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 6,
-                height = 2,
-                units = c("in"))
+# ggplot2::ggsave(filename = "S1_sim_trends_heatmap.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 6,
+#                 height = 2,
+#                 units = c("in"))
 
 ```
-
 
 ```{r}
 
@@ -207,16 +210,13 @@ plt <- vizTrends(dat = dat) +
   ggplot2::scale_x_log10()
 plt
 
-ggplot2::ggsave(filename = "1_sim_trends_selected.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 8,
-                height = 6,
-                units = c("in"))
+# ggplot2::ggsave(filename = "1_sim_trends_selected.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 8,
+#                 height = 6,
+#                 units = c("in"))
 
 ```
-
-
-

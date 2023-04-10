@@ -1,7 +1,7 @@
 ---
 title: "CODEX Spleen"
 author: "Brendan F. Miller"
-date: "2/15/2023"
+date: "4/10/2023"
 output: rmarkdown::html_document
 # output:
 #   md_document:
@@ -23,7 +23,7 @@ library(dplyr)
 
 ```{r}
 
-ncores = 7
+ncores = 2
 
 ```
 
@@ -118,21 +118,7 @@ saveRDS(results.pkhl, paste0(here::here(), "/data/spleen/PKHL/pkhl.folBcombined.
 
 ```
 
-## Visualizing trends
-
-```{r, eval=FALSE}
-
-crawdad::plotTrends(results = results.pkhl["CD4 Memory T cells"], idcol = "dist")
-
-```
-
-```{r, eval=FALSE}
-
-crawdad::plotTrends(results = results.pkhl["Podoplanin"], idcol = "dist")
-
-```
-
-## Defining susbets
+## Defining subsets
 
 ```{r, eval=FALSE}
 
@@ -175,7 +161,7 @@ saveRDS(subset.list.pkhl, paste0(here::here(), "/data/spleen/PKHL/pkhl.folBcombi
 
 ## Run analysis on subsets
 
-```{r}
+```{r, eval=FALSE}
 
 results.subsets.pkhl <- crawdad::findTrends(pkhl,
                         dist = 100,
@@ -213,16 +199,6 @@ ksfb <- ksfb %>%
 ksfb <- crawdad::toSP(pos = ksfb[,c("x", "y")],
                         celltypes = ksfb$celltypes_folBcombined)
 ksfb
-
-```
-
-```{r, eval=FALSE}
-## the above dataset has been saved as an rda file and able to load here:
-# data(pkhl)
-
-## convert to SP
-# pkhl <- crawdad:::toSP(pos = pkhl[,c("x", "y")],
-#                         celltypes = pkhl$celltypes)
 
 ```
 
@@ -287,21 +263,7 @@ saveRDS(results.ksfb, paste0(here::here(), "/data/spleen/KSFB/ksfb.folBcombined.
 
 ```
 
-## Visualizing trends
-
-```{r, eval=FALSE}
-
-crawdad::plotTrends(results = results.ksfb["CD4 Memory T cells"], idcol = "dist")
-
-```
-
-```{r, eval=FALSE}
-
-crawdad::plotTrends(results = results.ksfb["Podoplanin"], idcol = "dist")
-
-```
-
-## Defining susbets
+## Defining subsets
 
 ```{r, eval=FALSE}
 
@@ -450,7 +412,7 @@ ngpl
 
 primary spleen dataset (PKHL):
 
-```{r, eval=FALSE}
+```{r, eval=TRUE}
 
 ## folder on `brendan` branch
 figpath <- paste0(here::here(), "/plots/spleen")
@@ -472,7 +434,7 @@ other spleen datasets:
 
 ### KSFB
 
-```{r, eval=FALSE}
+```{r, eval=TRUE}
 
 shuffle.list.ksfb <- readRDS(paste0(here::here(), "/data/spleen/KSFB/ksfb.folBcombined.shuffled_res100-6000.rds"))
 
@@ -489,7 +451,7 @@ results.subsets.ksfb <- readRDS(paste0(here::here(), "/data/spleen/KSFB/ksfb.tri
 
 ### XXCD
 
-```{r, eval=FALSE}
+```{r, eval=TRUE}
 
 shuffle.list.xxcd <- readRDS(paste0(here::here(), "/data/spleen/XXCD/xxcd.folBcombined.shuffled_res100-6000.rds"))
 
@@ -506,7 +468,7 @@ results.subsets.xxcd <- readRDS(paste0(here::here(), "/data/spleen/XXCD/xxcd.tri
 
 ### PBVN
 
-```{r, eval=FALSE}
+```{r, eval=TRUE}
 
 shuffle.list.pbvn <- readRDS(paste0(here::here(), "/data/spleen/PBVN/pbvn.folBcombined.shuffled_res100-6000.rds"))
 
@@ -523,7 +485,7 @@ results.subsets.pbvn <- readRDS(paste0(here::here(), "/data/spleen/PBVN/pbvn.tri
 
 ### FSLD
 
-```{r, eval=FALSE}
+```{r, eval=TRUE}
 
 shuffle.list.fsld <- readRDS(paste0(here::here(), "/data/spleen/FSLD/fsld.folBcombined.shuffled_res100-6000.rds"))
 
@@ -540,7 +502,7 @@ results.subsets.fsld <- readRDS(paste0(here::here(), "/data/spleen/FSLD/fsld.tri
 
 ### NGPL
 
-```{r, eval=FALSE}
+```{r, eval=TRUE}
 
 shuffle.list.ngpl <- readRDS(paste0(here::here(), "/data/spleen/NGPL/ngpl.folBcombined.shuffled_res100-6000.rds"))
 
@@ -570,16 +532,16 @@ plt <- crawdad::vizAllClusters(cells = pkhl,
                         axisAdj = 1, s = 1, a = 0.5) +
   ggplot2::theme(legend.position="none")
   # ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
-
-ggplot2::ggsave(filename = "3_spleen_pkhl_tissue.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 6,
-                height = 6,
-                units = c("in"))
 plt
+
+# ggplot2::ggsave(filename = "3_spleen_pkhl_tissue.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 6,
+#                 height = 6,
+#                 units = c("in"))
 
 ```
 
@@ -605,14 +567,14 @@ plt <- crawdad::vizAllClusters(cells = pkhl,
   ggplot2::theme(legend.position="none")
 plt
 
-ggplot2::ggsave(filename = "3_spleen_pkhl_cd4_subsets_outsideFol_tissue.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 10,
-                height = 7,
-                units = c("in"))
+# ggplot2::ggsave(filename = "3_spleen_pkhl_cd4_subsets_outsideFol_tissue.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 10,
+#                 height = 7,
+#                 units = c("in"))
 
 ```
 
@@ -636,14 +598,14 @@ plt <- crawdad::vizAllClusters(cells = pkhl,
   ggplot2::theme(legend.position="none")
 plt
 
-ggplot2::ggsave(filename = "3_spleen_pkhl_cd4_subsets_insideFol_tissue.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 10,
-                height = 7,
-                units = c("in"))
+# ggplot2::ggsave(filename = "3_spleen_pkhl_cd4_subsets_insideFol_tissue.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 10,
+#                 height = 7,
+#                 units = c("in"))
 
 ```
 
@@ -673,14 +635,14 @@ plt <- crawdad::vizAllClusters(cells = pkhl,
   
 plt
 
-ggplot2::ggsave(filename = "3_spleen_pkhl_grid_tissue.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 10,
-                height = 7,
-                units = c("in"))
+# ggplot2::ggsave(filename = "3_spleen_pkhl_grid_tissue.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 10,
+#                 height = 7,
+#                 units = c("in"))
 
 ```
 
@@ -698,17 +660,16 @@ plt <- crawdad::vizAllClusters(cells = cells2,
                                axisAdj = 1, s = 10, a = 0.5) +
   # ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
   ggplot2::theme(legend.position="none")
-
-ggplot2::ggsave(filename = "3_spleen_pkhl_grid_38_39_tissue_zoom.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 4,
-                height = 3,
-                units = c("in"))
-
 plt
+
+# ggplot2::ggsave(filename = "3_spleen_pkhl_grid_38_39_tissue_zoom.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 4,
+#                 height = 3,
+#                 units = c("in"))
 
 ```
 
@@ -726,17 +687,16 @@ plt <- crawdad::vizAllClusters(cells = cells2,
                                axisAdj = 1, s = 10, a = 0.5) +
   # ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
   ggplot2::theme(legend.position="none")
-
-ggplot2::ggsave(filename = "3_spleen_pkhl_grid_66_77_tissue_zoom.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 3,
-                height = 4,
-                units = c("in"))
-
 plt
+
+# ggplot2::ggsave(filename = "3_spleen_pkhl_grid_66_77_tissue_zoom.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 3,
+#                 height = 4,
+#                 units = c("in"))
 
 ```
 
@@ -747,19 +707,8 @@ plt
 dat <- crawdad::meltResultsList(results.pkhl)
 
 d1 <- dat[dat$reference == "CD4 Memory T cells" & dat$neighbor == "Fol B cells",]
-plt <- crawdad::vizTrends(dat = d1) +
-  ggplot2::scale_x_log10()
-plt
-
 d2 <- dat[dat$reference == "CD4 Memory T cells" & dat$neighbor == "Podoplanin",]
-plt <- crawdad::vizTrends(dat = d2) +
-  ggplot2::scale_x_log10()
-plt
-
 d3 <- dat[dat$reference == "Fol B cells" & dat$neighbor == "CD4 Memory T cells",]
-plt <- crawdad::vizTrends(dat = d3) +
-  ggplot2::scale_x_log10()
-plt
 
 ## combine the trends into one data.frame, and have the "id" column label the combo, plot both lines on same plot
 ## turn off the facet wrap so just coloring the two trends, which are labeled using the "id" column
@@ -776,15 +725,26 @@ plt <- crawdad::vizTrends(dat = d, facet = FALSE) +
   # ggplot2::theme(legend.position="none")
 plt 
 
-ggplot2::ggsave(filename = "3_spleen_pkhl_cd4_trends.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 6,
-                height = 4,
-                units = c("in"))
+# ggplot2::ggsave(filename = "3_spleen_pkhl_cd4_trends.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 6,
+#                 height = 4,
+#                 units = c("in"))
 
+plt <- vizTrends.heatmap(dat = d, annotation = FALSE)
+plt
+
+# ggplot2::ggsave(filename = "S6_spleen_pkhl_cd4_trends_heatmap.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 6,
+#                 height = 3,
+#                 units = c("in"))
 
 ```
 
@@ -794,50 +754,14 @@ dat <- crawdad::meltResultsList(results.pkhl)
 plt <- vizTrends.heatmap(dat = dat, annotation = FALSE, title = "PKHL")
 plt
 
-ggplot2::ggsave(filename = "3B_spleen_pkhl_all_trends_heatmap.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 12,
-                height = 10,
-                units = c("in"))
-
-d1 <- dat[dat$reference == "CD4 Memory T cells" & dat$neighbor == "Fol B cells",]
-plt <- crawdad::vizTrends(dat = d1) +
-  ggplot2::scale_x_log10()
-plt
-
-d2 <- dat[dat$reference == "CD4 Memory T cells" & dat$neighbor == "Podoplanin",]
-plt <- crawdad::vizTrends(dat = d2) +
-  ggplot2::scale_x_log10()
-plt
-
-d3 <- dat[dat$reference == "Fol B cells" & dat$neighbor == "CD4 Memory T cells",]
-plt <- crawdad::vizTrends(dat = d3) +
-  ggplot2::scale_x_log10()
-plt
-
-## combine the trends into one data.frame, and have the "id" column label the combo, plot both lines on same plot
-## turn off the facet wrap so just coloring the two trends, which are labeled using the "id" column
-
-d1$id <- "Fol B cells"
-d2$id <- "Podoplanin"
-d3$id <- "Fol B cells vs CD4 Memory T cells"
-
-d <- dplyr::bind_rows(list(d1, d2))
-
-plt <- vizTrends.heatmap(dat = d, annotation = FALSE)
-plt
-
-ggplot2::ggsave(filename = "S6_spleen_pkhl_cd4_trends_heatmap.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 6,
-                height = 3,
-                units = c("in"))
+# ggplot2::ggsave(filename = "3B_spleen_pkhl_all_trends_heatmap.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 12,
+#                 height = 10,
+#                 units = c("in"))
 
 ```
 
@@ -853,14 +777,14 @@ plt <- vizTrends(dat = d1, facet = FALSE, id = "neighbor", title = "CD4 Memory T
   # ggplot2::theme(legend.position="none")
 plt
 
-ggplot2::ggsave(filename = "3_spleen_pkhl_cd4_near_folB_trends.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 6,
-                height = 4,
-                units = c("in"))
+# ggplot2::ggsave(filename = "3_spleen_pkhl_cd4_near_folB_trends.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 6,
+#                 height = 4,
+#                 units = c("in"))
 
 
 d2 <- dat[grepl(pattern = "CD4 Memory T cells_near_Neutrophils/Monocytes", dat$reference) & dat$neighbor %in% c("Fol B cells", "Podoplanin"),]
@@ -869,28 +793,28 @@ plt <- vizTrends(dat = d2, facet = FALSE, id = "neighbor", title = "CD4 Memory T
   # ggplot2::theme(legend.position="none")
 plt
 
-ggplot2::ggsave(filename = "3_spleen_pkhl_cd4_near_neutro_trends.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 6,
-                height = 4,
-                units = c("in"))
+# ggplot2::ggsave(filename = "3_spleen_pkhl_cd4_near_neutro_trends.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 6,
+#                 height = 4,
+#                 units = c("in"))
 
 d <- dplyr::bind_rows(list(d1, d2))
 
 plt <- vizTrends.heatmap(dat = d, annotation = FALSE)
 plt
 
-ggplot2::ggsave(filename = "3_spleen_pkhl_cd4_subset_trends_heatmap.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 8,
-                height = 3,
-                units = c("in"))
+# ggplot2::ggsave(filename = "3_spleen_pkhl_cd4_subset_trends_heatmap.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 8,
+#                 height = 3,
+#                 units = c("in"))
 
 ```
 
@@ -910,16 +834,16 @@ plt <- crawdad::vizAllClusters(cells = ksfb,
                         s = 1) +
   ggplot2::theme(legend.position="none")
   # ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
-
-ggplot2::ggsave(filename = "S8_spleen_ksfb_tissue.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 6,
-                height = 6,
-                units = c("in"))
 plt
+
+# ggplot2::ggsave(filename = "S8_spleen_ksfb_tissue.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 6,
+#                 height = 6,
+#                 units = c("in"))
 
 ## XXCD
 plt <- crawdad::vizAllClusters(cells = xxcd,
@@ -929,16 +853,16 @@ plt <- crawdad::vizAllClusters(cells = xxcd,
                         s = 1) +
   ggplot2::theme(legend.position="none")
   # ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
-
-ggplot2::ggsave(filename = "S8_spleen_xxcd_tissue.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 6,
-                height = 6,
-                units = c("in"))
 plt
+
+# ggplot2::ggsave(filename = "S8_spleen_xxcd_tissue.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 6,
+#                 height = 6,
+#                 units = c("in"))
 
 ## PBVN
 plt <- crawdad::vizAllClusters(cells = pbvn,
@@ -948,16 +872,16 @@ plt <- crawdad::vizAllClusters(cells = pbvn,
                         s = 1) +
   ggplot2::theme(legend.position="none")
   # ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
-
-ggplot2::ggsave(filename = "S8_spleen_pbvn_tissue.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 6,
-                height = 6,
-                units = c("in"))
 plt
+
+# ggplot2::ggsave(filename = "S8_spleen_pbvn_tissue.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 6,
+#                 height = 6,
+#                 units = c("in"))
 
 ## FSLD
 plt <- crawdad::vizAllClusters(cells = fsld,
@@ -967,16 +891,16 @@ plt <- crawdad::vizAllClusters(cells = fsld,
                         s = 1) +
   ggplot2::theme(legend.position="none")
   # ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
-
-ggplot2::ggsave(filename = "S8_spleen_fsld_tissue.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 6,
-                height = 6,
-                units = c("in"))
 plt
+
+# ggplot2::ggsave(filename = "S8_spleen_fsld_tissue.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 6,
+#                 height = 6,
+#                 units = c("in"))
 
 ## NGPL
 plt <- crawdad::vizAllClusters(cells = ngpl,
@@ -986,16 +910,16 @@ plt <- crawdad::vizAllClusters(cells = ngpl,
                         s = 1) +
   ggplot2::theme(legend.position="none")
   # ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
-
-ggplot2::ggsave(filename = "S8_spleen_ngpl_tissue.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 6,
-                height = 6,
-                units = c("in"))
 plt
+
+# ggplot2::ggsave(filename = "S8_spleen_ngpl_tissue.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 6,
+#                 height = 6,
+#                 units = c("in"))
 
 ```
 
@@ -1038,14 +962,14 @@ df <- dplyr::bind_rows(list(df1, df2, df3, df4, df5))
 plt <- vizTrends.heatmap(dat = df, annotation = FALSE, title = "CD4 Memory T cells", ncols = 5)
 plt
 
-ggplot2::ggsave(filename = "S9_spleen_cd4_trends_heatmap.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 12,
-                height = 3,
-                units = c("in"))
+# ggplot2::ggsave(filename = "S9_spleen_cd4_trends_heatmap.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 12,
+#                 height = 3,
+#                 units = c("in"))
 
 ```
 
@@ -1054,19 +978,8 @@ ggplot2::ggsave(filename = "S9_spleen_cd4_trends_heatmap.pdf",
 dat <- crawdad::meltResultsList(results.ksfb$`100`)
 
 d1 <- dat[dat$reference == "CD4 Memory T cells" & dat$neighbor == "Fol B cells",]
-plt <- crawdad::vizTrends(dat = d1) +
-  ggplot2::scale_x_log10()
-plt
-
 d2 <- dat[dat$reference == "CD4 Memory T cells" & dat$neighbor == "Podoplanin",]
-plt <- crawdad::vizTrends(dat = d2) +
-  ggplot2::scale_x_log10()
-plt
-
 d3 <- dat[dat$reference == "Fol B cells" & dat$neighbor == "CD4 Memory T cells",]
-plt <- crawdad::vizTrends(dat = d3) +
-  ggplot2::scale_x_log10()
-plt
 
 ## combine the trends into one data.frame, and have the "id" column label the combo, plot both lines on same plot
 ## turn off the facet wrap so just coloring the two trends, which are labeled using the "id" column
@@ -1082,15 +995,14 @@ plt <- crawdad::vizTrends(dat = d, facet = FALSE) +
   # ggplot2::theme(legend.position="none")
 plt 
 
-ggplot2::ggsave(filename = "S9_spleen_ksfb_cd4_folB_podo_trends.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 6,
-                height = 4,
-                units = c("in"))
-
+# ggplot2::ggsave(filename = "S9_spleen_ksfb_cd4_folB_podo_trends.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 6,
+#                 height = 4,
+#                 units = c("in"))
 
 ```
 
@@ -1099,19 +1011,8 @@ ggplot2::ggsave(filename = "S9_spleen_ksfb_cd4_folB_podo_trends.pdf",
 dat <- crawdad::meltResultsList(results.xxcd$`100`)
 
 d1 <- dat[dat$reference == "CD4 Memory T cells" & dat$neighbor == "Fol B cells",]
-plt <- crawdad::vizTrends(dat = d1) +
-  ggplot2::scale_x_log10()
-plt
-
 d2 <- dat[dat$reference == "CD4 Memory T cells" & dat$neighbor == "Podoplanin",]
-plt <- crawdad::vizTrends(dat = d2) +
-  ggplot2::scale_x_log10()
-plt
-
 d3 <- dat[dat$reference == "Fol B cells" & dat$neighbor == "CD4 Memory T cells",]
-plt <- crawdad::vizTrends(dat = d3) +
-  ggplot2::scale_x_log10()
-plt
 
 ## combine the trends into one data.frame, and have the "id" column label the combo, plot both lines on same plot
 ## turn off the facet wrap so just coloring the two trends, which are labeled using the "id" column
@@ -1127,15 +1028,14 @@ plt <- crawdad::vizTrends(dat = d, facet = FALSE) +
   # ggplot2::theme(legend.position="none")
 plt 
 
-ggplot2::ggsave(filename = "S9_spleen_xxcd_cd4_folB_podo_trends.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 6,
-                height = 4,
-                units = c("in"))
-
+# ggplot2::ggsave(filename = "S9_spleen_xxcd_cd4_folB_podo_trends.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 6,
+#                 height = 4,
+#                 units = c("in"))
 
 ```
 
@@ -1144,19 +1044,8 @@ ggplot2::ggsave(filename = "S9_spleen_xxcd_cd4_folB_podo_trends.pdf",
 dat <- crawdad::meltResultsList(results.pbvn$`100`)
 
 d1 <- dat[dat$reference == "CD4 Memory T cells" & dat$neighbor == "Fol B cells",]
-plt <- crawdad::vizTrends(dat = d1) +
-  ggplot2::scale_x_log10()
-plt
-
 d2 <- dat[dat$reference == "CD4 Memory T cells" & dat$neighbor == "Podoplanin",]
-plt <- crawdad::vizTrends(dat = d2) +
-  ggplot2::scale_x_log10()
-plt
-
 d3 <- dat[dat$reference == "Fol B cells" & dat$neighbor == "CD4 Memory T cells",]
-plt <- crawdad::vizTrends(dat = d3) +
-  ggplot2::scale_x_log10()
-plt
 
 ## combine the trends into one data.frame, and have the "id" column label the combo, plot both lines on same plot
 ## turn off the facet wrap so just coloring the two trends, which are labeled using the "id" column
@@ -1172,15 +1061,14 @@ plt <- crawdad::vizTrends(dat = d, facet = FALSE) +
   # ggplot2::theme(legend.position="none")
 plt 
 
-ggplot2::ggsave(filename = "S9_spleen_pbvn_cd4_folB_podo_trends.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 6,
-                height = 4,
-                units = c("in"))
-
+# ggplot2::ggsave(filename = "S9_spleen_pbvn_cd4_folB_podo_trends.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 6,
+#                 height = 4,
+#                 units = c("in"))
 
 ```
 
@@ -1189,19 +1077,8 @@ ggplot2::ggsave(filename = "S9_spleen_pbvn_cd4_folB_podo_trends.pdf",
 dat <- crawdad::meltResultsList(results.fsld$`100`)
 
 d1 <- dat[dat$reference == "CD4 Memory T cells" & dat$neighbor == "Fol B cells",]
-plt <- crawdad::vizTrends(dat = d1) +
-  ggplot2::scale_x_log10()
-plt
-
 d2 <- dat[dat$reference == "CD4 Memory T cells" & dat$neighbor == "Podoplanin",]
-plt <- vizTrends(dat = d2) +
-  ggplot2::scale_x_log10()
-plt
-
 d3 <- dat[dat$reference == "Fol B cells" & dat$neighbor == "CD4 Memory T cells",]
-plt <- crawdad::vizTrends(dat = d3) +
-  ggplot2::scale_x_log10()
-plt
 
 ## combine the trends into one data.frame, and have the "id" column label the combo, plot both lines on same plot
 ## turn off the facet wrap so just coloring the two trends, which are labeled using the "id" column
@@ -1217,15 +1094,14 @@ plt <- crawdad::vizTrends(dat = d, facet = FALSE) +
   # ggplot2::theme(legend.position="none")
 plt 
 
-ggplot2::ggsave(filename = "S9_spleen_fsld_cd4_folB_podo_trends.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 6,
-                height = 4,
-                units = c("in"))
-
+# ggplot2::ggsave(filename = "S9_spleen_fsld_cd4_folB_podo_trends.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 6,
+#                 height = 4,
+#                 units = c("in"))
 
 ```
 
@@ -1234,19 +1110,8 @@ ggplot2::ggsave(filename = "S9_spleen_fsld_cd4_folB_podo_trends.pdf",
 dat <- crawdad::meltResultsList(results.ngpl$`100`)
 
 d1 <- dat[dat$reference == "CD4 Memory T cells" & dat$neighbor == "Fol B cells",]
-plt <- vizTrends(dat = d1) +
-  ggplot2::scale_x_log10()
-plt
-
 d2 <- dat[dat$reference == "CD4 Memory T cells" & dat$neighbor == "Podoplanin",]
-plt <- crawdad::vizTrends(dat = d2) +
-  ggplot2::scale_x_log10()
-plt
-
 d3 <- dat[dat$reference == "Fol B cells" & dat$neighbor == "CD4 Memory T cells",]
-plt <- crawdad::vizTrends(dat = d3) +
-  ggplot2::scale_x_log10()
-plt
 
 ## combine the trends into one data.frame, and have the "id" column label the combo, plot both lines on same plot
 ## turn off the facet wrap so just coloring the two trends, which are labeled using the "id" column
@@ -1262,15 +1127,14 @@ plt <- crawdad::vizTrends(dat = d, facet = FALSE) +
   # ggplot2::theme(legend.position="none")
 plt 
 
-ggplot2::ggsave(filename = "S9_spleen_ngpl_cd4_folB_podo_trends.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 6,
-                height = 4,
-                units = c("in"))
-
+# ggplot2::ggsave(filename = "S9_spleen_ngpl_cd4_folB_podo_trends.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 6,
+#                 height = 4,
+#                 units = c("in"))
 
 ```
 
@@ -1303,14 +1167,14 @@ df <- dplyr::bind_rows(list(df1, df2, df3, df4, df5))
 plt <- vizTrends.heatmap(dat = df, annotation = FALSE, title = "CD4 Memory T cells_near_Fol B cells", ncols = 5)
 plt
 
-ggplot2::ggsave(filename = "S9_spleen_cd4_near_folB_trends_heatmap.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 12,
-                height = 3,
-                units = c("in"))
+# ggplot2::ggsave(filename = "S9_spleen_cd4_near_folB_trends_heatmap.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 12,
+#                 height = 3,
+#                 units = c("in"))
 
 ```
 
@@ -1341,14 +1205,14 @@ df <- dplyr::bind_rows(list(df1, df2, df3, df4, df5))
 plt <- vizTrends.heatmap(dat = df, annotation = FALSE, title = "CD4 Memory T cells_near_Neutrophils/Monocytes", ncols = 5)
 plt
 
-ggplot2::ggsave(filename = "S9_spleen_cd4_near_neutro_trends_heatmap.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 12,
-                height = 3,
-                units = c("in"))
+# ggplot2::ggsave(filename = "S9_spleen_cd4_near_neutro_trends_heatmap.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 12,
+#                 height = 3,
+#                 units = c("in"))
 
 ```
 
@@ -1362,14 +1226,14 @@ plt <- crawdad::vizTrends(dat = d, facet = FALSE, id = "neighbor", title = "CD4 
   # ggplot2::theme(legend.position="none")
 plt
 
-ggplot2::ggsave(filename = "S12_spleen_cd4_near_folB_trends_ksfb.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 6,
-                height = 4,
-                units = c("in"))
+# ggplot2::ggsave(filename = "S12_spleen_cd4_near_folB_trends_ksfb.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 6,
+#                 height = 4,
+#                 units = c("in"))
 
 
 d <- dat[grepl(pattern = "CD4 Memory T cells_near_Neutrophils/Monocytes", dat$reference) & dat$neighbor %in% c("Fol B cells", "Podoplanin"),]
@@ -1378,14 +1242,14 @@ plt <- crawdad::vizTrends(dat = d, facet = FALSE, id = "neighbor", title = "CD4 
   # ggplot2::theme(legend.position="none")
 plt
 
-ggplot2::ggsave(filename = "S9_spleen_cd4_near_neutro_trends_ksfb.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 6,
-                height = 4,
-                units = c("in"))
+# ggplot2::ggsave(filename = "S9_spleen_cd4_near_neutro_trends_ksfb.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 6,
+#                 height = 4,
+#                 units = c("in"))
 
 ```
 
@@ -1399,14 +1263,14 @@ plt <- crawdad::vizTrends(dat = d, facet = FALSE, id = "neighbor", title = "CD4 
   # ggplot2::theme(legend.position="none")
 plt
 
-ggplot2::ggsave(filename = "S9_spleen_cd4_near_folB_trends_xxcd.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 6,
-                height = 4,
-                units = c("in"))
+# ggplot2::ggsave(filename = "S9_spleen_cd4_near_folB_trends_xxcd.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 6,
+#                 height = 4,
+#                 units = c("in"))
 
 
 d <- dat[grepl(pattern = "CD4 Memory T cells_near_Neutrophils/Monocytes", dat$reference) & dat$neighbor %in% c("Fol B cells", "Podoplanin"),]
@@ -1415,14 +1279,14 @@ plt <- crawdad::vizTrends(dat = d, facet = FALSE, id = "neighbor", title = "CD4 
   # ggplot2::theme(legend.position="none")
 plt
 
-ggplot2::ggsave(filename = "S9_spleen_cd4_near_neutro_trends_xxcd.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 6,
-                height = 4,
-                units = c("in"))
+# ggplot2::ggsave(filename = "S9_spleen_cd4_near_neutro_trends_xxcd.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 6,
+#                 height = 4,
+#                 units = c("in"))
 
 ```
 
@@ -1436,14 +1300,14 @@ plt <- crawdad::vizTrends(dat = d, facet = FALSE, id = "neighbor", title = "CD4 
   # ggplot2::theme(legend.position="none")
 plt
 
-ggplot2::ggsave(filename = "S9_spleen_cd4_near_folB_trends_pbvn.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 6,
-                height = 4,
-                units = c("in"))
+# ggplot2::ggsave(filename = "S9_spleen_cd4_near_folB_trends_pbvn.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 6,
+#                 height = 4,
+#                 units = c("in"))
 
 
 d <- dat[grepl(pattern = "CD4 Memory T cells_near_Neutrophils/Monocytes", dat$reference) & dat$neighbor %in% c("Fol B cells", "Podoplanin"),]
@@ -1452,14 +1316,14 @@ plt <- crawdad::vizTrends(dat = d, facet = FALSE, id = "neighbor", title = "CD4 
   # ggplot2::theme(legend.position="none")
 plt
 
-ggplot2::ggsave(filename = "S9_spleen_cd4_near_neutro_trends_pbvn.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 6,
-                height = 4,
-                units = c("in"))
+# ggplot2::ggsave(filename = "S9_spleen_cd4_near_neutro_trends_pbvn.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 6,
+#                 height = 4,
+#                 units = c("in"))
 
 ```
 
@@ -1473,14 +1337,14 @@ plt <- crawdad::vizTrends(dat = d, facet = FALSE, id = "neighbor", title = "CD4 
   # ggplot2::theme(legend.position="none")
 plt
 
-ggplot2::ggsave(filename = "S9_spleen_cd4_near_folB_trends_fsld.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 6,
-                height = 4,
-                units = c("in"))
+# ggplot2::ggsave(filename = "S9_spleen_cd4_near_folB_trends_fsld.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 6,
+#                 height = 4,
+#                 units = c("in"))
 
 
 d <- dat[grepl(pattern = "CD4 Memory T cells_near_Neutrophils/Monocytes", dat$reference) & dat$neighbor %in% c("Fol B cells", "Podoplanin"),]
@@ -1489,14 +1353,14 @@ plt <- crawdad::vizTrends(dat = d, facet = FALSE, id = "neighbor", title = "CD4 
   # ggplot2::theme(legend.position="none")
 plt
 
-ggplot2::ggsave(filename = "S9_spleen_cd4_near_neutro_trends_fsld.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 6,
-                height = 4,
-                units = c("in"))
+# ggplot2::ggsave(filename = "S9_spleen_cd4_near_neutro_trends_fsld.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 6,
+#                 height = 4,
+#                 units = c("in"))
 
 ```
 
@@ -1510,14 +1374,14 @@ plt <- crawdad::vizTrends(dat = d, facet = FALSE, id = "neighbor", title = "CD4 
   # ggplot2::theme(legend.position="none")
 plt
 
-ggplot2::ggsave(filename = "S9_spleen_cd4_near_folB_trends_ngpl.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 6,
-                height = 4,
-                units = c("in"))
+# ggplot2::ggsave(filename = "S9_spleen_cd4_near_folB_trends_ngpl.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 6,
+#                 height = 4,
+#                 units = c("in"))
 
 
 d <- dat[grepl(pattern = "CD4 Memory T cells_near_Neutrophils/Monocytes", dat$reference) & dat$neighbor %in% c("Fol B cells", "Podoplanin"),]
@@ -1526,22 +1390,14 @@ plt <- crawdad::vizTrends(dat = d, facet = FALSE, id = "neighbor", title = "CD4 
   # ggplot2::theme(legend.position="none")
 plt
 
-ggplot2::ggsave(filename = "S9_spleen_cd4_near_neutro_trends_ngpl.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 6,
-                height = 4,
-                units = c("in"))
+# ggplot2::ggsave(filename = "S9_spleen_cd4_near_neutro_trends_ngpl.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 6,
+#                 height = 4,
+#                 units = c("in"))
 
 ```
-
-check these results to the old data where I though most were significant
-
-maybe its because before I did not remove duplicates???
-
-Still salvageable because there are some scales where it is significant even if at a global scale it is not. Perhaps this angle actually plays to our advantage
-
-
 

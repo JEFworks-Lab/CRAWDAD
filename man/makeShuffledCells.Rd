@@ -33,7 +33,9 @@ Outer list is for each resolution of shuffling, and each inner list is for a giv
 }
 \examples{
  
+\dontrun{
 data(sim)
-makeShuffledCells(sim, resolutions = c(50, 100, 200, 300, 400, 500))
+makeShuffledCells(sim, resolutions = c(50, 100, 200, 300, 400, 500), ncores = 2)
+}
 
 }

@@ -1,7 +1,7 @@
 ---
 title: "Slide-seq"
 author: "Brendan F. Miller"
-date: "2/15/2023"
+date: "4/10/2023"
 output: rmarkdown::html_document
 # output:
 #   md_document:
@@ -23,7 +23,7 @@ library(dplyr)
 
 ```{r}
 
-ncores = 7
+ncores = 2
 
 ```
 
@@ -45,6 +45,7 @@ slide
 ```
 
 ```{r}
+
 ## the above dataset has been saved as an rda file and able to load here:
 data(slide)
 
@@ -73,7 +74,7 @@ resolutions <- c(100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1200, 1500, 
 
 ```
 
-```{r}
+```{r, eval=FALSE}
 
 oldw <- getOption("warn")
 options(warn = -1)
@@ -102,7 +103,7 @@ saveRDS(shuffle.list, paste0(here::here(), "/data/slideseq/slideseqPuck.190926_0
 
 # Run pairwise analysis
 
-```{r}
+```{r, eval=FALSE}
 
 oldw <- getOption("warn")
 options(warn = -1)
@@ -143,6 +144,8 @@ Choroid, Candelabrum, Ependymal, Globular, Macrophages
 
 ```{r}
 
+results <- readRDS(paste0(here::here(), "/data/slideseq/slideseqPuck.190926_08.pairwise.results.dist100.res100-6000.rds"))
+
 results.coloc <- crawdad::filterCoTrends(results = results, alpha = 0.05)
 results.sep <- crawdad::filterSepTrends(results = results, alpha = 0.05)
 results.change <- crawdad::filterChangeTrends(results = results, alpha = 0.05)
@@ -151,34 +154,9 @@ results.change <- crawdad::filterChangeTrends(results = results, alpha = 0.05)
 
 ```{r}
 
-## example: neighbor cell types that are significantly co-localized with Purkinje at some scale
+## example: neighbor cell types that are significantly co-localized or separated with Purkinje at some scale
 results.coloc$`Purkinje`
 results.sep$`Purkinje`
-results.change$`Purkinje`
-
-```
-
-```{r}
-
-results.coloc$`Bergmann`
-results.sep$`Bergmann`
-results.change$`Bergmann`
-
-```
-
-```{r}
-
-results.coloc$`MLI1`
-results.sep$`MLI1`
-results.change$`MLI1`
-
-```
-
-```{r}
-
-results.coloc$`MLI2`
-results.sep$`MLI2`
-results.change$`MLI2`
 
 ```
 
@@ -218,23 +196,9 @@ length(unlist(lapply(names(results.change), function(ct){
 
 ```
 
-# Visualizing trends
+# Defining subsets
 
-```{r}
-
-crawdad::plotTrends(results = results["Purkinje"], idcol = "dist")
-
-```
-
-```{r}
-
-crawdad::plotTrends(results = results["Bergmann"], idcol = "dist")
-
-```
-
-# Defining susbets
-
-```{r}
+```{r, eval=FALSE}
 
 oldw <- getOption("warn")
 options(warn = -1)
@@ -260,7 +224,7 @@ saveRDS(binomMat, paste0(here::here(), "/data/slideseq/slideseqPuck.190926_08.bi
 
 ```
 
-```{r}
+```{r, eval=FALSE}
 
 oldw <- getOption("warn")
 options(warn = -1)
@@ -287,7 +251,7 @@ saveRDS(subset.list, paste0(here::here(), "/data/slideseq/slideseqPuck.190926_08
 
 # Run analysis on subsets
 
-```{r}
+```{r, eval=FALSE}
 
 oldw <- getOption("warn")
 options(warn = -1)
@@ -319,7 +283,7 @@ saveRDS(results.subsets, paste0(here::here(), "/data/slideseq/slideseqPuck.19092
 
 ## load data
 
-```{r, eval=FALSE}
+```{r}
 
 ## folder on `brendan` branch
 figpath <- paste0(here::here(), "/plots/slideseq")
@@ -344,37 +308,37 @@ plt <- crawdad::vizAllClusters(cells = slide,
                         s = 2) +
   # ggplot2::theme(legend.position="none")
   ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
-
-ggplot2::ggsave(filename = "2_slideseq_purk_berg_tissue_legend.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 6,
-                height = 6,
-                units = c("in"))
 plt
+
+# ggplot2::ggsave(filename = "2_slideseq_purk_berg_tissue_legend.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 6,
+#                 height = 6,
+#                 units = c("in"))
 
 ```
 
 ```{r, fig.height=12, fig.width=12}
 
-plt <- crawdad::vizAllClusters(cells = slide.filt,
-                        coms = as.factor(slide.filt$celltypes),
+plt <- crawdad::vizAllClusters(cells = slide,
+                        coms = as.factor(slide$celltypes),
                         ofInterest = c("Bergmann", "MLI1", "MLI2", "Purkinje", "Granule", "Oligodendrocytes"),
                         s = 2) +
   # ggplot2::theme(legend.position="none")
   ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
-
-ggplot2::ggsave(filename = "S1_slideseq_purk_berg_tissue_sep_legend.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 6,
-                height = 6,
-                units = c("in"))
 plt
+
+# ggplot2::ggsave(filename = "S1_slideseq_purk_berg_tissue_sep_legend.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 6,
+#                 height = 6,
+#                 units = c("in"))
 
 ```
 
@@ -387,7 +351,7 @@ crawdad::vizAllClusters(cells = slide,
 
 ```
 
-```{r, fig.height=12, fig.width=12}
+```{r, fig.height=12, fig.width=12, eval=FALSE}
 
 ## shuffling grid
 grid <- sf::st_make_grid(slide, cellsize = 1000)
@@ -422,7 +386,7 @@ plt
 
 ```
 
-```{r}
+```{r, eval=FALSE}
 
 ## pull out cells in specific grid regions
 int <- sf::st_intersection(slide, grid[[14]])
@@ -438,21 +402,21 @@ plt <- crawdad::vizAllClusters(cells = cells2,
   ggplot2::theme(legend.position="none") +
   ggplot2::labs(x = "x",
                 y = "y")
-
-ggplot2::ggsave(filename = "2_slideseq_purk_berg_tissue_zoom.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 6,
-                height = 6,
-                units = c("in"))
-
 plt
+
+# ggplot2::ggsave(filename = "2_slideseq_purk_berg_tissue_zoom.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 6,
+#                 height = 6,
+#                 units = c("in"))
+
 
 ```
 
-```{r}
+```{r, eval=FALSE}
 
 ## pull out cells in specific grid regions
 int <- sf::st_intersection(slide, grid[[14]])
@@ -468,17 +432,16 @@ plt <- crawdad::vizAllClusters(cells = cells2,
   ggplot2::theme(legend.position="none") +
   ggplot2::labs(x = "x",
                 y = "y")
-
-ggplot2::ggsave(filename = "2_slideseq_purk_berg_tissue_sep_zoom.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 6,
-                height = 6,
-                units = c("in"))
-
 plt
+
+# ggplot2::ggsave(filename = "2_slideseq_purk_berg_tissue_sep_zoom.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 6,
+#                 height = 6,
+#                 units = c("in"))
 
 ```
 
@@ -497,14 +460,14 @@ dat <- dat[!dat$reference %in% c(ignore) & !dat$neighbor %in% c(ignore),]
 plt <- vizTrends.heatmap(dat = dat, annotation = FALSE)
 plt
 
-ggplot2::ggsave(filename = "2_slideseq_all_trends_heatmap.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 12,
-                height = 10,
-                units = c("in"))
+# ggplot2::ggsave(filename = "2_slideseq_all_trends_heatmap.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 12,
+#                 height = 10,
+#                 units = c("in"))
 
 ```
 
@@ -515,20 +478,8 @@ ggplot2::ggsave(filename = "2_slideseq_all_trends_heatmap.pdf",
 dat <- crawdad::meltResultsList(results)
 
 d1 <- dat[dat$reference == "Purkinje" & dat$neighbor == "Bergmann",]
-plt <- vizTrends(dat = d1) +
-  ggplot2::scale_x_log10()
-plt 
-
 d2 <- dat[dat$reference == "Purkinje" & dat$neighbor == "MLI1",]
-plt <- vizTrends(dat = d2) +
-  ggplot2::scale_x_log10()
-plt 
-
 d3 <- dat[dat$reference == "Purkinje" & dat$neighbor == "MLI2",]
-plt <- vizTrends(dat = d3) +
-  ggplot2::scale_x_log10()
-plt 
-
 
 ## combine the trends into one data.frame, and have the "id" column label the combo, plot both lines on same plot
 ## turn off the facet wrap so just coloring the two trends, which are labeled using the "id" column
@@ -545,14 +496,14 @@ plt <- vizTrends(dat = d, facet = FALSE) +
   ggplot2::ggtitle("Purkinje")
 plt 
 
-ggplot2::ggsave(filename = "2_slideseq_purkinje_trends.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 4,
-                height = 4,
-                units = c("in"))
+# ggplot2::ggsave(filename = "2_slideseq_purkinje_trends.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 4,
+#                 height = 4,
+#                 units = c("in"))
 
 ```
 
@@ -561,15 +512,7 @@ ggplot2::ggsave(filename = "2_slideseq_purkinje_trends.pdf",
 dat <- crawdad::meltResultsList(results)
 
 d1 <- dat[dat$reference == "Purkinje" & dat$neighbor == "Granule",]
-plt <- vizTrends(dat = d1) +
-  ggplot2::scale_x_log10()
-plt 
-
 d2 <- dat[dat$reference == "Purkinje" & dat$neighbor == "Oligodendrocytes",]
-plt <- vizTrends(dat = d2) +
-  ggplot2::scale_x_log10()
-plt 
-
 
 ## combine the trends into one data.frame, and have the "id" column label the combo, plot both lines on same plot
 ## turn off the facet wrap so just coloring the two trends, which are labeled using the "id" column
@@ -585,14 +528,14 @@ plt <- vizTrends(dat = d, facet = FALSE) +
   ggplot2::ggtitle("Purkinje")
 plt 
 
-ggplot2::ggsave(filename = "2_slideseq_purkinje_trends_sep.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 4,
-                height = 4,
-                units = c("in"))
+# ggplot2::ggsave(filename = "2_slideseq_purkinje_trends_sep.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 4,
+#                 height = 4,
+#                 units = c("in"))
 
 ```
 
@@ -606,14 +549,14 @@ plt <- vizTrends(dat = d1, facet = FALSE, id = "neighbor") +
   ggplot2::ggtitle("Purkinje")
 plt
 
-ggplot2::ggsave(filename = "S3_slideseq_purkinje_trends_all.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 6,
-                height = 6,
-                units = c("in"))
+# ggplot2::ggsave(filename = "S3_slideseq_purkinje_trends_all.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 6,
+#                 height = 6,
+#                 units = c("in"))
 
 ```
 
@@ -624,20 +567,8 @@ ggplot2::ggsave(filename = "S3_slideseq_purkinje_trends_all.pdf",
 dat <- crawdad::meltResultsList(results)
 
 d1 <- dat[dat$reference == "Bergmann" & dat$neighbor == "Purkinje",]
-plt <- vizTrends(dat = d1) +
-  ggplot2::scale_x_log10()
-plt 
-
 d2 <- dat[dat$reference == "Bergmann" & dat$neighbor == "MLI1",]
-plt <- vizTrends(dat = d2) +
-  ggplot2::scale_x_log10()
-plt 
-
 d3 <- dat[dat$reference == "Bergmann" & dat$neighbor == "MLI2",]
-plt <- vizTrends(dat = d3) +
-  ggplot2::scale_x_log10()
-plt 
-
 
 ## combine the trends into one data.frame, and have the "id" column label the combo, plot both lines on same plot
 ## turn off the facet wrap so just coloring the two trends, which are labeled using the "id" column
@@ -654,15 +585,14 @@ plt <- vizTrends(dat = d, facet = FALSE) +
   ggplot2::ggtitle("Bergmann")
 plt 
 
-ggplot2::ggsave(filename = "2_slideseq_bergmann_trends.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 4,
-                height = 4,
-                units = c("in"))
-
+# ggplot2::ggsave(filename = "2_slideseq_bergmann_trends.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 4,
+#                 height = 4,
+#                 units = c("in"))
 
 ```
 
@@ -676,14 +606,14 @@ plt <- vizTrends(dat = d1, facet = FALSE, id = "neighbor") +
   ggplot2::ggtitle("Bergmann")
 plt
 
-ggplot2::ggsave(filename = "S3_slideseq_bergmann_trends_all.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 6,
-                height = 6,
-                units = c("in"))
+# ggplot2::ggsave(filename = "S3_slideseq_bergmann_trends_all.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 6,
+#                 height = 6,
+#                 units = c("in"))
 
 ```
 
@@ -694,20 +624,8 @@ ggplot2::ggsave(filename = "S3_slideseq_bergmann_trends_all.pdf",
 dat <- crawdad::meltResultsList(results)
 
 d1 <- dat[dat$reference == "MLI1" & dat$neighbor == "Purkinje",]
-plt <- vizTrends(dat = d1) +
-  ggplot2::scale_x_log10()
-plt 
-
 d2 <- dat[dat$reference == "MLI1" & dat$neighbor == "Bergmann",]
-plt <- vizTrends(dat = d2) +
-  ggplot2::scale_x_log10()
-plt 
-
 d3 <- dat[dat$reference == "MLI1" & dat$neighbor == "MLI2",]
-plt <- vizTrends(dat = d3) +
-  ggplot2::scale_x_log10()
-plt 
-
 
 ## combine the trends into one data.frame, and have the "id" column label the combo, plot both lines on same plot
 ## turn off the facet wrap so just coloring the two trends, which are labeled using the "id" column
@@ -724,15 +642,14 @@ plt <- vizTrends(dat = d, facet = FALSE) +
   ggplot2::ggtitle("MLI1")
 plt 
 
-ggplot2::ggsave(filename = "2_slideseq_mli1_trends.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 4,
-                height = 4,
-                units = c("in"))
-
+# ggplot2::ggsave(filename = "2_slideseq_mli1_trends.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 4,
+#                 height = 4,
+#                 units = c("in"))
 
 ```
 
@@ -746,14 +663,14 @@ plt <- vizTrends(dat = d1, facet = FALSE, id = "neighbor") +
   ggplot2::ggtitle("MLI1")
 plt
 
-ggplot2::ggsave(filename = "S3_slideseq_mli1_trends_all.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 6,
-                height = 6,
-                units = c("in"))
+# ggplot2::ggsave(filename = "S3_slideseq_mli1_trends_all.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 6,
+#                 height = 6,
+#                 units = c("in"))
 
 ```
 
@@ -764,20 +681,8 @@ ggplot2::ggsave(filename = "S3_slideseq_mli1_trends_all.pdf",
 dat <- crawdad::meltResultsList(results)
 
 d1 <- dat[dat$reference == "MLI2" & dat$neighbor == "Purkinje",]
-plt <- vizTrends(dat = d1) +
-  ggplot2::scale_x_log10()
-plt 
-
 d2 <- dat[dat$reference == "MLI2" & dat$neighbor == "Bergmann",]
-plt <- vizTrends(dat = d2) +
-  ggplot2::scale_x_log10()
-plt 
-
 d3 <- dat[dat$reference == "MLI2" & dat$neighbor == "MLI1",]
-plt <- vizTrends(dat = d3) +
-  ggplot2::scale_x_log10()
-plt 
-
 
 ## combine the trends into one data.frame, and have the "id" column label the combo, plot both lines on same plot
 ## turn off the facet wrap so just coloring the two trends, which are labeled using the "id" column
@@ -794,15 +699,14 @@ plt <- vizTrends(dat = d, facet = FALSE) +
   ggplot2::ggtitle("MLI2")
 plt 
 
-ggplot2::ggsave(filename = "2_slideseq_mli2_trends.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 4,
-                height = 4,
-                units = c("in"))
-
+# ggplot2::ggsave(filename = "2_slideseq_mli2_trends.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 4,
+#                 height = 4,
+#                 units = c("in"))
 
 ```
 
@@ -816,14 +720,14 @@ plt <- vizTrends(dat = d1, facet = FALSE, id = "neighbor") +
   ggplot2::ggtitle("MLI2")
 plt
 
-ggplot2::ggsave(filename = "S3_slideseq_mli2_trends_all.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 6,
-                height = 6,
-                units = c("in"))
+# ggplot2::ggsave(filename = "S3_slideseq_mli2_trends_all.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 6,
+#                 height = 6,
+#                 units = c("in"))
 
 ```
 
@@ -837,14 +741,14 @@ d <- dat[dat$reference %in% c("Bergmann", "MLI1", "MLI2", "Purkinje") & dat$neig
 plt <- vizTrends.heatmap(dat = d)
 plt
 
-ggplot2::ggsave(filename = "2_slideseq_purk_berg_mli_trends_heatmap.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 8,
-                height = 6,
-                units = c("in"))
+# ggplot2::ggsave(filename = "2_slideseq_purk_berg_mli_trends_heatmap.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 8,
+#                 height = 6,
+#                 units = c("in"))
 
 ```
 
@@ -856,15 +760,13 @@ d <- dat[dat$reference %in% c("Bergmann", "MLI1", "MLI2", "Purkinje"),]
 plt <- vizTrends.heatmap(dat = d)
 plt
 
-ggplot2::ggsave(filename = "S1_slideseq_purk_berg_mli_trends_heatmap_all.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 8,
-                height = 6,
-                units = c("in"))
+# ggplot2::ggsave(filename = "S1_slideseq_purk_berg_mli_trends_heatmap_all.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 8,
+#                 height = 6,
+#                 units = c("in"))
 
 ```
-
-
