@@ -32,3 +32,13 @@ list where each entry is a subset and the values are the cell ids determined to 
 \description{
 assign cells to subsets based on whether they are enriched in a given neighbor cell type based on the pvalues in the input \code{binomMatrix}
 }
+\examples{
+\dontrun{
+data(sim)
+cells <- toSP(pos = sim[,c("x", "y")], celltypes = slide$type)
+shuffle.list <- makeShuffledCells(cells, resolutions = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
+binomMat <- binomialTestMatrix(cells, neigh.dist = 100, ncores = 2)
+subset.list <- selectSubsets(binomMat, cells$celltypes, sub.type = "near", sub.thresh = 0.05) 
+}
+
+}

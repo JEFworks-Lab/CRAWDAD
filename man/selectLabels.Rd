@@ -24,3 +24,14 @@ factor of specific cell type labels for visualizing with \code{vizAllClusters()}
 make a factor of selected cell type labels for visualizing specific cells with \code{vizAllClusters()}.
 Could append new entries into the \code{subset_list} to select and label other custom subsets of cells
 }
+\examples{
+\dontrun{
+data(sim)
+cells <- toSP(pos = sim[,c("x", "y")], celltypes = slide$type)
+shuffle.list <- makeShuffledCells(cells, resolutions = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
+binomMat <- binomialTestMatrix(cells, neigh.dist = 100, ncores = 2)
+subset.list <- selectSubsets(binomMat, cells$celltypes, sub.type = "near", sub.thresh = 0.05)
+annots_temp <- selectLabels(df = cells, com = cells$celltypes, subset_list = subset.list, cellIDs = c("A", "B", "C", "D"), subsetIDs = c("C_near_B"))
+}
+
+}

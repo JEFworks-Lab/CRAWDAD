@@ -7,8 +7,8 @@
 vizEachCluster(
   cells,
   coms,
-  axisAdj = 100,
-  s = 0,
+  axisAdj = 1,
+  s = 0.5,
   a = 1,
   nacol = transparentCol(color = "gray", percent = 50),
   clustcol = "red"
@@ -37,7 +37,9 @@ Returns a gridExtra of grobs.
 A single plot where each panel is a different cluster highlighted on the tissue
 }
 \examples{
+\dontrun{
 data(slide)
-vizEachCluster(slide, coms = slide$celltypes, ofInterest = c("Bergmann", "Purkinje"))
+vizEachCluster(slide, coms = slide$celltypes)
+}
 
 }

@@ -20,7 +20,7 @@ diffTrendTesting(
 
 \item{neighID}{name of neighbor cell type for trend of interest}
 
-\item{zscores}{table of zscores for each cell type combo (rows) for each sample vs each resolution tested (columns)}
+\item{zscores}{table of zscores for each cell type combo for each sample (rows) vs each resolution tested (columns)}
 
 \item{heatmap}{return heatmap of distances between sample trends (boolean, default: TRUE)}
 

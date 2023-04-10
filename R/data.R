@@ -33,3 +33,13 @@
 #' 
 #' @usage data(pkhl)
 "pkhl"
+
+
+#' Simulation
+#'
+#' @format data.frame object where rows are cells,
+#'         `x` and `y` are x-y coordinates,
+#'         `celltypes` are cell type annotations
+#' 
+#' @usage data(pkhl)
+"sim"

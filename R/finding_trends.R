@@ -7,8 +7,14 @@
 #' @param resolutions numeric vector of the different resolutions to shuffle at and subsequently compute significance at (default: c(50, 100, 200, 300, 400, 500))
 #' @param perms number of permutations to shuffle for each resolution (default = 1)
 #' @param ncores number of cores for parallelization (default 1)
-#' @param seed set seed for shuffling (if more than 1 permutation, then seed equals permutation number)
+#' @param seed set seed for shuffling (if more than 1 permutation, each shuffling permutation has a seed equal to the permutation number)
 #' @param verbose Boolean for verbosity (default TRUE)
+#' 
+#' @examples  
+#' \dontrun{
+#' data(sim)
+#' makeShuffledCells(sim, resolutions = c(50, 100, 200, 300, 400, 500), ncores = 2)
+#' }
 #'
 #' @export
 makeShuffledCells <- function(cells,
@@ -35,14 +41,12 @@ makeShuffledCells <- function(cells,
     start_time <- Sys.time()
   }
   
+  cells_df <- crawdad::spToDF(cells)
+  
   randomcellslist <- lapply(resolutions, function(r) {
     
-    grid <- sf::st_make_grid(cells, cellsize = r)
-    
-    if(verbose){
-      message(r, " micron resolution")
-      message(length(grid), " tiles to shuffle...")
-    }
+    ## create list of offsets for the permutations
+    offsets <- -seq(from = 0, to = r, by = r/perms)
     
     permutations <- lapply(1:perms, function(i){
       
@@ -57,6 +61,15 @@ makeShuffledCells <- function(cells,
         message("shuffling permutation ", i, " using seed ", s)
       }
       
+      ## create grid after going into permutations
+      grid <- sf::st_make_grid(cells, cellsize = r, 
+                               offset = c(min(cells_df$x) + offsets[i], min(cells_df$y) + offsets[i]))
+      
+      if(verbose){
+        message(r, " unit resolution")
+        message(length(grid), " tiles to shuffle...")
+      }
+      
       ## disable scientific notation.
       ## apparently, when I sort the names by converting to numeric then back to characters
       ## some numerics are written in scientific notation but then the notation and not
@@ -68,7 +81,7 @@ makeShuffledCells <- function(cells,
       options(scipen = 999)
       
       ## shuffle within grid once
-      randcelltype <- unlist(parallel::mclapply(1:length(grid), function(i) {
+      randcelltype <- unlist(BiocParallel::bplapply(1:length(grid), function(i) {
         ## sometimes can be on boundary, so just pick first one
         int <- sf::st_intersection(cells, grid[[i]])
         
@@ -84,7 +97,7 @@ makeShuffledCells <- function(cells,
         shuffled_cells <- as.character(shuffled_cells)
         names(shuffled_cells) <- rownames(int)
         return(shuffled_cells)
-      }, mc.cores=ncores))
+      }, BPPARAM=BiocParallel::SnowParam(workers=ncores)))
       
       
       
@@ -134,12 +147,19 @@ makeShuffledCells <- function(cells,
 
 
 #' compute significant different between real and randomly shuffled cell neighbor proportions
+#' 
+#' @description for a given reference cell type, computes the Z scores for being colocalized or separated from each query cell type. 
+#' If `returnMeans = TRUE`, then the result will be a data.frame where each row is a resolution, each column is a query cell type, and each value is the Z score.
+#' If `returnMeans = FALSE`, then the result will be a list of data.frames, where each data.frame is a resolution,
+#' the rows are permutations, the columns are query cell types, and each value is a Z score.
 #'
 #' @param cells sp::SpatialPointsDataFrame of all the cells
 #' @param randomcellslist list of lists of randomly shuffled cell type labels produced from `makeShuffledCells`
 #' @param trueNeighCells Simple feature collection of real cells for a given reference cell type, with geometries of a given dist (from sf::st_buffer)
 #' @param cellBuffer Simple feature collection of the neighbor cells that are within "dist" of the ref cells (from sf::intersection)
 #' @param ncores number of cores for parallelization (default 1)
+#' @param removeDups remove duplicate neighbor cells to prevent them from being counted multiple times and inflate the Z scores (default: TRUE)
+#' @param returnMeans if multiple permutations, return the mean Z score across the permutations in each resolution with respect to each neighbor cell type (default: TRUE) 
 #'
 #'@export
 evaluateSignificance <- function(cells,
@@ -147,54 +167,120 @@ evaluateSignificance <- function(cells,
                                  trueNeighCells,
                                  cellBuffer,
                                  ncores = 1,
-                                 removeDups = TRUE){
+                                 removeDups = TRUE,
+                                 returnMeans = TRUE){
   
   allcells <- cells
   trueNeighCells <- trueNeighCells
   cellBuffer <- cellBuffer
   
-  results <- do.call(rbind, parallel::mclapply(randomcellslist, function(cellsAtRes){
+  ## if true, will return a data.frame
+  if(returnMeans){
     
-    ## iterate through each permutation of a given resolution
-    ## produce the scores for each neighbor cell type
-    ## combine the tables into a dataframe, take the mean of the scores for each cell type
-    ## score means for each resolution returned as a column where rows are the cell types using sapply
-    scores <- do.call(rbind, lapply(cellsAtRes, function(randomcellslabels){
+    ## for each resolution:
+    results <- do.call(rbind, BiocParallel::bplapply(randomcellslist, function(cellsAtRes){
       
-      randomcells <- allcells
-      randomcells$celltypes <- as.factor(randomcellslabels)
-      sf::st_agr(randomcells) <- "constant"
+      ## Iterate through each permutation of a given resolution and 
+      ## produce the scores for each neighbor cell type. 
+      ## Scores for a given permutation added as a row to a dataframe.
+      ## Take the column mean of the scores for each neighbor cell type across permutations.
+      ## The resulting vector of score means is returned and appended as a row in the `results` data,frame,
+      ## where each row is a resolution, and contains Z scores for each neighbor cell type (the columns)
       
-      bufferrandomcells <- sf::st_intersection(randomcells, cellBuffer$geometry)
+      scores <- do.call(rbind, lapply(cellsAtRes, function(randomcellslabels){
+        
+        randomcells <- allcells
+        randomcells$celltypes <- as.factor(randomcellslabels)
+        sf::st_agr(randomcells) <- "constant"
+        
+        bufferrandomcells <- sf::st_intersection(randomcells, cellBuffer$geometry)
+        
+        ## remove duplicate neighbor cells to prevent them from being counted multiple times
+        ## and inflate the Z scores
+        if(removeDups){
+          # message("number of permuted neighbor cells before: ", nrow(bufferrandomcells))
+          bufferrandomcells <- bufferrandomcells[intersect(rownames(bufferrandomcells), rownames(randomcells)),]
+          # message("number of permuted neighbor cells after removing dups: ", nrow(bufferrandomcells))
+        }
+        
+        ## evaluate significance https://online.stat.psu.edu/stat415/lesson/9/9.4
+        y1 <- table(trueNeighCells$celltypes)
+        y2 <- table(bufferrandomcells$celltypes)
+        n1 <- length(trueNeighCells$celltypes)
+        n2 <- length(bufferrandomcells$celltypes)
+        p1 <- y1/n1
+        p2 <- y2/n2
+        p <- (y1+y2)/(n1+n2)
+        Z <- (p1-p2)/sqrt(p*(1-p)*(1/n1+1/n2))
+        
+        rm(bufferrandomcells)
+        rm(randomcells)
+        gc(verbose = FALSE, reset = TRUE)
+        
+        return(Z)
+      }))
       
-      ## remove duplicate neighbor cells to prevent them from being counted multiple times
-      ## and inflate the Z scores
-      if(removeDups){
-        # message("number of permuted neighbor cells before: ", nrow(bufferrandomcells))
-        bufferrandomcells <- bufferrandomcells[intersect(rownames(bufferrandomcells), rownames(randomcells)),]
-        # message("number of permuted neighbor cells after removing dups: ", nrow(bufferrandomcells))
-      }
+      ## returning the mean Z score across permutations for the given resolution
+      return(colMeans(scores))
       
-      ## evaluate significance https://online.stat.psu.edu/stat415/lesson/9/9.4
-      y1 <- table(trueNeighCells$celltypes)
-      y2 <- table(bufferrandomcells$celltypes)
-      n1 <- length(trueNeighCells$celltypes)
-      n2 <- length(bufferrandomcells$celltypes)
-      p1 <- y1/n1
-      p2 <- y2/n2
-      p <- (y1+y2)/(n1+n2)
-      Z <- (p1-p2)/sqrt(p*(1-p)*(1/n1+1/n2))
+    }, BPPARAM=BiocParallel::SnowParam(workers=ncores)))
+  
+    ## otherwise, returns a list
+  } else {
+    
+    ## for each resolution:
+    results <- BiocParallel::bplapply(randomcellslist, function(cellsAtRes){
       
-      rm(bufferrandomcells)
-      rm(randomcells)
-      gc(verbose = FALSE, reset = TRUE)
+      ## Iterate through each permutation of a given resolution and 
+      ## produce the scores for each neighbor cell type. 
+      ## Scores for a given permutation added as a row to a dataframe.
+      ## Take the column mean of the scores for each neighbor cell type across permutations.
+      ## The resulting vector of score means is returned and appended as a row in the `results` data,frame,
+      ## where each row is a resolution, and contains Z scores for each neighbor cell type (the columns)
       
-      return(Z)
-    })
-    )
-    return(colMeans(scores))
-  }, mc.cores = ncores)
-  )
+      scores <- do.call(rbind, lapply(cellsAtRes, function(randomcellslabels){
+        
+        randomcells <- allcells
+        randomcells$celltypes <- as.factor(randomcellslabels)
+        sf::st_agr(randomcells) <- "constant"
+        
+        bufferrandomcells <- sf::st_intersection(randomcells, cellBuffer$geometry)
+        
+        ## remove duplicate neighbor cells to prevent them from being counted multiple times
+        ## and inflate the Z scores
+        if(removeDups){
+          # message("number of permuted neighbor cells before: ", nrow(bufferrandomcells))
+          bufferrandomcells <- bufferrandomcells[intersect(rownames(bufferrandomcells), rownames(randomcells)),]
+          # message("number of permuted neighbor cells after removing dups: ", nrow(bufferrandomcells))
+        }
+        
+        ## evaluate significance https://online.stat.psu.edu/stat415/lesson/9/9.4
+        y1 <- table(trueNeighCells$celltypes)
+        y2 <- table(bufferrandomcells$celltypes)
+        n1 <- length(trueNeighCells$celltypes)
+        n2 <- length(bufferrandomcells$celltypes)
+        p1 <- y1/n1
+        p2 <- y2/n2
+        p <- (y1+y2)/(n1+n2)
+        Z <- (p1-p2)/sqrt(p*(1-p)*(1/n1+1/n2))
+        
+        rm(bufferrandomcells)
+        rm(randomcells)
+        gc(verbose = FALSE, reset = TRUE)
+        
+        return(Z)
+      }))
+      
+      ## returning the data.frame of Z scores for each permutation (row)
+      return(scores)
+      
+    }, BPPARAM=BiocParallel::SnowParam(workers=ncores))
+    
+    ## will be list of data.frame in this case
+    ## each data.frame is a resolution
+    names(results) <- names(randomcellslist)
+    
+  }
   
   rm(allcells)
   rm(trueNeighCells)
@@ -213,6 +299,14 @@ evaluateSignificance <- function(cells,
 #' @param verbose Boolean for verbosity (default TRUE)
 #' 
 #' @return matrix where rows are cells, columns are cell types and values are p-values whether or not a cell is enriched in neighbors of a given cell type based on a binomial test.
+#' 
+#' @examples 
+#' \dontrun{
+#' data(sim)
+#' cells <- toSP(pos = sim[,c("x", "y")], celltypes = slide$type)
+#' shuffle.list <- makeShuffledCells(cells, resolutions = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
+#' binomMat <- binomialTestMatrix(cells, neigh.dist = 100, ncores = 2)
+#' }
 #' 
 #' @export
 binomialTestMatrix <- function(cells,
@@ -259,7 +353,7 @@ binomialTestMatrix <- function(cells,
   ## compute pvals for a binomial test for each cell type neighbor
   ## As we loop through each cell, add the pvals for each cell type as a new row of a matrix
   message("Performing tests...")
-  results <- do.call(rbind, parallel::mclapply(rownames(cells), function(c){
+  results <- do.call(rbind, BiocParallel::bplapply(rownames(cells), function(c){
     
     cells.inbuffer <- sf::st_intersection(cells, refs.buffer[c,]$geometry)
     x <- table(cells.inbuffer$celltypes)
@@ -269,7 +363,7 @@ binomialTestMatrix <- function(cells,
     pvals <- mapply(binom, x, n, p)
     pvals
     
-  }, mc.cores = ncores))
+  }, BPPARAM=BiocParallel::SnowParam(workers=ncores)))
   
   rownames(results) <- rownames(cells)
   colnames(results) <- names(p)
@@ -294,6 +388,15 @@ binomialTestMatrix <- function(cells,
 #' @param verbose Boolean for verbosity (default TRUE)
 #' 
 #' @return list where each entry is a subset and the values are the cell ids determined to be in the subset
+#' 
+#' @examples 
+#' \dontrun{
+#' data(sim)
+#' cells <- toSP(pos = sim[,c("x", "y")], celltypes = slide$type)
+#' shuffle.list <- makeShuffledCells(cells, resolutions = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
+#' binomMat <- binomialTestMatrix(cells, neigh.dist = 100, ncores = 2)
+#' subset.list <- selectSubsets(binomMat, cells$celltypes, sub.type = "near", sub.thresh = 0.05) 
+#' }
 #' 
 #' @export
 selectSubsets <- function(binomMatrix,
@@ -323,7 +426,9 @@ selectSubsets <- function(binomMatrix,
     id
   }))
   
-  subsets <- parallel::mclapply(rownames(combos), function(i){
+  binomMat <- binomMatrix
+  
+  subsets <- BiocParallel::bplapply(rownames(combos), function(i){
     
     cells.ref.ix <- levels(cell.types)[as.numeric(combos[i,1])]
     cells.neighbors.ix <- levels(cell.types)[as.numeric(combos[i,2])]
@@ -331,7 +436,7 @@ selectSubsets <- function(binomMatrix,
     message("computing subsets for ", id)
     
     ## get reference cell rows
-    ref.cells <- binomMatrix[which(cell.types == cells.ref.ix),]
+    ref.cells <- binomMat[which(cell.types == cells.ref.ix),]
     
     ## subset reference cells whose pval is below thresh for given neighbor cell type
     ## return cells that were significant
@@ -350,7 +455,7 @@ selectSubsets <- function(binomMatrix,
     
     return(sub.cells)
     
-  }, mc.cores = ncores)
+  }, BPPARAM=BiocParallel::SnowParam(workers=ncores))
   
   if(verbose){
     total_t <- round(difftime(Sys.time(), start_time, units = "mins"), 2)
@@ -372,29 +477,31 @@ selectSubsets <- function(binomMatrix,
 #'
 #' @param cells sp::SpatialPointsDataFrame object, with celltypes features and point geometries
 #' @param dist numeric distance to define neighbor cells with respect to each reference cell (default: 50)
-#' @param perms number of permutations to shuffle for each resolution (default = 1)
-#' @param seed set seed for shuffling (if more than 1 permutation, then seed equals permutation number)
 #' @param ncores number of cores for parallelization (default 1)
 #' @param shuffle.list a list of cell type labels shuffled at different resolutions (output from `makeShuffledCells()`)
 #' @param subset.list a subset list (output from `selectSubsets()`). Required if computing trends for subsets (default NULL)
-#' @param plot Boolean to return plots (default TRUE)
 #' @param verbose Boolean for verbosity (default TRUE)
+#' @param removeDups remove duplicate neighbor cells to prevent them from being counted multiple times and inflate the Z scores (default: TRUE)
+#' @param returnMeans if multiple permutations, return the mean Z score across the permutations in each resolution with respect to each neighbor cell type (default: TRUE)
 #'
 #' @return A list that contains a dataframe for each reference cell type, where the dataframe contains the significance values for each neighbor cell type at each resolution
 #' 
-#' @examples 
+#' @examples
+#' \dontrun{
+#' data(sim)
+#' shuffle.list <- makeShuffledCells(sim, resolutions = c(50, 100, 200, 300, 400, 500))
+#' findTrends(sim, dist = 100, shuffle.list = shuffle.list, ncores = 2)
+#' }
 #' 
 #' @export
 findTrends <- function(cells,
                        dist = 50,
-                       perms = 1,
-                       seed = 0,
                        ncores = 1,
                        shuffle.list,
                        subset.list = NULL,
-                       plot = FALSE,
                        verbose = TRUE,
-                       removeDups = TRUE){
+                       removeDups = TRUE,
+                       returnMeans = TRUE){
   
   if(!is.list(shuffle.list)){
     stop("`shuffle.list` is not a list. You can make this using `makeShuffledCells()`")
@@ -407,8 +514,6 @@ findTrends <- function(cells,
   if( !any(grepl("celltypes", colnames(cells))) ){
     stop("`cells` needs a column named `celltypes`. You can make this using `toSP()`")
   }
-  
-  seed <- seed
   
   if(verbose){
     start_time <- Sys.time()
@@ -470,7 +575,8 @@ findTrends <- function(cells,
                                       trueNeighCells = neigh.cells,
                                       cellBuffer = ref.buffer,
                                       ncores = ncores,
-                                      removeDups = removeDups)
+                                      removeDups = removeDups,
+                                      returnMeans = returnMeans)
       return(results)
     }) 
     names(results.all) <- levels(celltypes)
@@ -528,7 +634,8 @@ findTrends <- function(cells,
                                       trueNeighCells = neigh.cells,
                                       cellBuffer = ref.buffer,
                                       ncores = ncores,
-                                      removeDups = removeDups)
+                                      removeDups = removeDups,
+                                      returnMeans = returnMeans)
       results.all[[i]] <- results
       
       rm(ref.buffer)

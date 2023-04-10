@@ -8,21 +8,24 @@ vizTrends(
   dat,
   id = "id",
   yaxis = "Z",
-  sig.thresh = 2,
+  sig.thresh = 1.96,
   nc = length(unique(dat[[id]])),
   colors = rainbow(nc),
   title = NULL,
-  facet = TRUE
+  facet = TRUE,
+  lines = TRUE,
+  points = TRUE,
+  withPerms = FALSE
 )
 }
 \arguments{
-\item{dat}{data.frame; the information about the resolution, Z-score, reference and the neighbor cell.}
+\item{dat}{\code{findTrends()} results list, or data.frame; the information about the resolution, Z-score, reference and the neighbor cell.}
 
 \item{id}{column name that contains an additional feature to color trend lines (default: "id")}
 
 \item{yaxis}{column that has significance value across resolutions (default: "Z")}
 
-\item{sig.thresh}{threshold for significance, ie Z score significance threshold (default: 2).}
+\item{sig.thresh}{threshold for significance, ie Z score significance threshold (default: 1.96).}
 
 \item{nc}{number of colors to use for labeling features in id column}
 
@@ -31,7 +34,23 @@ vizTrends(
 \item{title}{plot title (default: NULL)}
 
 \item{facet}{boolean to facet wrap on reference and neighbor cell types. (default: TRUE)}
+
+\item{lines}{boolean to plot lines (default: TRUE)}
+
+\item{points}{boolean to plot points (default: TRUE)}
+
+\item{withPerms}{if the results list is a list of lists using \code{returnMeans = FALSE} in \code{findTrends()}, then column order is different and this flag is needed (default: FALSE)}
 }
 \description{
 The input data.frame should be the results list from \code{findTrends()} that has been melted into a data.frame using \code{meltResultsList()}.
+}
+\examples{
+\dontrun{
+data(sim)
+cells <- toSP(pos = sim[,c("x", "y")], celltypes = slide$type)
+shuffle.list <- makeShuffledCells(cells, resolutions = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
+results <- findTrends(cells, dist = 100, shuffle.list = shuffle.list, ncores = 2)
+vizTrends(dat = results)
+}
+
 }

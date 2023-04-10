@@ -22,7 +22,7 @@ makeShuffledCells(
 
 \item{ncores}{number of cores for parallelization (default 1)}
 
-\item{seed}{set seed for shuffling (if more than 1 permutation, then seed equals permutation number)}
+\item{seed}{set seed for shuffling (if more than 1 permutation, each shuffling permutation has a seed equal to the permutation number)}
 
 \item{verbose}{Boolean for verbosity (default TRUE)}
 }
@@ -30,4 +30,12 @@ makeShuffledCells(
 for each resolution, and for i number of permutations, shuffle the celltype labels.
 Returns a list of lists, where each list is a factor of the shuffled celltype labels.
 Outer list is for each resolution of shuffling, and each inner list is for a given permutation with a given seed.
+}
+\examples{
+ 
+\dontrun{
+data(sim)
+makeShuffledCells(sim, resolutions = c(50, 100, 200, 300, 400, 500), ncores = 2)
+}
+
 }

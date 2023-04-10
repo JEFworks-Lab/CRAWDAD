@@ -7,14 +7,12 @@
 findTrends(
   cells,
   dist = 50,
-  perms = 1,
-  seed = 0,
   ncores = 1,
   shuffle.list,
   subset.list = NULL,
-  plot = FALSE,
   verbose = TRUE,
-  removeDups = TRUE
+  removeDups = TRUE,
+  returnMeans = TRUE
 )
 }
 \arguments{
@@ -22,19 +20,17 @@ findTrends(
 
 \item{dist}{numeric distance to define neighbor cells with respect to each reference cell (default: 50)}
 
-\item{perms}{number of permutations to shuffle for each resolution (default = 1)}
-
-\item{seed}{set seed for shuffling (if more than 1 permutation, then seed equals permutation number)}
-
 \item{ncores}{number of cores for parallelization (default 1)}
 
 \item{shuffle.list}{a list of cell type labels shuffled at different resolutions (output from \code{makeShuffledCells()})}
 
 \item{subset.list}{a subset list (output from \code{selectSubsets()}). Required if computing trends for subsets (default NULL)}
 
-\item{plot}{Boolean to return plots (default TRUE)}
-
 \item{verbose}{Boolean for verbosity (default TRUE)}
+
+\item{removeDups}{remove duplicate neighbor cells to prevent them from being counted multiple times and inflate the Z scores (default: TRUE)}
+
+\item{returnMeans}{if multiple permutations, return the mean Z score across the permutations in each resolution with respect to each neighbor cell type (default: TRUE)}
 }
 \value{
 A list that contains a dataframe for each reference cell type, where the dataframe contains the significance values for each neighbor cell type at each resolution
@@ -44,4 +40,12 @@ Trends are based on significant differences in cell type proportions between the
 Cell type proportions are with respect to the different cell types that are neighboring the cells of a given reference cell type within a certain defined distance.
 This is done at difference resolutions, where a resolution is whether the cell type labels are shuffled locally or globally.
 Trends are essentially built from significance values. The significance test basically asks if two cell types are localized or separated by assessing if the proportion of the neighboring cell type is significantly greater, or less than, random chance.
+}
+\examples{
+\dontrun{
+data(sim)
+shuffle.list <- makeShuffledCells(sim, resolutions = c(50, 100, 200, 300, 400, 500))
+findTrends(sim, dist = 100, shuffle.list = shuffle.list, ncores = 2)
+}
+
 }

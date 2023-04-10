@@ -13,6 +13,16 @@
 #'
 #' @return sp::SpatialPointsDataFrame object of the neighbor cells or factor of neighbor cells
 #' 
+#' @examples 
+#' \dontrun{
+#' data(sim)
+#' cells <- toSP(pos = sim[,c("x", "y")], celltypes = slide$type)
+#' shuffle.list <- makeShuffledCells(cells, resolutions = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
+#' binomMat <- binomialTestMatrix(cells, neigh.dist = 100, ncores = 2)
+#' subset.list <- selectSubsets(binomMat, cells$celltypes, sub.type = "near", sub.thresh = 0.05)
+#' neighCells <- getNeighbors(cells = cells, reference.ids = subset.list[["C_near_B"]],  dist = 100)
+#' }
+#' 
 #' @export
 getNeighbors <- function(cells,
                          reference.ids,
@@ -67,16 +77,126 @@ getNeighbors <- function(cells,
 #' Then both dataframes can be combined into one final dataframe.
 #' Now you have identifiers that include: resolution, neighbor, reference, and "id" (ie neighbor distance).
 #' 
-#' @param resultsList list output from findTrendsv2
+#' @param resultsList list output from `findTrends()`
 #' @param id id desired, can add a column that contains an additional identifier for the results. Can use these for plotting and comparing different things
+#' @param withPerms if the results list is a list of lists using `returnMeans = FALSE` in `findTrends()`, then column order is different and this flag is needed (default: FALSE)
+#' 
+#' @examples 
+#' \dontrun{
+#' data(sim)
+#' cells <- toSP(pos = sim[,c("x", "y")], celltypes = slide$type)
+#' shuffle.list <- makeShuffledCells(cells, resolutions = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
+#' results <- findTrends(cells, dist = 100, shuffle.list = shuffle.list, ncores = 2)
+#' meltResultsList(results)
+#' }
 #' 
 #' @export
-meltResultsList <- function(resultsList, id = NA){
+meltResultsList <- function(resultsList, id = NA, withPerms = FALSE){
   
   df <- reshape2::melt(resultsList)
-  colnames(df) <- c("resolution", "neighbor", "Z", "reference")
+  
+  if(withPerms){
+    colnames(df) <- c("perm", "neighbor", "Z", "resolution", "reference")
+  } else {
+    colnames(df) <- c("resolution", "neighbor", "Z", "reference")
+  }
+  
   ## add an identifier for the particular results
   df[["id"]] <- id
+  
+  # resolutions as numeric:
+  df <- df %>%
+    dplyr::mutate_at(dplyr::vars(resolution), as.numeric)
+  
   return(df)
   
+}
+
+
+#' filter for significant cell type association trends that are co-localized
+#' 
+#' @description filter the results list from `findTrends()` for neighbor cell types that are significantly co-localized with each reference cell type.
+#' 
+#' @param results list output from `findTrends()`
+#' @param alpha significance threshold
+#' 
+#' @examples 
+#' \dontrun{
+#' data(sim)
+#' cells <- toSP(pos = sim[,c("x", "y")], celltypes = slide$type)
+#' shuffle.list <- makeShuffledCells(cells, resolutions = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
+#' results <- findTrends(cells, dist = 100, shuffle.list = shuffle.list, ncores = 2)
+#' filterCoTrends(results = results, alpha = 0.05)
+#' }
+#' 
+#' @export
+filterCoTrends <- function(results, alpha = 0.05) {
+  zthresh <- qnorm(1-alpha/2)
+  lapply(results, function(x) {
+    colIds <- unique(which(x > zthresh, arr.ind=TRUE)[,2])
+    celltypes <- colnames(x)[colIds]
+    x <- as.matrix(x[,celltypes])
+    colnames(x) <- celltypes
+    x
+  })
+}
+
+
+#' filter for significant cell type association trends that are separated
+#' 
+#' @description filter the results list from `findTrends()` for neighbor cell types that are significantly separated with each reference cell type.
+#' 
+#' @param results list output from `findTrends()`
+#' @param alpha significance threshold
+#' 
+#' @examples 
+#' \dontrun{
+#' data(sim)
+#' cells <- toSP(pos = sim[,c("x", "y")], celltypes = slide$type)
+#' shuffle.list <- makeShuffledCells(cells, resolutions = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
+#' results <- findTrends(cells, dist = 100, shuffle.list = shuffle.list, ncores = 2)
+#' filterSepTrends(results = results, alpha = 0.05)
+#' }
+#' 
+#' @export
+filterSepTrends <- function(results, alpha = 0.05) {
+  zthresh <- qnorm(1-alpha/2)
+  lapply(results, function(x) {
+    colIds <- unique(which(x < -zthresh, arr.ind=TRUE)[,2])
+    celltypes <- colnames(x)[colIds]
+    x <- as.matrix(x[,celltypes])
+    colnames(x) <- celltypes
+    x
+  })
+}
+
+
+#' filter for significant cell type association trends that are either co-localized or separated
+#' 
+#' @description filter the results list from `findTrends()` for neighbor cell types that become significantly co-localized and separated at different scales with each reference cell type.
+#' 
+#' @param results list output from `findTrends()`
+#' @param alpha significance threshold
+#' 
+#' @examples 
+#' \dontrun{
+#' data(sim)
+#' cells <- toSP(pos = sim[,c("x", "y")], celltypes = slide$type)
+#' shuffle.list <- makeShuffledCells(cells, resolutions = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
+#' results <- findTrends(cells, dist = 100, shuffle.list = shuffle.list, ncores = 2)
+#' filterChangeTrends(results = results, alpha = 0.05)
+#' }
+#' 
+#' @export
+filterChangeTrends <- function(results, alpha = 0.05) {
+  zthresh <- qnorm(1-alpha/2)
+  lapply(results, function(x) {
+    co <- unique(which(x > zthresh, arr.ind=TRUE)[,2])
+    sep <- unique(which(x < -zthresh, arr.ind=TRUE)[,2])
+    colIds <- intersect(co, sep)
+    celltypes <- colnames(x)[colIds]
+    x <- as.matrix(x[,celltypes])
+    colnames(x) <- celltypes
+    x
+  })
 }

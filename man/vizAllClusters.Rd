@@ -8,8 +8,8 @@ vizAllClusters(
   cells,
   coms,
   ofInterest = NULL,
-  axisAdj = 100,
-  s = 0.01,
+  axisAdj = 1,
+  s = 0.5,
   a = 1,
   title = NULL,
   nacol = transparentCol(color = "gray", percent = 50)
@@ -39,7 +39,9 @@ plot
 uses the x and y position information and a chosen set of communities
 }
 \examples{
+\dontrun{
 data(slide)
 vizAllClusters(slide, coms = slide$celltypes)
+}
 
 }
