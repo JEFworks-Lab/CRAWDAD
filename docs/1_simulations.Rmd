@@ -220,3 +220,62 @@ plt
 #                 units = c("in"))
 
 ```
+
+# Permutations
+
+```{r}
+
+oldw <- getOption("warn")
+options(warn = -1)
+
+## generate background
+shuffle.list.perms <- crawdad::makeShuffledCells(cells,
+                          resolutions = c(150, 250, 500, 750, 1000, 1500, 2000),
+                          perms = 10,
+                          ncores = ncores,
+                          verbose = TRUE)
+
+options(warn = oldw)
+
+```
+
+```{r}
+
+oldw <- getOption("warn")
+options(warn = -1)
+
+## find trends, passing background as parameter
+results.perms <- crawdad::findTrends(cells,
+                        dist = 100,
+                        shuffle.list = shuffle.list.perms,
+                        ncores = ncores,
+                        verbose = TRUE,
+                        returnMeans = FALSE)
+
+options(warn = oldw)
+
+```
+
+```{r}
+
+dat <- crawdad::meltResultsList(results.perms, withPerms = TRUE)
+
+plt <- vizTrends(dat = dat, facet = TRUE, lines = FALSE) +
+  ggplot2::geom_smooth(data = dat, 
+                       ggplot2::aes(x = resolution, y = Z)) +
+  ggplot2::scale_x_log10() +
+  ggplot2::theme(legend.position="none")
+plt
+
+# ggplot2::ggsave(filename = "1_sim_trends_perms.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 8,
+#                 height = 6,
+#                 units = c("in"))
+
+```
+
+

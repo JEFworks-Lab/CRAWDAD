@@ -23,7 +23,7 @@ library(dplyr)
 
 ```{r}
 
-ncores = 2
+ncores = 7
 
 ```
 
@@ -808,6 +808,30 @@ plt <- vizTrends.heatmap(dat = d, annotation = FALSE)
 plt
 
 # ggplot2::ggsave(filename = "3_spleen_pkhl_cd4_subset_trends_heatmap.pdf",
+#                 plot = plt,
+#                 device = "pdf",
+#                 path = figpath,
+#                 scale = 1,
+#                 width = 8,
+#                 height = 3,
+#                 units = c("in"))
+
+```
+
+```{r}
+
+dat <- crawdad::meltResultsList(results.subsets.pkhl)
+
+d2 <- dat[grepl(pattern = "CD4 Memory T cells_near_", dat$reference) & dat$neighbor %in% c("Podoplanin"),]
+plt <- vizTrends(dat = d1, facet = FALSE, id = "neighbor", title = "CD4 Memory T cells subsets") +
+  ggplot2::scale_x_log10()
+  # ggplot2::theme(legend.position="none")
+plt
+
+plt <- vizTrends.heatmap(dat = d2, annotation = FALSE)
+plt
+
+# ggplot2::ggsave(filename = "3_spleen_pkhl_cd4_subset_trends_heatmap_all.pdf",
 #                 plot = plt,
 #                 device = "pdf",
 #                 path = figpath,
