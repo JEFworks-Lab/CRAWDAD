@@ -1,0 +1,313 @@
+ADH1B,Adipocytes
+ADIPOQ,Adipocytes
+ANKRD29,Adipocytes
+CAVIN2,Adipocytes
+CLEC14A,Adipocytes
+EGFL7,Adipocytes
+HOXD8,Adipocytes
+HOXD9,Adipocytes
+KDR,Adipocytes
+LPL,Adipocytes
+MMRN2,Adipocytes
+NDUFA4L2,Adipocytes
+NOSTRIN,Adipocytes
+PDCD1LG2,Adipocytes
+PDE4A,Adipocytes
+RAMP2,Adipocytes
+RAPGEF3,Adipocytes
+SOX18,Adipocytes
+TFAP2A,Adipocytes
+TIMP4,Adipocytes
+UCP1,Adipocytes
+ANKRD28,B cells
+APOBEC3A,B cells
+BANK1,B cells
+C2orf42,B cells
+CCPG1,B cells
+CD19,B cells
+CD27,B cells
+CD79A,B cells
+CD79B,B cells
+CLECL1,B cells
+DNAAF1,B cells
+DUSP5,B cells
+ERN1,B cells
+FAM107B,B cells
+ITM2C,B cells
+LGALSL,B cells
+MS4A1,B cells
+MZB1,B cells
+PELI1,B cells
+RAB30,B cells
+SEC11C,B cells
+SLAMF1,B cells
+SLAMF7,B cells
+TCL1A,B cells
+TRIB1,B cells
+VOPP1,B cells
+ABCC11,Breast cancer
+APOBEC3B,Breast cancer
+AR,Breast cancer
+CAV1,Breast cancer
+CCND1,Breast cancer
+CDH1,Breast cancer
+CEACAM6,Breast cancer
+CENPF,Breast cancer
+CXCL12,Breast cancer
+EGFR,Breast cancer
+ERBB2,Breast cancer
+ESR1,Breast cancer
+FOXA1,Breast cancer
+GATA3,Breast cancer
+KIT,Breast cancer
+KRT7,Breast cancer
+LDHB,Breast cancer
+LRRC15,Breast cancer
+MDM2,Breast cancer
+MKI67,Breast cancer
+PCLAF,Breast cancer
+PGR,Breast cancer
+PTGDS,Breast cancer
+RUNX1,Breast cancer
+S100A4,Breast cancer
+SCD,Breast cancer
+SFRP1,Breast cancer
+SNAI1,Breast cancer
+TACSTD2,Breast cancer
+TCF4,Breast cancer
+TOP2A,Breast cancer
+ZEB1,Breast cancer
+ZEB2,Breast cancer
+ADAM9,Breast glandular cells
+AGR3,Breast glandular cells
+ALDH1A3,Breast glandular cells
+AQP3,Breast glandular cells
+BACE2,Breast glandular cells
+C15orf48,Breast glandular cells
+C5orf46,Breast glandular cells
+CCDC6,Breast glandular cells
+CD9,Breast glandular cells
+CDC42EP1,Breast glandular cells
+CLIC6,Breast glandular cells
+CTTN,Breast glandular cells
+DAPK3,Breast glandular cells
+DMKN,Breast glandular cells
+DNTTIP1,Breast glandular cells
+DSC2,Breast glandular cells
+EIF4EBP1,Breast glandular cells
+ENAH,Breast glandular cells
+FASN,Breast glandular cells
+FLNB,Breast glandular cells
+HMGA1,Breast glandular cells
+HOOK2,Breast glandular cells
+HPX,Breast glandular cells
+JUP,Breast glandular cells
+KRT23,Breast glandular cells
+LYPD3,Breast glandular cells
+MLPH,Breast glandular cells
+MYO5B,Breast glandular cells
+OCIAD2,Breast glandular cells
+OPRPN,Breast glandular cells
+PIGR,Breast glandular cells
+PTRHD1,Breast glandular cells
+QARS,Breast glandular cells
+S100A14,Breast glandular cells
+SCGB2A1,Breast glandular cells
+SDC4,Breast glandular cells
+SERHL2,Breast glandular cells
+SERPINA3,Breast glandular cells
+SH3YL1,Breast glandular cells
+SLC25A37,Breast glandular cells
+SLC5A6,Breast glandular cells
+SMS,Breast glandular cells
+SQLE,Breast glandular cells
+SRPK1,Breast glandular cells
+SVIL,Breast glandular cells
+TCIM,Breast glandular cells
+TMEM147,Breast glandular cells
+TOMM7,Breast glandular cells
+TPD52,Breast glandular cells
+TRAPPC3,Breast glandular cells
+USP53,Breast glandular cells
+ZNF562,Breast glandular cells
+ACTG2,Breast myoepithelial cells
+C6orf132,Breast myoepithelial cells
+DSP,Breast myoepithelial cells
+DST,Breast myoepithelial cells
+GLIPR1,Breast myoepithelial cells
+KARS,Breast myoepithelial cells
+KLF5,Breast myoepithelial cells
+KRT5,Breast myoepithelial cells
+KRT6B,Breast myoepithelial cells
+MYLK,Breast myoepithelial cells
+NARS,Breast myoepithelial cells
+OXTR,Breast myoepithelial cells
+PTN,Breast myoepithelial cells
+TRAF4,Breast myoepithelial cells
+TUBB2B,Breast myoepithelial cells
+ADGRE5,Dendritic cells
+CD83,Dendritic cells
+CLEC9A,Dendritic cells
+FCER1A,Dendritic cells
+IL2RG,Dendritic cells
+IL3RA,Dendritic cells
+ITGAX,Dendritic cells
+LILRA4,Dendritic cells
+SPIB,Dendritic cells
+AKR1C3,Endothelial cells
+ANGPT2,Endothelial cells
+AQP1,Endothelial cells
+CD93,Endothelial cells
+ESM1,Endothelial cells
+PECAM1,Endothelial cells
+SOX17,Endothelial cells
+STC1,Endothelial cells
+TIFA,Endothelial cells
+VWF,Endothelial cells
+WARS,Endothelial cells
+ANKRD30A,Epithelial cells
+EPCAM,Epithelial cells
+KRT14,Epithelial cells
+KRT8,Epithelial cells
+MUC6,Epithelial cells
+MYBPC1,Epithelial cells
+CCDC80,Fibroblasts
+DPT,Fibroblasts
+FBLN1,Fibroblasts
+IGF1,Fibroblasts
+LUM,Fibroblasts
+MMP1,Fibroblasts
+MMP12,Fibroblasts
+MMP2,Fibroblasts
+PDGFRA,Fibroblasts
+PIM1,Fibroblasts
+POSTN,Fibroblasts
+SFRP4,Fibroblasts
+TAC1,Fibroblasts
+TCEAL7,Fibroblasts
+PTPRC,Immune cells
+AIF1,Macrophages
+APOC1,Macrophages
+BASP1,Macrophages
+C1QA,Macrophages
+C1QC,Macrophages
+CD163,Macrophages
+CD68,Macrophages
+CD80,Macrophages
+CD86,Macrophages
+CX3CR1,Macrophages
+CXCL16,Macrophages
+CXCL5,Macrophages
+FAM49A,Macrophages
+FGL2,Macrophages
+GJB2,Macrophages
+IGSF6,Macrophages
+LPXN,Macrophages
+LY86,Macrophages
+LYZ,Macrophages
+MAP3K8,Macrophages
+MNDA,Macrophages
+MRC1,Macrophages
+PLD4,Macrophages
+PPARG,Macrophages
+SEC24A,Macrophages
+SERPINB9,Macrophages
+CPA3,Mast cells
+CTSG,Mast cells
+TPSAB1,Mast cells
+CD14,Monocytes
+FCGR3A,Monocytes
+S100A8,Monocytes
+ITGAM,Myeloid cells
+CD247,NK cells
+FCER1G,NK cells
+GNLY,NK cells
+KLRD1,NK cells
+KLRF1,NK cells
+NCAM1,NK cells
+NKG7,NK cells
+PRF1,NK cells
+CEACAM8,Neutrophils
+TNFRSF17,Plasma cells
+ACTA2,Smooth muscle cells
+AKR1C1,Smooth muscle cells
+AVPR1A,Smooth muscle cells
+CCL8,Smooth muscle cells
+CRISPLD2,Smooth muscle cells
+CTH,Smooth muscle cells
+FOXC2,Smooth muscle cells
+FSTL3,Smooth muscle cells
+LARS,Smooth muscle cells
+MYH11,Smooth muscle cells
+PDGFRB,Smooth muscle cells
+PDK4,Smooth muscle cells
+SSTR2,Smooth muscle cells
+THAP2,Smooth muscle cells
+CCL5,T cells
+CCR7,T cells
+CD274,T cells
+CD3E,T cells
+CD3G,T cells
+CD4,T cells
+CD69,T cells
+CD8A,T cells
+CTLA4,T cells
+CXCR4,T cells
+CYTIP,T cells
+DUSP2,T cells
+FOXP3,T cells
+GPR183,T cells
+GZMA,T cells
+GZMK,T cells
+HAVCR2,T cells
+IL2RA,T cells
+IL7R,T cells
+KLRB1,T cells
+KLRC1,T cells
+LAG3,T cells
+LTB,T cells
+PDCD1,T cells
+PRDM1,T cells
+RHOH,T cells
+RORC,T cells
+RTKN2,T cells
+SELL,T cells
+SMAP2,T cells
+TCF7,T cells
+TENT5C,T cells
+TIGIT,T cells
+TRAC,T cells
+TUBA4A,T cells
+CCL20,Custom
+DERL3,Custom
+MEDAG,Custom
+TYROBP,Custom
+KRT15,Custom
+CSF3,Custom
+CLDN4,Custom
+EDNRB,Custom
+REXO4,Custom
+LIF,Custom
+ELF3,Custom
+CLDN5,Custom
+CRHBP,Custom
+GZMB,Custom
+CD1C,Custom
+CYP1A1,Custom
+EDN1,Custom
+PCOLCE,Custom
+NPM3,Custom
+CD8B,Custom
+CD3D,Custom
+TCF15,Custom
+BTNL9,Custom
+ELF5,Custom
+FBLIM1,Custom
+KRT16,Custom
+MPO,Custom
+AHSP,Custom
+SLC4A1,Custom
+POLR2J3,Custom
+LEP,Custom
+CLCA2,Custom
+HDC,Custom

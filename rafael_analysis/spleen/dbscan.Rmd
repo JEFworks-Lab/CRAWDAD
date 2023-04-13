@@ -1,0 +1,191 @@
+---
+title: "DBSCAN"
+author: "Rafael dos Santos Peixoto"
+date: "2023-04-12"
+output: html_document
+---
+
+run intro.rdm first
+
+```{r}
+library(tidyverse)
+library(sp)
+library(sf)
+library(gridExtra)
+```
+
+
+## get data
+
+```{r}
+df <- do.call(rbind, st_geometry(pkhl)) %>%
+  as_tibble() %>% setNames(c('x', 'y'))
+df$type <- pkhl$celltypes
+head(df)
+
+df %>% ggplot(aes(x, y, color = type)) +
+  geom_point(size = .1)
+```
+
+## DBSCAN all
+
+```{r}
+
+library(dbscan)
+set.seed(42)
+
+pos <- df[, c('x', 'y')]
+
+## manually adjust eps and minPts
+dbscan_res <- dbscan(pos, eps = 75, minPts = 25)
+
+df %>% ggplot(aes(x, y, color = as.factor(dbscan_res$cluster))) +
+  geom_point(size = .01) +
+  guides(color = guide_legend(override.aes = list(size = 7)))
+```
+
+## DBSCAN ct1
+
+## DBSCAN all cts
+
+```{r}
+cts <- as.character(unique(df$type))
+ct_dbscan_res <- lapply(cts, function(ct){
+  df %>% 
+    filter(type == ct) %>% 
+    select(x, y) %>% 
+    dbscan(eps = 75, minPts = 25)
+})
+
+names(ct_dbscan_res) <- cts
+ct_dbscan_res
+```
+
+## visualizing
+
+```{r, fig.height=6, fig.width=6}
+ct <- 'Podoplanin'
+df %>% 
+  filter(type == ct) %>% 
+  ggplot() + 
+  geom_point(aes(x, y, color = as.factor(ct_dbscan_res[[ct]]$cluster)),
+             size = .25) + 
+  labs(title = ct, color = 'subcluster')
+
+```
+
+```{r, fig.height=6, fig.width=6}
+ct <- 'Fol B cells'
+df %>% 
+  filter(type == ct) %>% 
+  ggplot() + 
+  geom_point(aes(x, y, color = as.factor(ct_dbscan_res[[ct]]$cluster)),
+             size = .25) + 
+  labs(title = ct, color = 'subcluster')
+
+```
+
+## adjusting eps
+
+```{r, fig.height=6, fig.width=6}
+cts <- as.character(unique(df$type))
+ct_dbscan_res <- lapply(cts, function(ct){
+  df %>% 
+    filter(type == ct) %>% 
+    select(x, y) %>% 
+    dbscan(eps = 125, minPts = 25)
+})
+
+names(ct_dbscan_res) <- cts
+
+ct <- 'Fol B cells'
+df %>% 
+  filter(type == ct) %>% 
+  ggplot() + 
+  geom_point(aes(x, y, color = as.factor(ct_dbscan_res[[ct]]$cluster)),
+             size = .25) + 
+  labs(title = ct, color = 'subcluster')
+```
+
+```{r, fig.height=6, fig.width=6}
+ct <- 'Podoplanin'
+df %>% 
+  filter(type == ct) %>% 
+  ggplot() + 
+  geom_point(aes(x, y, color = as.factor(ct_dbscan_res[[ct]]$cluster)),
+             size = .25) + 
+  labs(title = ct, color = 'subcluster')
+```
+
+## adjusting eps and minPts
+
+```{r, fig.height=6, fig.width=6}
+cts <- as.character(unique(df$type))
+ct_dbscan_res <- lapply(cts, function(ct){
+  df %>% 
+    filter(type == ct) %>% 
+    select(x, y) %>% 
+    dbscan(eps = 150, minPts = 10)
+})
+
+names(ct_dbscan_res) <- cts
+
+ct <- 'Podoplanin'
+df %>% 
+  filter(type == ct) %>% 
+  ggplot() + 
+  geom_point(aes(x, y, color = as.factor(ct_dbscan_res[[ct]]$cluster)),
+             size = .25) + 
+  labs(title = ct, color = 'subcluster')
+```
+
+```{r, fig.height=6, fig.width=6}
+ct <- 'Fol B cells'
+df %>% 
+  filter(type == ct) %>% 
+  ggplot() + 
+  geom_point(aes(x, y, color = as.factor(ct_dbscan_res[[ct]]$cluster)),
+             size = .25) + 
+  labs(title = ct, color = 'subcluster')
+```
+
+```{r, fig.height=6, fig.width=6}
+
+ct <- 'Fol B cells'
+df %>% 
+  filter(type == ct) %>% 
+  mutate(subcluster = as.factor(ct_dbscan_res[[ct]]$cluster)) %>% 
+  ggplot() + 
+  geom_point(aes(x, y),
+             size = .25) + 
+  facet_wrap(. ~ subcluster) + 
+  labs(title = ct)
+```
+
+```{r, fig.height=6, fig.width=6}
+ct <- 'Fol B cells'
+df %>% 
+  filter(type == ct) %>% 
+  ggplot() + 
+  geom_point(aes(x, y, color = as.factor(ct_dbscan_res[[ct]]$cluster == 25)),
+             size = .25) + 
+  labs(title = ct, color = 'subcluster')
+```
+
+## SAM test
+
+```{r, fig.height=6, fig.width=6}
+
+ct <- 'Fol B cells'
+df %>% 
+  filter(type == ct) %>% 
+  ggplot() + 
+  geom_point(aes(x, y),
+             size = .25) +
+  theme_void()
+```
+
+
+
+
+
