@@ -753,3 +753,64 @@ transparentCol <- function(color, percent = 50, name = NULL) {
   ## Save the color
   invisible(t.col)
 }
+
+
+
+# Plot Colocalization Dotplot ---------------------------------------------
+
+
+#' Plot Co-localization Dotplot
+#' 
+#' @description This fuction takes the `findTrends()` melted data frame and 
+#' plots the resolution and the Z-score in which the trend first crossed the 
+#' significance line (Z = 1.96). The Z-score was capped beween -3 and 3. Since 
+#' the co-localization at smaller resolutions are more important thant those at 
+#' greater ones, we plotted the inverse of the resolution so smaller ones would 
+#' correspond to larger dots.
+#' 
+#' @param dat `findTrends()` data.frame; the information about the resolution, Z-score, reference and the neighbor cell. The input data.frame should be the results list from `findTrends()` that has been melted into a data.frame using `meltResultsList()`.
+#' @param sig.thresh numeric; threshold for significance, ie Z score significance threshold (default: 1.96).
+#' @param zscore.limit numeric; limit the Z-score to look better in the graph scale gradient. Z-score values above zscore.limit will be represented as zscore.limit, scores below -zscore.limit will be represented as -zscore.limit.
+#' 
+#' @param colors character vector; colors for the gradient heatmap (low, mid, high).
+#' @param title character; plot title (default: NULL).
+#' 
+#' @examples 
+#' \dontrun{
+#' data(sim)
+#' cells <- toSP(pos = sim[,c("x", "y")], celltypes = slide$type)
+#' shuffle.list <- makeShuffledCells(cells, resolutions = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
+#' results <- findTrends(cells, dist = 100, shuffle.list = shuffle.list, ncores = 2)
+#' dat <- meltResultsList(results)
+#' vizColocDotplot(dat)
+#' }
+#' 
+#' @export
+vizColocDotplot <- function(dat, sig.thresh = 1.96, zscore.limit = 3,
+                            colors = c("blue", "white", "red"),
+                            title = NULL){
+  ## create data.frame with the Z-scores and resolutions at the first resolution
+  ## the trend becomes significant
+  sig_dat <- dat %>%
+    filter(abs(Z) >= sig.thresh) %>% 
+    group_by(neighbor, reference) %>% 
+    filter(resolution == min(resolution, na.rm = TRUE))
+  ## limit the z-score for the gradient in the figure to look better
+  sig_dat$Z[sig_dat$Z > zscore.limit] <- zscore.limit
+  sig_dat$Z[sig_dat$Z < -zscore.limit] <- -zscore.limit
+  ## plot figure
+  sig_dat %>% 
+    ggplot() +
+    geom_point(aes(x=reference, y=neighbor, 
+                   color=Z, size=rank(1/resolution))) + 
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+    scale_colour_gradient2(
+      low = colors[1],
+      mid = colors[2],
+      high = colors[3],
+      na.value = "#eeeeee"
+    ) + 
+    scale_size_continuous(range = c(1, 10)) + 
+    scale_x_discrete(position = "top")  + 
+    theme_bw()
+}

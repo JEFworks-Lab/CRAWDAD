@@ -30,19 +30,20 @@ LazyData: FALSE
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
 Imports: 
-  assertthat,
-  BiocParallel,
-  parallel,
-  ggplot2,
-  scattermore,
-  grDevices,
-  DescTools,
-  MASS,
-  reshape2,
-  stats,
-  sf,
-  sp,
-  dplyr
+    assertthat,
+    BiocParallel,
+    parallel,
+    ggplot2,
+    scattermore,
+    grDevices,
+    DescTools,
+    MASS,
+    reshape2,
+    stats,
+    sf,
+    sp,
+    dplyr,
+    magrittr
 Depends:
     R (>= 4.0)
 Suggests:
