@@ -1,3 +1,6 @@
+
+# Not exported ------------------------------------------------------------
+
 #' Plot trends
 #'
 #' @description Plot panel of Z-score trends for each reference and neighbor cell-type pairs.
@@ -240,6 +243,11 @@ plotTrendsOverlay <- function(results,
   }
   
 }
+
+
+
+# Exported ----------------------------------------------------------------
+
 
 
 #' Visualize all clusters on the tissue
@@ -569,8 +577,15 @@ vizTrends <- function(dat, id = "id", yaxis = "Z",
                    # legend.position="none"
     )
   
-  if(facet){
-    plt <- plt + ggplot2::facet_grid(neighbor ~ reference)
+  if (facet){
+    plt <- plt + ggplot2::facet_grid(neighbor ~ reference, scales = 'free_y')
+  }
+  
+  ## check if the data has permutations
+  if ('perm' %in% colnames(dat)){
+    plt <- plt + ggplot2::geom_smooth(data = dat, 
+                                      ggplot2::aes(x = resolution, y = Z),
+                                      se = TRUE) 
   }
   
   plt
@@ -754,9 +769,6 @@ transparentCol <- function(color, percent = 50, name = NULL) {
   invisible(t.col)
 }
 
-
-
-# Plot Colocalization Dotplot ---------------------------------------------
 
 
 #' Plot Co-localization Dotplot
