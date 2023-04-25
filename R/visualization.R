@@ -804,25 +804,25 @@ vizColocDotplot <- function(dat, sig.thresh = 1.96, zscore.limit = 3,
   ## create data.frame with the Z-scores and resolutions at the first resolution
   ## the trend becomes significant
   sig_dat <- dat %>%
-    filter(abs(Z) >= sig.thresh) %>% 
-    group_by(neighbor, reference) %>% 
-    filter(resolution == min(resolution, na.rm = TRUE))
+    dplyr::filter(abs(Z) >= sig.thresh) %>% 
+    dplyr::group_by(neighbor, reference) %>% 
+    dplyr::filter(resolution == min(resolution, na.rm = TRUE))
   ## limit the z-score for the gradient in the figure to look better
   sig_dat$Z[sig_dat$Z > zscore.limit] <- zscore.limit
   sig_dat$Z[sig_dat$Z < -zscore.limit] <- -zscore.limit
   ## plot figure
   sig_dat %>% 
-    ggplot() +
-    geom_point(aes(x=reference, y=neighbor, 
+    ggplot2::ggplot() +
+    ggplot2::geom_point(ggplot2::aes(x=reference, y=neighbor, 
                    color=Z, size=rank(1/resolution))) + 
-    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
-    scale_colour_gradient2(
+    ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust=1)) +
+    ggplot2::scale_colour_gradient2(
       low = colors[1],
       mid = colors[2],
       high = colors[3],
       na.value = "#eeeeee"
     ) + 
-    scale_size_continuous(range = c(1, 10)) + 
-    scale_x_discrete(position = "top")  + 
-    theme_bw()
+    ggplot2::scale_size_continuous(range = c(1, 10)) + 
+    ggplot2::scale_x_discrete(position = "top")  + 
+    ggplot2::theme_bw()
 }
