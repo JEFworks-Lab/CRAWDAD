@@ -82,4 +82,4 @@ dat <- crawdad::meltResultsList(results)
 
 # Visualize with CRAWDAD --------------------------------------------------
 
-
+vizColocDotplot(dat)

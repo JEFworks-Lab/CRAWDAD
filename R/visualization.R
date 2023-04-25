@@ -812,9 +812,9 @@ vizColocDotplot <- function(dat, sig.thresh = 1.96, zscore.limit = 3,
   sig_dat$Z[sig_dat$Z < -zscore.limit] <- -zscore.limit
   ## plot figure
   sig_dat %>% 
-    ggplot2::ggplot() +
-    ggplot2::geom_point(ggplot2::aes(x=reference, y=neighbor, 
-                   color=Z, size=rank(1/resolution))) + 
+    ggplot2::ggplot(ggplot2::aes(x=reference, y=neighbor, 
+                                 color=Z, size=(1/resolution))) +
+    ggplot2::geom_point() + 
     ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust=1)) +
     ggplot2::scale_colour_gradient2(
       low = colors[1],
@@ -822,7 +822,10 @@ vizColocDotplot <- function(dat, sig.thresh = 1.96, zscore.limit = 3,
       high = colors[3],
       na.value = "#eeeeee"
     ) + 
-    ggplot2::scale_size_continuous(range = c(1, 10)) + 
+    ggplot2::scale_size_continuous(name = "Resolution",
+                                   range = c(0, 10),
+                                   labels = function(x) round(1/x)) + 
     ggplot2::scale_x_discrete(position = "top")  + 
     ggplot2::theme_bw()
 }
+
