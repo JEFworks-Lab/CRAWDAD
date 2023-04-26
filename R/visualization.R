@@ -781,7 +781,8 @@ transparentCol <- function(color, percent = 50, name = NULL) {
 #' correspond to larger dots.
 #' 
 #' @param dat `findTrends()` data.frame; the information about the resolution, Z-score, reference and the neighbor cell. The input data.frame should be the results list from `findTrends()` that has been melted into a data.frame using `meltResultsList()`.
-#' @param sig.thresh numeric; threshold for significance, ie Z score significance threshold (default: 1.96).
+#' @param zsig.thresh numeric; threshold for significance, ie Z score significance threshold (default: 1.96).
+#' @param psig.tresh numeric; threshold for significance, ie P value significance threshold. If no value is provided, the zsig.thresh parameter will be used.
 #' @param zscore.limit numeric; limit the Z-score to look better in the graph scale gradient. Z-score values above zscore.limit will be represented as zscore.limit, scores below -zscore.limit will be represented as -zscore.limit.
 #' 
 #' @param colors character vector; colors for the gradient heatmap (low, mid, high).
@@ -798,13 +799,17 @@ transparentCol <- function(color, percent = 50, name = NULL) {
 #' }
 #' 
 #' @export
-vizColocDotplot <- function(dat, sig.thresh = 1.96, zscore.limit = 3,
+vizColocDotplot <- function(dat, zsig.thresh = 1.96, psig.tresh = NULL,
+                            zscore.limit = 3,
                             colors = c("blue", "white", "red"),
                             title = NULL){
+  if (is.null(psig.tresh)) {
+    zsig.thresh = round(qnorm(psig.tresh/2, lower.tail = F), 2)
+  }
   ## create data.frame with the Z-scores and resolutions at the first resolution
   ## the trend becomes significant
   sig_dat <- dat %>%
-    dplyr::filter(abs(Z) >= sig.thresh) %>% 
+    dplyr::filter(abs(Z) >= zsig.thresh) %>% 
     dplyr::group_by(neighbor, reference) %>% 
     dplyr::filter(resolution == min(resolution, na.rm = TRUE))
   ## limit the z-score for the gradient in the figure to look better
