@@ -781,9 +781,9 @@ transparentCol <- function(color, percent = 50, name = NULL) {
 #' correspond to larger dots.
 #' 
 #' @param dat `findTrends()` data.frame; the information about the resolution, Z-score, reference and the neighbor cell. The input data.frame should be the results list from `findTrends()` that has been melted into a data.frame using `meltResultsList()`.
-#' @param zsig.thresh numeric; threshold for significance, ie Z score significance threshold (default: 1.96).
-#' @param psig.tresh numeric; threshold for significance, ie P value significance threshold. If no value is provided, the zsig.thresh parameter will be used.
-#' @param zscore.limit numeric; limit the Z-score to look better in the graph scale gradient. Z-score values above zscore.limit will be represented as zscore.limit, scores below -zscore.limit will be represented as -zscore.limit.
+#' @param zsig.thresh numeric; the Z score significance threshold (default: 1.96).
+#' @param psig.tresh numeric; the two-sided P value significance threshold. It can be used in place of the zsig.thresh parameter. If no value is provided, the zsig.thresh will be used.
+#' @param zscore.limit numeric; limit the Z-score to look better in the graph scale gradient. Z-score values above zscore.limit will be represented as zscore.limit, scores below -zscore.limit will be represented as -zscore.limit (default: 3).
 #' 
 #' @param colors character vector; colors for the gradient heatmap (low, mid, high).
 #' @param title character; plot title (default: NULL).
