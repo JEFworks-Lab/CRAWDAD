@@ -74,12 +74,20 @@ results <- crawdad::findTrends(cells,
                                dist = 100,
                                shuffle.list = shuffle.list,
                                ncores = ncores,
-                               verbose = TRUE)
+                               verbose = TRUE,
+                               returnMeans = FALSE)
 
-dat <- crawdad::meltResultsList(results)
+dat <- crawdad::meltResultsList(results, withPerms = T)
 
 
 
 # Visualize with CRAWDAD --------------------------------------------------
 
 vizColocDotplot(dat)
+
+library(tidyverse)
+dat_filter <- dat %>% 
+  filter(reference == 'B') %>% 
+  filter(neighbor == 'C')
+
+vizTrends(dat_filter, lines = F, withPerms = T)
