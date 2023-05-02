@@ -1,5 +1,5 @@
 library('crawdad')
-ncores <- 16
+ncores <- 7
 
 
 
@@ -8,9 +8,9 @@ ncores <- 16
 #### simulate
 ## cells
 set.seed(1)
-size <- 8000
-x <- runif(size, min = 0, max = 2000)
-y <- runif(size, min = 0, max = 2000)
+size <- 4000
+x <- runif(size, min = 0, max = 1000)
+y <- runif(size, min = 0, max = 1000)
 p <- data.frame(x = x, y = y, type='D')
 rownames(p) <- paste0('cell', 1:size)
 
