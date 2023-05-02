@@ -1,3 +1,6 @@
+
+# Not exported ------------------------------------------------------------
+
 #' Plot trends
 #'
 #' @description Plot panel of Z-score trends for each reference and neighbor cell-type pairs.
@@ -240,6 +243,11 @@ plotTrendsOverlay <- function(results,
   }
   
 }
+
+
+
+# Exported ----------------------------------------------------------------
+
 
 
 #' Visualize all clusters on the tissue
@@ -569,8 +577,15 @@ vizTrends <- function(dat, id = "id", yaxis = "Z",
                    # legend.position="none"
     )
   
-  if(facet){
-    plt <- plt + ggplot2::facet_grid(neighbor ~ reference)
+  if (facet){
+    plt <- plt + ggplot2::facet_grid(neighbor ~ reference, scales = 'free_y')
+  }
+  
+  ## check if the data has permutations
+  if ('perm' %in% colnames(dat)){
+    plt <- plt + ggplot2::geom_smooth(data = dat, 
+                                      ggplot2::aes(x = resolution, y = Z),
+                                      se = TRUE) 
   }
   
   plt
@@ -756,9 +771,6 @@ transparentCol <- function(color, percent = 50, name = NULL) {
 
 
 
-# Plot Colocalization Dotplot ---------------------------------------------
-
-
 #' Plot Co-localization Dotplot
 #' 
 #' @description This fuction takes the `findTrends()` melted data frame and 
@@ -769,8 +781,9 @@ transparentCol <- function(color, percent = 50, name = NULL) {
 #' correspond to larger dots.
 #' 
 #' @param dat `findTrends()` data.frame; the information about the resolution, Z-score, reference and the neighbor cell. The input data.frame should be the results list from `findTrends()` that has been melted into a data.frame using `meltResultsList()`.
-#' @param sig.thresh numeric; threshold for significance, ie Z score significance threshold (default: 1.96).
-#' @param zscore.limit numeric; limit the Z-score to look better in the graph scale gradient. Z-score values above zscore.limit will be represented as zscore.limit, scores below -zscore.limit will be represented as -zscore.limit.
+#' @param zsig.thresh numeric; the Z score significance threshold (default: 1.96).
+#' @param psig.tresh numeric; the two-sided P value significance threshold. It can be used in place of the zsig.thresh parameter. If no value is provided, the zsig.thresh will be used.
+#' @param zscore.limit numeric; limit the Z-score to look better in the graph scale gradient. Z-score values above zscore.limit will be represented as zscore.limit, scores below -zscore.limit will be represented as -zscore.limit (default: 3).
 #' 
 #' @param colors character vector; colors for the gradient heatmap (low, mid, high).
 #' @param title character; plot title (default: NULL).
@@ -786,31 +799,38 @@ transparentCol <- function(color, percent = 50, name = NULL) {
 #' }
 #' 
 #' @export
-vizColocDotplot <- function(dat, sig.thresh = 1.96, zscore.limit = 3,
+vizColocDotplot <- function(dat, zsig.thresh = 1.96, psig.tresh = NULL,
+                            zscore.limit = 3,
                             colors = c("blue", "white", "red"),
                             title = NULL){
+  if (is.null(psig.tresh)) {
+    zsig.thresh = round(qnorm(psig.tresh/2, lower.tail = F), 2)
+  }
   ## create data.frame with the Z-scores and resolutions at the first resolution
   ## the trend becomes significant
   sig_dat <- dat %>%
-    filter(abs(Z) >= sig.thresh) %>% 
-    group_by(neighbor, reference) %>% 
-    filter(resolution == min(resolution, na.rm = TRUE))
+    dplyr::filter(abs(Z) >= zsig.thresh) %>% 
+    dplyr::group_by(neighbor, reference) %>% 
+    dplyr::filter(resolution == min(resolution, na.rm = TRUE))
   ## limit the z-score for the gradient in the figure to look better
   sig_dat$Z[sig_dat$Z > zscore.limit] <- zscore.limit
   sig_dat$Z[sig_dat$Z < -zscore.limit] <- -zscore.limit
   ## plot figure
   sig_dat %>% 
-    ggplot() +
-    geom_point(aes(x=reference, y=neighbor, 
-                   color=Z, size=rank(1/resolution))) + 
-    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
-    scale_colour_gradient2(
+    ggplot2::ggplot(ggplot2::aes(x=reference, y=neighbor, 
+                                 color=Z, size=(1/resolution))) +
+    ggplot2::geom_point() + 
+    ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust=1)) +
+    ggplot2::scale_colour_gradient2(
       low = colors[1],
       mid = colors[2],
       high = colors[3],
       na.value = "#eeeeee"
     ) + 
-    scale_size_continuous(range = c(1, 10)) + 
-    scale_x_discrete(position = "top")  + 
-    theme_bw()
+    ggplot2::scale_size_continuous(name = "Resolution",
+                                   range = c(0, 10),
+                                   labels = function(x) round(1/x)) + 
+    ggplot2::scale_x_discrete(position = "top")  + 
+    ggplot2::theme_bw()
 }
+
