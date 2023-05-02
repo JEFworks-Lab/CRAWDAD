@@ -803,7 +803,7 @@ vizColocDotplot <- function(dat, zsig.thresh = 1.96, psig.tresh = NULL,
                             zscore.limit = 3,
                             colors = c("blue", "white", "red"),
                             title = NULL){
-  if (is.null(psig.tresh)) {
+  if (!is.null(psig.tresh)) {
     zsig.thresh = round(qnorm(psig.tresh/2, lower.tail = F), 2)
   }
   ## create data.frame with the Z-scores and resolutions at the first resolution
