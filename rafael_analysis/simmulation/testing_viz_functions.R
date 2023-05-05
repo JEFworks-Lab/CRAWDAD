@@ -90,4 +90,9 @@ dat_filter <- dat %>%
   filter(reference == 'B') %>% 
   filter(neighbor == 'C')
 
-vizTrends(dat_filter, lines = F, withPerms = T)
+vizTrends(dat_filter, lines = T, withPerms = T)
+
+dat_filter %>% group_by(neighbor, resolution, reference, id) %>% 
+  summarise(mean = mean(Z), 
+            sd = sd(Z)) %>% 
+  mutate(Z = mean)

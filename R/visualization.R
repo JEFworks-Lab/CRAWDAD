@@ -543,6 +543,15 @@ vizTrends <- function(dat, id = "id", yaxis = "Z",
     dat <- crawdad::meltResultsList(dat, withPerms = withPerms)
   }
   
+  ## creates error bar
+  if (withPerms) {
+    dat <- dat %>% 
+      group_by(neighbor, resolution, reference, id) %>% 
+      summarise(mean = mean(Z), 
+                sd = sd(Z)) %>% 
+      mutate(Z = mean)
+  }
+  
   plt <- ggplot2::ggplot(data = dat)
   if(points){
     plt <- plt + ggplot2::geom_point(ggplot2::aes(x = resolution, y = .data[[yaxis]], color = .data[[id]]), size = 1.5)
@@ -582,10 +591,13 @@ vizTrends <- function(dat, id = "id", yaxis = "Z",
   }
   
   ## check if the data has permutations
-  if ('perm' %in% colnames(dat)){
-    plt <- plt + ggplot2::geom_smooth(data = dat, 
-                                      ggplot2::aes(x = resolution, y = Z),
-                                      se = TRUE) 
+  if (withPerms){
+    # plt <- plt + ggplot2::geom_smooth(data = dat, 
+    #                                   ggplot2::aes(x = resolution, y = Z),
+    #                                   se = TRUE) 
+    pd <- position_dodge(0.1) # move them .05 to the left and right
+    plt <- plt + geom_errorbar(aes(x=resolution, ymin=mean-sd, ymax=mean+sd), 
+                               width=.1, position=pd)
   }
   
   plt
