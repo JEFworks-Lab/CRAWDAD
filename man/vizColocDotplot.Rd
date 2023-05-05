@@ -6,7 +6,8 @@
 \usage{
 vizColocDotplot(
   dat,
-  sig.thresh = 1.96,
+  zsig.thresh = 1.96,
+  psig.tresh = NULL,
   zscore.limit = 3,
   colors = c("blue", "white", "red"),
   title = NULL
@@ -15,9 +16,11 @@ vizColocDotplot(
 \arguments{
 \item{dat}{\code{findTrends()} data.frame; the information about the resolution, Z-score, reference and the neighbor cell. The input data.frame should be the results list from \code{findTrends()} that has been melted into a data.frame using \code{meltResultsList()}.}
 
-\item{sig.thresh}{numeric; threshold for significance, ie Z score significance threshold (default: 1.96).}
+\item{zsig.thresh}{numeric; the Z score significance threshold (default: 1.96).}
 
-\item{zscore.limit}{numeric; limit the Z-score to look better in the graph scale gradient. Z-score values above zscore.limit will be represented as zscore.limit, scores below -zscore.limit will be represented as -zscore.limit.}
+\item{psig.tresh}{numeric; the two-sided P value significance threshold. It can be used in place of the zsig.thresh parameter. If no value is provided, the zsig.thresh will be used.}
+
+\item{zscore.limit}{numeric; limit the Z-score to look better in the graph scale gradient. Z-score values above zscore.limit will be represented as zscore.limit, scores below -zscore.limit will be represented as -zscore.limit (default: 3).}
 
 \item{colors}{character vector; colors for the gradient heatmap (low, mid, high).}
 

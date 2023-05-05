@@ -1,5 +1,5 @@
 library('crawdad')
-ncores <- 16
+ncores <- 7
 
 
 
@@ -8,9 +8,9 @@ ncores <- 16
 #### simulate
 ## cells
 set.seed(1)
-size <- 8000
-x <- runif(size, min = 0, max = 2000)
-y <- runif(size, min = 0, max = 2000)
+size <- 4000
+x <- runif(size, min = 0, max = 1000)
+y <- runif(size, min = 0, max = 1000)
 p <- data.frame(x = x, y = y, type='D')
 rownames(p) <- paste0('cell', 1:size)
 
@@ -74,12 +74,25 @@ results <- crawdad::findTrends(cells,
                                dist = 100,
                                shuffle.list = shuffle.list,
                                ncores = ncores,
-                               verbose = TRUE)
+                               verbose = TRUE,
+                               returnMeans = FALSE)
 
-dat <- crawdad::meltResultsList(results)
+dat <- crawdad::meltResultsList(results, withPerms = T)
 
 
 
 # Visualize with CRAWDAD --------------------------------------------------
 
 vizColocDotplot(dat)
+
+library(tidyverse)
+dat_filter <- dat %>% 
+  filter(reference == 'B') %>% 
+  filter(neighbor == 'C')
+
+vizTrends(dat_filter, lines = T, withPerms = T)
+
+dat_filter %>% group_by(neighbor, resolution, reference, id) %>% 
+  summarise(mean = mean(Z), 
+            sd = sd(Z)) %>% 
+  mutate(Z = mean)
