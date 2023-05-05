@@ -557,7 +557,7 @@ vizTrends <- function(dat, id = "id", yaxis = "Z",
     plt <- plt + ggplot2::geom_point(ggplot2::aes(x = resolution, y = .data[[yaxis]], color = .data[[id]]), size = 1.5)
   }
   if(lines){
-    plt <- plt + ggplot2::geom_path(ggplot2::aes(x = resolution, y = .data[[yaxis]], color = .data[[id]]), size = 1.5)
+    plt <- plt + ggplot2::geom_path(ggplot2::aes(x = resolution, y = .data[[yaxis]], color = .data[[id]]), size = 1)
   }
   plt <- plt + ggplot2::scale_color_manual(values = colors, na.value = "black") +
     ggplot2::geom_hline(yintercept = 0, color = "black", size = 1) +
@@ -597,7 +597,7 @@ vizTrends <- function(dat, id = "id", yaxis = "Z",
     #                                   se = TRUE) 
     pd <- position_dodge(0.1) # move them .05 to the left and right
     plt <- plt + geom_errorbar(aes(x=resolution, ymin=mean-sd, ymax=mean+sd), 
-                               width=.1, position=pd)
+                               width=.1, position=pd, color="red")
   }
   
   plt
