@@ -18,7 +18,7 @@ filter the results list from \code{findTrends()} for neighbor cell types that ar
 \dontrun{
 data(sim)
 cells <- toSP(pos = sim[,c("x", "y")], celltypes = slide$type)
-shuffle.list <- makeShuffledCells(cells, resolutions = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
+shuffle.list <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
 results <- findTrends(cells, dist = 100, shuffle.list = shuffle.list, ncores = 2)
 filterCoTrends(results = results, alpha = 0.05)
 }

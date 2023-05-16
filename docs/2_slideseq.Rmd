@@ -70,7 +70,7 @@ crawdad::vizEachCluster(cells = slide,
 
 ```{r}
 
-resolutions <- c(100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000, 6000)
+scales <- c(100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000, 6000)
 
 ```
 
@@ -81,7 +81,7 @@ options(warn = -1)
 
 ## generate background
 shuffle.list <- crawdad:::makeShuffledCells(slide,
-                          resolutions = resolutions,
+                          scales = scales,
                           perms = 1,
                           ncores = ncores,
                           seed = 1,

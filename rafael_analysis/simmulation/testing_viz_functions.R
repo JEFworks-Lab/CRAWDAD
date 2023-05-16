@@ -63,8 +63,8 @@ plot(cells)
 
 ## generate background
 shuffle.list <- crawdad::makeShuffledCells(cells,
-                                           #resolutions = 10^(seq(1.7, 3.7, by = 0.2)),
-                                           resolutions = seq(100, 1000, by=50),
+                                           #scales = 10^(seq(1.7, 3.7, by = 0.2)),
+                                           scales = seq(100, 1000, by=50),
                                            perms = 10,
                                            ncores = ncores,
                                            seed = 1,
@@ -92,7 +92,7 @@ dat_filter <- dat %>%
 
 vizTrends(dat_filter, lines = T, withPerms = T)
 
-dat_filter %>% group_by(neighbor, resolution, reference, id) %>% 
+dat_filter %>% group_by(neighbor, scale, reference, id) %>% 
   summarise(mean = mean(Z), 
             sd = sd(Z)) %>% 
   mutate(Z = mean)

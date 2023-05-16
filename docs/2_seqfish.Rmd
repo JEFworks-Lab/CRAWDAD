@@ -69,7 +69,7 @@ crawdad::vizEachCluster(cells = seq,
 
 ```{r}
 
-resolutions = c(100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000, 6000)
+scales = c(100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000, 6000)
 
 ```
 
@@ -80,7 +80,7 @@ options(warn = -1)
 
 ## generate background
 shuffle.list <- crawdad:::makeShuffledCells(seq,
-                          resolutions = resolutions,
+                          scales = scales,
                           perms = 1,
                           ncores = ncores,
                           seed = 1,
@@ -448,14 +448,14 @@ seq <- crawdad:::toSP(pos = seq[,c("x", "y")],
                         celltypes = seq$celltypes)
 
 ncores = 2
-resolutions = c(100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000, 6000)
+scales = c(100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000, 6000)
 
 oldw <- getOption("warn")
 options(warn = -1)
 
 ## generate background
 shuffle.list2 <- crawdad:::makeShuffledCells(seq,
-                          resolutions = resolutions,
+                          scales = scales,
                           perms = 10,
                           ncores = ncores,
                           verbose = TRUE)
@@ -503,17 +503,17 @@ d2 <- dat[dat$reference == "Endothelium" & dat$neighbor == "Haematoendothelial p
 d1$id <- "Lateral plate mesoderm with Intermediate mesoderm"
 d2$id <- "Endothelium with Haematoendothelial progenitors"
 d <- dplyr::bind_rows(list(d1, d2))
-# resolutions as numeric:
+# scales as numeric:
 d <- d %>%
-  dplyr::mutate_at(vars(resolution), as.numeric)
+  dplyr::mutate_at(vars(scale), as.numeric)
 
 # mean_line <- d %>%
-#   group_by(reference, resolution) %>%
+#   group_by(reference, scale) %>%
 #   summarise(Mean = mean(Z))
 
 plt <- vizTrends(dat = d1, facet = TRUE, lines = FALSE) +
   ggplot2::geom_smooth(data = d1, 
-                       ggplot2::aes(x = resolution, y = Z, color = id, fill = id)) +
+                       ggplot2::aes(x = scale, y = Z, color = id, fill = id)) +
   ggplot2::scale_x_log10() +
   ggplot2::ylim(c(-3, 15)) +
   ggplot2::theme(legend.position="none")
@@ -521,7 +521,7 @@ plt
 
 plt <- vizTrends(dat = d2, facet = TRUE, lines = FALSE) +
   ggplot2::geom_smooth(data = d2, 
-                       ggplot2::aes(x = resolution, y = Z, color = id, fill = id)) +
+                       ggplot2::aes(x = scale, y = Z, color = id, fill = id)) +
   ggplot2::scale_x_log10() +
   ggplot2::ylim(c(-3, 15)) +
   ggplot2::theme(legend.position="none")

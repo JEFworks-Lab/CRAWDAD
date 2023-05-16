@@ -2,11 +2,11 @@
 % Please edit documentation in R/finding_trends.R
 \name{makeShuffledCells}
 \alias{makeShuffledCells}
-\title{Shuffle the celltype labels at different shuffling resolutions}
+\title{Shuffle the celltype labels at different shuffling scales}
 \usage{
 makeShuffledCells(
   cells,
-  resolutions = c(50, 100, 200, 300, 400, 500),
+  scales = c(50, 100, 200, 300, 400, 500),
   perms = 1,
   ncores = 1,
   seed = 0,
@@ -16,9 +16,9 @@ makeShuffledCells(
 \arguments{
 \item{cells}{sp::SpatialPointsDataFrame object, with celltypes features and point geometries}
 
-\item{resolutions}{numeric vector of the different resolutions to shuffle at and subsequently compute significance at (default: c(50, 100, 200, 300, 400, 500))}
+\item{scales}{numeric vector of the different scales to shuffle at and subsequently compute significance at (default: c(50, 100, 200, 300, 400, 500))}
 
-\item{perms}{number of permutations to shuffle for each resolution (default = 1)}
+\item{perms}{number of permutations to shuffle for each scale (default = 1)}
 
 \item{ncores}{number of cores for parallelization (default 1)}
 
@@ -27,15 +27,15 @@ makeShuffledCells(
 \item{verbose}{Boolean for verbosity (default TRUE)}
 }
 \description{
-for each resolution, and for i number of permutations, shuffle the celltype labels.
+for each scale, and for i number of permutations, shuffle the celltype labels.
 Returns a list of lists, where each list is a factor of the shuffled celltype labels.
-Outer list is for each resolution of shuffling, and each inner list is for a given permutation with a given seed.
+Outer list is for each scale of shuffling, and each inner list is for a given permutation with a given seed.
 }
 \examples{
  
 \dontrun{
 data(sim)
-makeShuffledCells(sim, resolutions = c(50, 100, 200, 300, 400, 500), ncores = 2)
+makeShuffledCells(sim, scales = c(50, 100, 200, 300, 400, 500), ncores = 2)
 }
 
 }

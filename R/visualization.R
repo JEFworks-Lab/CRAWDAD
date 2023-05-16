@@ -5,7 +5,7 @@
 #'
 #' @description Plot panel of Z-score trends for each reference and neighbor cell-type pairs.
 #'
-#' @param results list or data.frame; the information about the resolution, Z-score, reference and the neighbor cell. It can be the result directly obtained by the findTrends function or the melted version created by the `meltResultsList()` function.
+#' @param results list or data.frame; the information about the scale, Z-score, reference and the neighbor cell. It can be the result directly obtained by the findTrends function or the melted version created by the `meltResultsList()` function.
 #' @param idcol character; if results are a data.frame, this is the column that contains the additional feature to plot multiple trend lines with
 #' @param legend boolean to produce legend, if results are a melted data.frame with "idcol" column (default: FALSE)
 #' @param ... additional plotting parameters for base R plotting. Fed into "lines()" in script
@@ -39,18 +39,18 @@ plotTrends <- function(results,
       ## for each neighbor cell type...
       sapply(colnames(results.norm), function(ct2) {
         rg <- max(abs(results.norm[, ct2]), na.rm = TRUE)
-        resolutions <- rownames(results.norm)
+        scales <- rownames(results.norm)
         
         if(is.infinite(rg)){
           rg <- 2.0
         }
         
         ## instantiate a plot and plot trend
-        plot(resolutions, results.norm[,ct2],
+        plot(scales, results.norm[,ct2],
              type="l", lwd = 2,
              main=paste0(ct1,' ref \n', ct2, " neighbors"),
              ylim=c(-rg, rg),
-             xlab="resolution", ylab="Z", ...)
+             xlab="scale", ylab="Z", ...)
         
         ## threshold lines
         abline(h = -2, col='red')
@@ -86,7 +86,7 @@ plotTrends <- function(results,
         results.norm.neigh <- results.norm[results.norm[,"neighbor"] == ct2,]
         
         yl <- max(abs(results.norm.neigh[, "Z"]), na.rm = TRUE)
-        xl <- max(as.numeric(results.norm.neigh[,"resolution"]))
+        xl <- max(as.numeric(results.norm.neigh[,"scale"]))
         
         if(is.infinite(yl)){
           yl <- 2.0
@@ -98,7 +98,7 @@ plotTrends <- function(results,
              cex.main=1,
              ylim=c(-yl, yl),
              xlim=c(0, xl),
-             xlab="resolution", ylab="Z")
+             xlab="scale", ylab="Z")
         
         ## for each id param, draw a line on plot instance
         for(i in 1:length(ids)){
@@ -106,7 +106,7 @@ plotTrends <- function(results,
           
           results.norm.neigh.id <- results.norm.neigh[results.norm.neigh[,idcol] == id,]
           
-          lines(as.numeric(results.norm.neigh.id[,"resolution"]), results.norm.neigh.id[,"Z"],
+          lines(as.numeric(results.norm.neigh.id[,"scale"]), results.norm.neigh.id[,"Z"],
                 type="l", lwd=2, col=cl[i], ...)
         }
         
@@ -130,7 +130,7 @@ plotTrends <- function(results,
 
 #' This one overlays each neighbor trend wrt the same reference cell type on the plot
 #' 
-#' @param results data.frame; the information about the resolution, Z-score, reference and the neighbor cell. It can be the result directly obtained by the melted `findTrends` output created by the `meltResultsList()` function.
+#' @param results data.frame; the information about the scale, Z-score, reference and the neighbor cell. It can be the result directly obtained by the melted `findTrends` output created by the `meltResultsList()` function.
 #' @param ... additional plotting parameters for base R plotting. Fed into "lines()" in script
 #' 
 #' @return nothing
@@ -160,14 +160,14 @@ plotTrendsOverlay <- function(results,
       ## for each neighbor cell type...
       sapply(colnames(results.norm), function(ct2) {
         rg <- max(abs(results.norm[, ct2]), na.rm = TRUE)
-        resolutions <- rownames(results.norm)
+        scales <- rownames(results.norm)
         
         ## instantiate a plot and plot trend
-        plot(resolutions, results.norm[,ct2],
+        plot(scales, results.norm[,ct2],
              type="l", lwd = 2,
              main=paste0(ct1,' ref \n', ct2, " neighbors"),
              ylim=c(-rg, rg),
-             xlab="resolution", ylab="Z", ...)
+             xlab="scale", ylab="Z", ...)
         
         ## threshold lines
         abline(h = -2, col='red')
@@ -182,7 +182,7 @@ plotTrendsOverlay <- function(results,
   } else if(inherits(results, "data.frame")){
     message("results detected to be a data.frame")
     
-    results <- results[,c("resolution", "neighbor", "reference", "Z")]
+    results <- results[,c("scale", "neighbor", "reference", "Z")]
     
     refs <- unique(results[,"reference"])
     neighs <- unique(results[,"neighbor"])
@@ -202,7 +202,7 @@ plotTrendsOverlay <- function(results,
       results.norm.limits <- results.norm[results.norm[,"neighbor"] != ct1,]
       yl_max <- max(results.norm.limits[, "Z"], na.rm = TRUE)
       yl_min <- min(results.norm.limits[, "Z"], na.rm = TRUE)
-      xl <- max(as.numeric(results.norm.limits[,"resolution"]))
+      xl <- max(as.numeric(results.norm.limits[,"scale"]))
       if(is.infinite(yl_max)){
         yl_max <- 2.0
       }
@@ -216,7 +216,7 @@ plotTrendsOverlay <- function(results,
            cex.main=1,
            ylim=c(yl_min,yl_max),
            xlim=c(0, xl),
-           xlab="resolution", ylab="Z")
+           xlab="scale", ylab="Z")
       
       ## for each neighbor cell type draw a line on plot instance
       for(i in 1:length(neighs)){
@@ -225,7 +225,7 @@ plotTrendsOverlay <- function(results,
         # masks relationships with other cell types
         if(ct1 != ct2){
           results.norm.neigh.id <-  results.norm[results.norm[,"neighbor"] == ct2,]
-          lines(as.numeric(results.norm.neigh.id[,"resolution"]), results.norm.neigh.id[,"Z"],
+          lines(as.numeric(results.norm.neigh.id[,"scale"]), results.norm.neigh.id[,"Z"],
                 type="l", lwd=0.8, col=cl[i], ...)
         }
       }
@@ -505,9 +505,9 @@ vizEachCluster <- function(cells, coms, axisAdj = 1, s = 0.5, a = 1,
 #' 
 #' @description The input data.frame should be the results list from `findTrends()` that has been melted into a data.frame using `meltResultsList()`.
 #' 
-#' @param dat `findTrends()` results list, or data.frame; the information about the resolution, Z-score, reference and the neighbor cell.
+#' @param dat `findTrends()` results list, or data.frame; the information about the scale, Z-score, reference and the neighbor cell.
 #' @param id column name that contains an additional feature to color trend lines (default: "id")
-#' @param yaxis column that has significance value across resolutions (default: "Z")
+#' @param yaxis column that has significance value across scales (default: "Z")
 #' @param sig.thresh threshold for significance, ie Z score significance threshold (default: 1.96).
 #' @param nc number of colors to use for labeling features in id column
 #' @param colors color assignment for each of the features in id column
@@ -521,7 +521,7 @@ vizEachCluster <- function(cells, coms, axisAdj = 1, s = 0.5, a = 1,
 #' \dontrun{
 #' data(sim)
 #' cells <- toSP(pos = sim[,c("x", "y")], celltypes = slide$type)
-#' shuffle.list <- makeShuffledCells(cells, resolutions = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
+#' shuffle.list <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
 #' results <- findTrends(cells, dist = 100, shuffle.list = shuffle.list, ncores = 2)
 #' vizTrends(dat = results)
 #' }
@@ -546,14 +546,14 @@ vizTrends <- function(dat, id = "id", yaxis = "Z",
   ## adds ref and neigh labels
   if (facet) {
     dat <- dat %>% 
-      mutate(reference = paste('Reference:', reference),
-             neighbor = paste('Neighbor:', neighbor))
+      mutate(reference = paste('reference:', reference),
+             neighbor = paste('neighbor:', neighbor))
   }
   
   ## creates error bar
   if (withPerms) {
     dat <- dat %>% 
-      group_by(neighbor, resolution, reference, id) %>% 
+      group_by(neighbor, scale, reference, id) %>% 
       summarise(mean = mean(Z), 
                 sd = sd(Z)) %>% 
       mutate(Z = mean)
@@ -561,10 +561,10 @@ vizTrends <- function(dat, id = "id", yaxis = "Z",
   
   plt <- ggplot2::ggplot(data = dat)
   if(points){
-    plt <- plt + ggplot2::geom_point(ggplot2::aes(x = resolution, y = .data[[yaxis]], color = .data[[id]]), size = 1.5)
+    plt <- plt + ggplot2::geom_point(ggplot2::aes(x = scale, y = .data[[yaxis]], color = .data[[id]]), size = 1.5)
   }
   if(lines){
-    plt <- plt + ggplot2::geom_path(ggplot2::aes(x = resolution, y = .data[[yaxis]], color = .data[[id]]), size = 1)
+    plt <- plt + ggplot2::geom_path(ggplot2::aes(x = scale, y = .data[[yaxis]], color = .data[[id]]), size = 1)
   }
   plt <- plt + ggplot2::scale_color_manual(values = colors, na.value = "black") +
     ggplot2::geom_hline(yintercept = 0, color = "black", size = 1) +
@@ -600,10 +600,10 @@ vizTrends <- function(dat, id = "id", yaxis = "Z",
   ## check if the data has permutations
   if (withPerms){
     # plt <- plt + ggplot2::geom_smooth(data = dat, 
-    #                                   ggplot2::aes(x = resolution, y = Z),
+    #                                   ggplot2::aes(x = scale, y = Z),
     #                                   se = TRUE) 
     pd <- position_dodge(0.1) # move them .05 to the left and right
-    plt <- plt + geom_errorbar(aes(x=resolution, ymin=mean-sd, ymax=mean+sd), 
+    plt <- plt + geom_errorbar(aes(x=scale, ymin=mean-sd, ymax=mean+sd), 
                                width=.1, position=pd, color="red")
   }
   
@@ -616,7 +616,7 @@ vizTrends <- function(dat, id = "id", yaxis = "Z",
 #' 
 #' @description The input data.frame should be the results list from `findTrends()` that has been melted into a data.frame using `meltResultsList()`.
 #' 
-#' @param dat `findTrends()` results list, or data.frame; the information about the resolution, Z-score, reference and the neighbor cell.
+#' @param dat `findTrends()` results list, or data.frame; the information about the scale, Z-score, reference and the neighbor cell.
 #' @param sig.thresh threshold for significance, ie Z score significance threshold (default: 1.96).
 #' @param z_limit Z score limits (default +/- 20)
 #' @param palette_ color gradient for heatmap (default: grDevices::colorRampPalette(c("blue", "white", "red"))(n = 209))
@@ -629,7 +629,7 @@ vizTrends <- function(dat, id = "id", yaxis = "Z",
 #' \dontrun{
 #' data(sim)
 #' cells <- toSP(pos = sim[,c("x", "y")], celltypes = slide$type)
-#' shuffle.list <- makeShuffledCells(cells, resolutions = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
+#' shuffle.list <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
 #' results <- findTrends(cells, dist = 100, shuffle.list = shuffle.list, ncores = 2)
 #' vizTrends.heatmap(dat = results)
 #' }
@@ -652,8 +652,8 @@ vizTrends.heatmap <- function(dat,
   }
   
   ## save original for actual Z scores if annotation
-  dat$resolution <- factor(as.character(dat$resolution), ordered = TRUE,
-                           levels = as.character(sort(unique(dat$resolution), decreasing = FALSE)))
+  dat$scale <- factor(as.character(dat$scale), ordered = TRUE,
+                           levels = as.character(sort(unique(dat$scale), decreasing = FALSE)))
   
   d <- dat
   ## winsorize high Z scores
@@ -662,7 +662,7 @@ vizTrends.heatmap <- function(dat,
   d$Z[with(d, Z < sig.thresh & Z > -sig.thresh)] <- 0
   
   plt <- ggplot2::ggplot(data = d) +
-    ggplot2::geom_tile(ggplot2::aes(x = resolution, y = neighbor, fill=Z)) +
+    ggplot2::geom_tile(ggplot2::aes(x = scale, y = neighbor, fill=Z)) +
     ggplot2::facet_wrap(~reference, ncol = ncols) +
     ggplot2::scale_fill_gradientn(
       limits = c(-z_limit, z_limit),
@@ -704,7 +704,7 @@ vizTrends.heatmap <- function(dat,
     ))
   
   if(annotation){
-    plt <- plt + ggplot2::geom_text(data = dat, ggplot2::aes(x = resolution, y = neighbor, label = format(round(Z, 1), nsmall = 2) ), size = 2)
+    plt <- plt + ggplot2::geom_text(data = dat, ggplot2::aes(x = scale, y = neighbor, label = format(round(Z, 1), nsmall = 2) ), size = 2)
   }
   
   plt
@@ -728,7 +728,7 @@ vizTrends.heatmap <- function(dat,
 #' \dontrun{
 #' data(sim)
 #' cells <- toSP(pos = sim[,c("x", "y")], celltypes = slide$type)
-#' shuffle.list <- makeShuffledCells(cells, resolutions = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
+#' shuffle.list <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
 #' binomMat <- binomialTestMatrix(cells, neigh.dist = 100, ncores = 2)
 #' subset.list <- selectSubsets(binomMat, cells$celltypes, sub.type = "near", sub.thresh = 0.05)
 #' annots_temp <- selectLabels(df = cells, com = cells$celltypes, subset_list = subset.list, cellIDs = c("A", "B", "C", "D"), subsetIDs = c("C_near_B"))
@@ -798,13 +798,13 @@ transparentCol <- function(color, percent = 50, name = NULL) {
 #' Plot Co-localization Dotplot
 #' 
 #' @description This fuction takes the `findTrends()` melted data frame and 
-#' plots the resolution and the Z-score in which the trend first crossed the 
-#' significance line (Z = 1.96). The Z-score was capped beween -3 and 3. Since 
-#' the co-localization at smaller resolutions are more important thant those at 
-#' greater ones, we plotted the inverse of the resolution so smaller ones would 
+#' plots the scale and the Z-score in which the trend first crossed the 
+#' significance line (Z = 1.96). The Z-score was capped between -3 and 3. Since 
+#' the co-localization at smaller scales are more important than those at 
+#' greater ones, we plotted the inverse of the scale so smaller ones would 
 #' correspond to larger dots.
 #' 
-#' @param dat `findTrends()` data.frame; the information about the resolution, Z-score, reference and the neighbor cell. The input data.frame should be the results list from `findTrends()` that has been melted into a data.frame using `meltResultsList()`.
+#' @param dat `findTrends()` data.frame; the information about the scale, Z-score, reference and the neighbor cell. The input data.frame should be the results list from `findTrends()` that has been melted into a data.frame using `meltResultsList()`.
 #' @param zsig.thresh numeric; the Z score significance threshold (default: 1.96).
 #' @param psig.tresh numeric; the two-sided P value significance threshold. It can be used in place of the zsig.thresh parameter. If no value is provided, the zsig.thresh will be used.
 #' @param zscore.limit numeric; limit the Z-score to look better in the graph scale gradient. Z-score values above zscore.limit will be represented as zscore.limit, scores below -zscore.limit will be represented as -zscore.limit (default: 3).
@@ -816,7 +816,7 @@ transparentCol <- function(color, percent = 50, name = NULL) {
 #' \dontrun{
 #' data(sim)
 #' cells <- toSP(pos = sim[,c("x", "y")], celltypes = slide$type)
-#' shuffle.list <- makeShuffledCells(cells, resolutions = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
+#' shuffle.list <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
 #' results <- findTrends(cells, dist = 100, shuffle.list = shuffle.list, ncores = 2)
 #' dat <- meltResultsList(results)
 #' vizColocDotplot(dat)
@@ -830,19 +830,19 @@ vizColocDotplot <- function(dat, zsig.thresh = 1.96, psig.tresh = NULL,
   if (!is.null(psig.tresh)) {
     zsig.thresh = round(qnorm(psig.tresh/2, lower.tail = F), 2)
   }
-  ## create data.frame with the Z-scores and resolutions at the first resolution
+  ## create data.frame with the Z-scores and scales at the first scale
   ## the trend becomes significant
   sig_dat <- dat %>%
     dplyr::filter(abs(Z) >= zsig.thresh) %>% 
     dplyr::group_by(neighbor, reference) %>% 
-    dplyr::filter(resolution == min(resolution, na.rm = TRUE))
+    dplyr::filter(scale == min(scale, na.rm = TRUE))
   ## limit the z-score for the gradient in the figure to look better
   sig_dat$Z[sig_dat$Z > zscore.limit] <- zscore.limit
   sig_dat$Z[sig_dat$Z < -zscore.limit] <- -zscore.limit
   ## plot figure
   sig_dat %>% 
     ggplot2::ggplot(ggplot2::aes(x=reference, y=neighbor, 
-                                 color=Z, size=(1/resolution))) +
+                                 color=Z, size=(1/scale))) +
     ggplot2::geom_point() + 
     ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust=1)) +
     ggplot2::scale_colour_gradient2(
@@ -851,7 +851,7 @@ vizColocDotplot <- function(dat, zsig.thresh = 1.96, psig.tresh = NULL,
       high = colors[3],
       na.value = "#eeeeee"
     ) + 
-    ggplot2::scale_size_continuous(name = "Resolution",
+    ggplot2::scale_size_continuous(name = "scale",
                                    range = c(0, 10),
                                    labels = function(x) round(1/x)) + 
     ggplot2::scale_x_discrete(position = "top")  + 

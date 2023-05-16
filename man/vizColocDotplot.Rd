@@ -14,7 +14,7 @@ vizColocDotplot(
 )
 }
 \arguments{
-\item{dat}{\code{findTrends()} data.frame; the information about the resolution, Z-score, reference and the neighbor cell. The input data.frame should be the results list from \code{findTrends()} that has been melted into a data.frame using \code{meltResultsList()}.}
+\item{dat}{\code{findTrends()} data.frame; the information about the scale, Z-score, reference and the neighbor cell. The input data.frame should be the results list from \code{findTrends()} that has been melted into a data.frame using \code{meltResultsList()}.}
 
 \item{zsig.thresh}{numeric; the Z score significance threshold (default: 1.96).}
 
@@ -28,17 +28,17 @@ vizColocDotplot(
 }
 \description{
 This fuction takes the \code{findTrends()} melted data frame and
-plots the resolution and the Z-score in which the trend first crossed the
-significance line (Z = 1.96). The Z-score was capped beween -3 and 3. Since
-the co-localization at smaller resolutions are more important thant those at
-greater ones, we plotted the inverse of the resolution so smaller ones would
+plots the scale and the Z-score in which the trend first crossed the
+significance line (Z = 1.96). The Z-score was capped between -3 and 3. Since
+the co-localization at smaller scales are more important than those at
+greater ones, we plotted the inverse of the scale so smaller ones would
 correspond to larger dots.
 }
 \examples{
 \dontrun{
 data(sim)
 cells <- toSP(pos = sim[,c("x", "y")], celltypes = slide$type)
-shuffle.list <- makeShuffledCells(cells, resolutions = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
+shuffle.list <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
 results <- findTrends(cells, dist = 100, shuffle.list = shuffle.list, ncores = 2)
 dat <- meltResultsList(results)
 vizColocDotplot(dat)

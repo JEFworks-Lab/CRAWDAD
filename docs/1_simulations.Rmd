@@ -112,7 +112,7 @@ options(warn = -1)
 
 ## generate background
 shuffle.list <- crawdad::makeShuffledCells(cells,
-                          resolutions = c(150, 250, 500, 750, 1000, 1500, 2000),
+                          scales = c(150, 250, 500, 750, 1000, 1500, 2000),
                           perms = 1,
                           ncores = ncores,
                           seed = 1,
@@ -124,7 +124,7 @@ options(warn = oldw)
 
 ## Run pairwise analysis
 
-We can identify trends that describe spatial relationships between pairwise combinations of cell types in our data. `dist` refers to the distance at which neighbor cells are defined. In this example, we assess if the neighbors of each cell type are enriched or depleted in cells of another given cell type compared to each shuffled resolution of the data.
+We can identify trends that describe spatial relationships between pairwise combinations of cell types in our data. `dist` refers to the distance at which neighbor cells are defined. In this example, we assess if the neighbors of each cell type are enriched or depleted in cells of another given cell type compared to each shuffled scale of the data.
 
 ```{r}
 
@@ -146,7 +146,7 @@ options(warn = oldw)
 
 dat <- crawdad::meltResultsList(results)
 
-plt <- ggplot2::ggplot(dat, ggplot2::aes(x=resolution, y=Z, col=neighbor)) +
+plt <- ggplot2::ggplot(dat, ggplot2::aes(x=scale, y=Z, col=neighbor)) +
   ggplot2::geom_line() +
   ggplot2::facet_grid(rows = ggplot2::vars(reference)) +
   ggplot2::theme_classic() +
