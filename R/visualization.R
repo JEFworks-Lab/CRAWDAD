@@ -538,9 +538,16 @@ vizTrends <- function(dat, id = "id", yaxis = "Z",
                       withPerms = FALSE){
   
   ## if results is list from `findTrends()` then melt it.
-  if(inherits(dat, "list")){
+  if (inherits(dat, "list")) {
     message("results detected to be a list. Melting to data.frame.")
     dat <- crawdad::meltResultsList(dat, withPerms = withPerms)
+  }
+  
+  ## adds ref and neigh labels
+  if (facet) {
+    dat <- dat %>% 
+      mutate(reference = paste('Reference:', reference),
+             neighbor = paste('Neighbor:', neighbor))
   }
   
   ## creates error bar
@@ -664,7 +671,9 @@ vizTrends.heatmap <- function(dat,
     ) +
     ggplot2::ggtitle(title) +
     ggplot2::theme_classic() +
-    ggplot2::theme(axis.text.x = ggplot2::element_text(size=10, color = "black", angle = -90, vjust = 0.5, hjust = 0),
+    ggplot2::theme(axis.text.x = ggplot2::element_text(size=10, color = "black", 
+                                                       angle = -90, vjust = 0.5, 
+                                                       hjust = 0),
                    axis.text.y = ggplot2::element_text(size=10, color = "black"),
                    axis.title.y = ggplot2::element_text(size=15),
                    axis.title.x = ggplot2::element_text(size=15),
@@ -673,9 +682,12 @@ vizTrends.heatmap <- function(dat,
                    plot.background = ggplot2::element_blank(),
                    legend.background = ggplot2::element_blank(),
                    panel.background = ggplot2::element_blank(),
-                   panel.grid.major =  ggplot2::element_line(linewidth = 0.1, colour = "black"),
-                   panel.border = ggplot2::element_rect(colour = "black", fill=NA, linewidth=1),
-                   axis.line = ggplot2::element_line(linewidth = 0, colour = "black"),
+                   panel.grid.major =  ggplot2::element_line(linewidth = 0.1, 
+                                                             colour = "black"),
+                   panel.border = ggplot2::element_rect(colour = "black", fill=NA, 
+                                                        linewidth=1),
+                   axis.line = ggplot2::element_line(linewidth = 0, 
+                                                     colour = "black"),
                    panel.spacing = ggplot2::unit(0.1, "lines"),
                    strip.text = ggplot2::element_text(size = 8),
                    # legend.title = ggplot2::element_blank(),
