@@ -842,18 +842,19 @@ vizColocDotplot <- function(dat, zsig.thresh = 1.96, psig.tresh = NULL,
   ## plot figure
   sig_dat %>% 
     ggplot2::ggplot(ggplot2::aes(x=reference, y=neighbor, 
-                                 color=Z, size=(1/scale))) +
+                                 color=Z, size=scale)) +
     ggplot2::geom_point() + 
-    ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust=1)) +
+    ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, 
+                                                       vjust = 0.5, 
+                                                       hjust=1)) +
     ggplot2::scale_colour_gradient2(
       low = colors[1],
       mid = colors[2],
       high = colors[3],
       na.value = "#eeeeee"
     ) + 
-    ggplot2::scale_size_continuous(name = "scale",
-                                   range = c(0, 10),
-                                   labels = function(x) round(1/x)) + 
+    ggplot2::scale_size_continuous(trans = 'reverse',
+                                   range = c(5,15)) + 
     ggplot2::scale_x_discrete(position = "top")  + 
     ggplot2::theme_bw()
 }
