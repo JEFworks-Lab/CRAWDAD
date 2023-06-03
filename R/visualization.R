@@ -830,17 +830,24 @@ vizColocDotplot <- function(dat, zsig.thresh = 1.96, psig.tresh = NULL,
   if (!is.null(psig.tresh)) {
     zsig.thresh = round(qnorm(psig.tresh/2, lower.tail = F), 2)
   }
+  
   ## create data.frame with the Z-scores and scales at the first scale
   ## the trend becomes significant
-  sig_dat <- dat %>%
-    dplyr::filter(abs(Z) >= zsig.thresh) %>% 
-    dplyr::group_by(neighbor, reference) %>% 
-    dplyr::filter(scale == min(scale, na.rm = TRUE))
+  ## get mean Z
+  mean_dat <- dat %>% 
+    group_by(neighbor, scale, reference) %>% 
+    summarize(Z = mean(Z))
+  ## calculate sig z scores
+  sig_dat <- mean_dat %>%
+    filter(abs(Z) >= 1.96) %>% 
+    group_by(neighbor, reference) %>% 
+    filter(scale == min(scale, na.rm = TRUE))
+  
   ## limit the z-score for the gradient in the figure to look better
   sig_dat$Z[sig_dat$Z > zscore.limit] <- zscore.limit
   sig_dat$Z[sig_dat$Z < -zscore.limit] <- -zscore.limit
   ## plot figure
-  sig_dat %>% 
+  p2 <- sig_dat %>% 
     ggplot2::ggplot(ggplot2::aes(x=reference, y=neighbor, 
                                  color=Z, size=scale)) +
     ggplot2::geom_point() + 
