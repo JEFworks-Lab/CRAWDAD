@@ -797,18 +797,25 @@ transparentCol <- function(color, percent = 50, name = NULL) {
 
 #' Plot Co-localization Dotplot
 #' 
-#' @description This fuction takes the `findTrends()` melted data frame and 
+#' @description This function takes the `findTrends()` melted data frame and 
 #' plots the scale and the Z-score in which the trend first crossed the 
 #' significance line (Z = 1.96). The Z-score was capped between -3 and 3. Since 
 #' the co-localization at smaller scales are more important than those at 
 #' greater ones, we plotted the inverse of the scale so smaller ones would 
 #' correspond to larger dots.
 #' 
-#' @param dat `findTrends()` data.frame; the information about the scale, Z-score, reference and the neighbor cell. The input data.frame should be the results list from `findTrends()` that has been melted into a data.frame using `meltResultsList()`.
+#' @param dat `findTrends()` data.frame; the information about the scale, 
+#' Z-score, reference and the neighbor cell. The input data.frame should be the 
+#' results list from `findTrends()` that has been melted into a data.frame using `meltResultsList()`.
 #' @param zsig.thresh numeric; the Z score significance threshold (default: 1.96).
-#' @param psig.tresh numeric; the two-sided P value significance threshold. It can be used in place of the zsig.thresh parameter. If no value is provided, the zsig.thresh will be used.
-#' @param zscore.limit numeric; limit the Z-score to look better in the graph scale gradient. Z-score values above zscore.limit will be represented as zscore.limit, scores below -zscore.limit will be represented as -zscore.limit (default: 3).
-#' 
+#' @param psig.tresh numeric; the two-sided P value significance threshold. It 
+#' can be used in place of the zsig.thresh parameter. If no value is provided, 
+#' the zsig.thresh will be used.
+#' @param zscore.limit numeric; limit the Z-score to look better in the graph 
+#' scale gradient. Z-score values above zscore.limit will be represented as 
+#' zscore.limit, scores below -zscore.limit will be represented as -zscore.limit (default: 3).
+#' @param reorder boolean; if TRUE, reorder the cell types by clustering on the 
+#' z-score. If false, orders in alphabetical order (default: FALSE).
 #' @param colors character vector; colors for the gradient heatmap (low, mid, high).
 #' @param title character; plot title (default: NULL).
 #' 
@@ -824,7 +831,7 @@ transparentCol <- function(color, percent = 50, name = NULL) {
 #' 
 #' @export
 vizColocDotplot <- function(dat, zsig.thresh = 1.96, psig.tresh = NULL,
-                            zscore.limit = 3,
+                            zscore.limit = 3,  reorder = FALSE,
                             colors = c("blue", "white", "red"),
                             title = NULL){
   if (!is.null(psig.tresh)) {
@@ -835,19 +842,45 @@ vizColocDotplot <- function(dat, zsig.thresh = 1.96, psig.tresh = NULL,
   ## the trend becomes significant
   ## get mean Z
   mean_dat <- dat %>% 
-    group_by(neighbor, scale, reference) %>% 
-    summarize(Z = mean(Z))
+    dplyr::group_by(neighbor, scale, reference) %>% 
+    dplyr::summarize(Z = mean(Z))
+  ## get values before filtering
+  max_scale <- max(dat$scale)
+  u_cts <- unique(dat$reference)
   ## calculate sig z scores
   sig_dat <- mean_dat %>%
-    filter(abs(Z) >= 1.96) %>% 
-    group_by(neighbor, reference) %>% 
-    filter(scale == min(scale, na.rm = TRUE))
+    dplyr::filter(abs(Z) >= 1.96) %>% 
+    dplyr::group_by(neighbor, reference) %>% 
+    dplyr::filter(scale == min(scale, na.rm = TRUE))
   
   ## limit the z-score for the gradient in the figure to look better
   sig_dat$Z[sig_dat$Z > zscore.limit] <- zscore.limit
   sig_dat$Z[sig_dat$Z < -zscore.limit] <- -zscore.limit
+  
+  ## reorder
+  if (reorder) {
+    ## merge with all cts
+    comb_cts <- tidyr::expand_grid(u_cts, u_cts)
+    colnames(comb_cts) <- c('reference', 'neighbor')
+    df_all <- dplyr::left_join(comb_cts, sig_dat, by = c('reference', 'neighbor'))
+    df_all <- df_all %>% 
+      dplyr::mutate(Z = dplyr::coalesce(Z, 0),
+                    scale = dplyr::coalesce(scale, max_scale))
+    ## create matrix
+    sig_mat <- reshape::cast(df_all, neighbor~reference, value='Z')
+    rownames(sig_mat) <- sig_mat[,1]
+    sig_mat <- sig_mat[,-1]
+    sig_mat[is.na(sig_mat)] <- 0
+    ## cluster
+    hc <- hclust(dist(sig_mat))
+    sig_dat$neighbor <- factor(sig_dat$neighbor, 
+                               levels=rownames(sig_mat)[hc$order])
+    sig_dat$reference <- factor(sig_dat$reference, 
+                                levels=colnames(sig_mat)[hc$order])
+  }
+  
   ## plot figure
-  p2 <- sig_dat %>% 
+  sig_dat %>% 
     ggplot2::ggplot(ggplot2::aes(x=reference, y=neighbor, 
                                  color=Z, size=scale)) +
     ggplot2::geom_point() + 
@@ -861,7 +894,7 @@ vizColocDotplot <- function(dat, zsig.thresh = 1.96, psig.tresh = NULL,
       na.value = "#eeeeee"
     ) + 
     ggplot2::scale_size_continuous(trans = 'reverse',
-                                   range = c(5,15)) + 
+                                   range = c(5, 10)) + 
     ggplot2::scale_x_discrete(position = "top")  + 
     ggplot2::theme_bw()
 }
