@@ -178,7 +178,7 @@ results.subsets.pkhl <- crawdad::findTrends(pkhl,
                         ncores = ncores,
                         verbose = TRUE)
 
-## note: 22.36 minutes with 7 cores, 2.3 GHz Quad-Core Intel Core i7; vs 12:23 minutes 14 cores on rockfish
+c
 ```
 
 save the results
