@@ -22,3 +22,29 @@ ggplot(sig_dat, aes(x=reference, y=neighbor,
   geom_point() +
   scale_size_continuous(trans = "reverse")
   
+
+
+# Reorder -----------------------------------------------------------------
+
+## reorder
+## get mean Z
+mean_dat <- dat %>% 
+  group_by(neighbor, scale, reference) %>% 
+  summarize(Z = mean(Z))
+
+## calculate sig z scores
+sig_dat <- mean_dat %>%
+  filter(abs(Z) >= 1.96) %>% 
+  group_by(neighbor, reference) %>% 
+  filter(scale == min(scale, na.rm = TRUE))
+head(sig_dat)
+
+## compare to the original code
+## this code will get the zscore for all permutations that present a significant
+## result, then they will be displayed. So, if only a single permutation is
+## significant, the colocalization will also be.
+o_sig_dat <- dat %>%
+  filter(abs(Z) >= 1.96) %>% 
+  group_by(neighbor, reference) %>% 
+  filter(scale == min(scale, na.rm = TRUE))
+head(o_sig_dat)
