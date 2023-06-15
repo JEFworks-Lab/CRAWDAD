@@ -3,7 +3,7 @@
 
 library(crawdad)
 library(tidyverse)
-ncores <- 7
+ncores <- 1
 
 xxcd <- read.csv2(file = paste0(here::here(), "/data/spleen/XXCD.meta.csv.gz"), row.names = 1)
 xxcd <- xxcd[,c("x", "y", "celltypes_folBcombined")]

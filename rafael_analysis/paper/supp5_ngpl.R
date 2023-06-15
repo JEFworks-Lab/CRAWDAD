@@ -3,7 +3,7 @@
 
 library(crawdad)
 library(tidyverse)
-ncores <- 7
+ncores <- 1
 
 ngpl <- read.csv2(file = paste0(here::here(), "/data/spleen/NGPL.meta.csv.gz"), row.names = 1)
 ngpl <- ngpl[,c("x", "y", "celltypes_folBcombined")]

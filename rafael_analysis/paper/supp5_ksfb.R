@@ -3,7 +3,7 @@
 
 library(crawdad)
 library(tidyverse)
-ncores <- 7
+ncores <- 1
 
 ksfb <- read.csv2(file = paste0(here::here(), "/data/spleen/KSFB.meta.csv.gz"), row.names = 1)
 ksfb <- ksfb[,c("x", "y", "celltypes_folBcombined")]

@@ -3,7 +3,7 @@
 
 library(crawdad)
 library(tidyverse)
-ncores <- 7
+ncores <- 1
 
 pbvn <- read.csv2(file = paste0(here::here(), "/data/spleen/PBVN.meta.csv.gz"), row.names = 1)
 pbvn <- pbvn[,c("x", "y", "celltypes_folBcombined")]
