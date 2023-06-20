@@ -180,3 +180,33 @@ dev.off()
 
 
 
+# Figure 3d ---------------------------------------------------------------
+
+p <- vizColocDotplot(dat_filtered, reorder = TRUE) + 
+  scale_x_discrete(position = 'bottom') +
+  scale_y_discrete(position = 'right') +
+  theme(legend.position='bottom',
+        axis.text.x = element_text(angle = 90, h = 1),
+        legend.box = 'vertical') +
+  scale_size_continuous(range = c(5, 10), 
+                        trans = 'reverse')
+p
+pdf('rafael_analysis/paper/supp5c_xxcd.pdf', height = 7.7, width = 6.05)
+p 
+dev.off()
+
+## reorder according to pkhl
+ct_ordered <- readRDS("rafael_analysis/paper/ct_ordered_spleen.RDS")
+p <- vizColocDotplot(dat_filtered, reorder = TRUE) + 
+  scale_x_discrete(position = 'bottom', limits=ct_ordered) +
+  scale_y_discrete(position = 'right', limits=ct_ordered) +
+  theme(legend.position='bottom',
+        axis.text.x = element_text(angle = 90, h = 1),
+        legend.box = 'vertical') +
+  scale_size_continuous(range = c(5, 10), 
+                        trans = 'reverse')
+p
+pdf('rafael_analysis/paper/supp5c_xxcd_ordered_pkhl.pdf', height = 7.7, width = 6.05)
+p 
+dev.off()
+
