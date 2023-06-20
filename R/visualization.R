@@ -849,7 +849,7 @@ vizColocDotplot <- function(dat, zsig.thresh = 1.96, psig.tresh = NULL,
   u_cts <- unique(dat$reference)
   ## calculate sig z scores
   sig_dat <- mean_dat %>%
-    dplyr::filter(abs(Z) >= 1.96) %>% 
+    dplyr::filter(abs(Z) >= zsig.thresh) %>% 
     dplyr::group_by(neighbor, reference) %>% 
     dplyr::filter(scale == min(scale, na.rm = TRUE))
   
@@ -857,6 +857,11 @@ vizColocDotplot <- function(dat, zsig.thresh = 1.96, psig.tresh = NULL,
   sig_dat$Z[sig_dat$Z > zscore.limit] <- zscore.limit
   sig_dat$Z[sig_dat$Z < -zscore.limit] <- -zscore.limit
   
+  ## scale sizes
+  lsizes <- sort(unique(sig_dat$scale))
+  legend_sizes <- c(lsizes[1],
+                    round(mean(c(lsizes[1], lsizes[length(lsizes)]))),
+                    lsizes[length(lsizes)])
   ## reorder
   if (reorder) {
     ## merge with all cts
@@ -893,8 +898,9 @@ vizColocDotplot <- function(dat, zsig.thresh = 1.96, psig.tresh = NULL,
       high = colors[3],
       na.value = "#eeeeee"
     ) + 
-    ggplot2::scale_size_continuous(trans = 'reverse',
-                                   range = c(5, 10)) + 
+    ggplot2::scale_radius(trans = 'reverse',
+                        breaks = legend_sizes,
+                        range = c(1, 11)) + 
     ggplot2::scale_x_discrete(position = "top")  + 
     ggplot2::theme_bw()
 }
