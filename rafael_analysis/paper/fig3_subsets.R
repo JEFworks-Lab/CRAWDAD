@@ -329,7 +329,7 @@ cells <- crawdad::toSP(pos = pkhl[,c("x", "y")],
                        celltypes = pkhl$celltypes)
 
 binomMat <- crawdad::binomialTestMatrix(cells,
-                                        neigh.dist = 150,
+                                        neigh.dist = 500,
                                         ncores = ncores,
                                         verbose = TRUE)
 
@@ -349,7 +349,7 @@ saveRDS(subset.list, file="rafael_analysis/paper/data/fig3_subset2.RDS")
 subset.list <- readRDS("rafael_analysis/paper/data/fig3_subset2.RDS")
 
 
-# Subsets Podoplanin ------------------------------------------------------
+# Subsets Podoplanin 2 ------------------------------------------------------
 
 subset.list <- readRDS("rafael_analysis/paper/data/fig3_subset2.RDS")
 subcells <- subset.list
@@ -399,7 +399,7 @@ p <- ggplot() +
   theme_void() + 
   theme(legend.position="none")
 p
-png('rafael_analysis/paper/subsets2/podo_pkhl_spat_cts.png', height = 1024, width = 1024)
+png('rafael_analysis/paper/subsets2/podo_pkhl_spat_cts2.png', height = 1024, width = 1024)
 p 
 dev.off()
 
