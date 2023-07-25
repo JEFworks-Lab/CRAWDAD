@@ -214,7 +214,7 @@ pdf('rafael_analysis/paper/supp5c_fsld.pdf', height = 7.7, width = 6.05)
 p 
 dev.off()
 
-## reorder according to pkhl
+## reorder according to fsld
 ct_ordered <- readRDS("rafael_analysis/paper/ct_ordered_spleen.RDS")
 p <- vizColocDotplot(dat_filtered, reorder = TRUE, zsig.thresh = zsig, zscore.limit = zsig*2) + 
   scale_x_discrete(position = 'bottom', limits=ct_ordered) +
@@ -223,7 +223,7 @@ p <- vizColocDotplot(dat_filtered, reorder = TRUE, zsig.thresh = zsig, zscore.li
         axis.text.x = element_text(angle = 90, h = 1),
         legend.box = 'vertical')
 p
-pdf('rafael_analysis/paper/supp5c_fsld_ordered_pkhl.pdf', height = 7.7, width = 6.05)
+pdf('rafael_analysis/paper/supp5c_fsld_ordered_fsld.pdf', height = 7.7, width = 6.05)
 p 
 dev.off()
 
@@ -482,7 +482,7 @@ p <- ggplot() +
   theme_void() + 
   theme(legend.position="none")
 p
-png('rafael_analysis/paper/subsets500/podo_pkhl_spat_cts_500.png', height = 1024, width = 1024)
+png('rafael_analysis/paper/subsets500/podo_fsld_spat_cts_500.png', height = 1024, width = 1024)
 p 
 dev.off()
 
@@ -503,7 +503,7 @@ dat_filter <- d1 %>%
   filter(neighbor == 'CD4 Memory T cells')
 p <- vizTrends(dat_filter, lines = T, withPerms = T, sig.thresh = zsigs)
 p
-pdf('rafael_analysis/paper/subsets500/pkhl_podofolB_CD4.pdf')
+pdf('rafael_analysis/paper/subsets500/fsld_podofolB_CD4.pdf')
 p 
 dev.off()
 
@@ -521,6 +521,6 @@ dat_filter <- d1 %>%
   filter(neighbor == 'CD4 Memory T cells')
 p <- vizTrends(dat_filter, lines = T, withPerms = T, sig.thresh = zsigs)
 p
-pdf('rafael_analysis/paper/replication/pkhl_podoredpulp_CD4.pdf')
+pdf('rafael_analysis/paper/replication/fsld_podoredpulp_CD4.pdf')
 p 
 dev.off()
