@@ -98,7 +98,7 @@ p <- vizColocDotplot(dat, s) +
         axis.text.x = element_text(angle = 90, h = 1),
         legend.box = 'vertical')
 p
-spdf('rafael_analysis/paper/3d.pdf', height = 7, width = 5.5)
+pdf('rafael_analysis/paper/3d.pdf', height = 7, width = 5.5)
 p 
 dev.off()
 
@@ -204,6 +204,25 @@ p
 pdf('rafael_analysis/paper/3f_trend.pdf')
 p 
 dev.off()
+
+
+
+## Reverse: CD4+ memory near follicle B cells colocalize with podoplanin trend
+d1 <- dats[grepl(pattern = "CD4 Memory T cells_near_Fol B cells", 
+                 dats$reference) & dats$neighbor %in% c("Fol B cells", "Podoplanin"),]
+plt <- vizTrends(dat = d1, facet = FALSE, id = "neighbor", title = "CD4 Memory T cells near Fol B cells") +
+  ggplot2::scale_x_log10()
+# ggplot2::theme(legend.position="none")
+plt
+
+dat_filter <- d1 %>% 
+  filter(neighbor == 'Podoplanin')
+p <- vizTrends(dat_filter, lines = T, withPerms = T, sig.thresh = zsigs)
+p
+pdf('rafael_analysis/paper/3f_trend.pdf')
+p 
+dev.off()
+
 
 
 # Figure 3g ---------------------------------------------------------------

@@ -3,7 +3,7 @@
 
 library(crawdad)
 library(tidyverse)
-ncores <- 1
+ncores <- 7
 
 fsld <- read.csv2(file = paste0(here::here(), "/data/spleen/FSLD.meta.csv.gz"), row.names = 1)
 fsld <- fsld[,c("x", "y", "celltypes_folBcombined")]
@@ -378,5 +378,149 @@ p <- ggplot() +
   theme(legend.position="none")
 p
 png('rafael_analysis/paper/subsets/podo_fsld_spat_cts.png', height = 1024, width = 1024)
+p 
+dev.off()
+
+
+
+# Subsetting 500 --------------------------------------------------------------
+
+load("rafael_analysis/paper/supp5_fsld.RData")
+cells <- crawdad::toSP(pos = fsld[,c("x", "y")],
+                       celltypes = fsld$celltypes)
+
+binomMat <- crawdad::binomialTestMatrix(cells,
+                                        neigh.dist = 500,
+                                        ncores = ncores,
+                                        verbose = TRUE)
+
+head(binomMat)
+
+saveRDS(binomMat, file="rafael_analysis/paper/supp5_fsld_binomMat500.RDS")
+binomMat <- readRDS("rafael_analysis/paper/supp5_fsld_binomMat500.RDS")
+
+subset.list <- crawdad::selectSubsets(binomMat,
+                                      cells$celltypes,
+                                      sub.type = "near",
+                                      sub.thresh = 0.05,
+                                      ncores = ncores,
+                                      verbose = TRUE)
+
+saveRDS(subset.list, file="rafael_analysis/paper/supp5_fsld_subset500.RDS")
+subset.list <- readRDS("rafael_analysis/paper/supp5_fsld_subset500.RDS")
+
+results.subsets <- crawdad::findTrends(cells,
+                                       dist = 100,
+                                       shuffle.list = shuffle.list,
+                                       subset.list = subset.list,
+                                       ncores = ncores,
+                                       verbose = TRUE,
+                                       returnMeans = FALSE)
+## 8.0865 hours to run
+results.subsets
+saveRDS(results.subsets, file="rafael_analysis/paper/supp5_fsld_results500.subsets.RDS")
+results.subsets <- readRDS("rafael_analysis/paper/supp5_fsld_results500.subsets.RDS")
+
+
+
+## subsets
+dats <- crawdad::meltResultsList(results.subsets, withPerms = TRUE)
+
+## Multiple-test correction
+ntestss <- length(unique(dats$reference)) * length(unique(dats$neighbor))
+psigs <- 0.05/ntestss
+zsigs <- round(qnorm(psigs/2, lower.tail = F), 2)
+
+
+# Spat cts 500 ------------------------------------------------------
+
+subset.list <- readRDS("rafael_analysis/paper/supp5_fsld_subset500.RDS")
+subcells <- subset.list
+ssample <- fsld
+
+## visualize names
+names(subcells)[grepl('Podoplanin_near_', names(subcells))]
+
+## select subsets
+c_podo_folb <- subcells[["Podoplanin_near_Fol B cells"]]
+c_podo <- which(ssample$celltypes == "Podoplanin")
+c_podo_notfolb <- c_podo[!c_podo %in% c_podo_folb]
+c_cd4 <- which(ssample$celltypes == "CD4 Memory T cells")
+
+## rewrite types
+ssample[c_podo_folb, ]$celltypes <- 'Podoplanin near Fol B cells'
+ssample[c_podo_notfolb, ]$celltypes <- 'Podoplanin not near Fol B cells'
+
+## define cts of interest and colors
+cts_interest <- ssample$celltypes %in% c('CD4 Memory T cells', 
+                                         'Podoplanin near Fol B cells', 
+                                         'Podoplanin not near Fol B cells')
+
+cols_ssample <- c("#FFFF00", "#FF0080", "#0000FF")
+names(cols_ssample) <-  c('CD4 Memory T cells', 
+                          'Podoplanin near Fol B cells', 
+                          'Podoplanin not near Fol B cells')
+
+df_cts <- ssample %>% 
+  filter(celltypes %in% names(cols_ssample))
+
+df_bkg <-  ssample %>% 
+  filter(!(celltypes %in% names(cols_ssample)))
+
+p <- ggplot() + 
+  geom_point(data = df_bkg, aes(x=x, y=y), 
+             color = 'lightgrey', size=1.5, alpha=0.5) + 
+  
+  geom_point(data = df_cts[df_cts$celltypes == 'CD4 Memory T cells', ], 
+             aes(x=x, y=y), color = '#FF0080', size=1.5, alpha=0.5) + 
+  
+  geom_point(data = df_cts[df_cts$celltypes == 'Podoplanin near Fol B cells', ], 
+             aes(x=x, y=y), color = '#FFFF00', size=1.5, alpha=0.5) + 
+  
+  geom_point(data = df_cts[df_cts$celltypes == 'Podoplanin not near Fol B cells', ], 
+             aes(x=x, y=y), color = '#0000FF', size=1.5, alpha=0.5) +
+  theme_void() + 
+  theme(legend.position="none")
+p
+png('rafael_analysis/paper/subsets500/podo_pkhl_spat_cts_500.png', height = 1024, width = 1024)
+p 
+dev.off()
+
+
+
+# Trends podo 500 ----------------------------------------------
+
+## Podoplanin near follicle B cells (white pupl) colocalize with CD4 trend
+d1 <- dats[grepl(pattern = "Podoplanin_near_Fol B cells", 
+                 dats$reference) & dats$neighbor %in% c("CD4 Memory T cells"),]
+plt <- vizTrends(dat = d1, facet = FALSE, id = "neighbor", 
+                 title = "Podoplanin cells near Fol B cells") +
+  ggplot2::scale_x_log10()
+# ggplot2::theme(legend.position="none")
+plt
+
+dat_filter <- d1 %>% 
+  filter(neighbor == 'CD4 Memory T cells')
+p <- vizTrends(dat_filter, lines = T, withPerms = T, sig.thresh = zsigs)
+p
+pdf('rafael_analysis/paper/subsets500/pkhl_podofolB_CD4.pdf')
+p 
+dev.off()
+
+
+
+## Podoplanin near follicle B cells (red pupl) colocalize with CD4 trend
+d1 <- dats[grepl(pattern = "Podoplanin_near_B cells, red pulp", 
+                 dats$reference) & dats$neighbor %in% c("CD4 Memory T cells"),]
+plt <- vizTrends(dat = d1, facet = FALSE, id = "neighbor", title = "Podoplanin cells near B cells, red pulp") +
+  ggplot2::scale_x_log10()
+# ggplot2::theme(legend.position="none")
+plt
+
+dat_filter <- d1 %>% 
+  filter(neighbor == 'CD4 Memory T cells')
+p <- vizTrends(dat_filter, lines = T, withPerms = T, sig.thresh = zsigs)
+p
+pdf('rafael_analysis/paper/replication/pkhl_podoredpulp_CD4.pdf')
 p 
 dev.off()

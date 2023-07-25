@@ -376,3 +376,56 @@ p
 png('rafael_analysis/paper/subsets/podo_ksfb_spat_cts.png', height = 1024, width = 1024)
 p 
 dev.off()
+
+
+
+
+
+
+# Subsetting 500 --------------------------------------------------------------
+
+cells <- crawdad::toSP(pos = ksfb[,c("x", "y")],
+                       celltypes = ksfb$celltypes)
+
+binomMat <- crawdad::binomialTestMatrix(cells,
+                                        neigh.dist = 500,
+                                        ncores = ncores,
+                                        verbose = TRUE)
+
+head(binomMat)
+
+saveRDS(binomMat, file="rafael_analysis/paper/supp5_ksfb_binomMat500.RDS")
+binomMat <- readRDS("rafael_analysis/paper/supp5_ksfb_binomMat500.RDS")
+
+subset.list <- crawdad::selectSubsets(binomMat,
+                                      cells$celltypes,
+                                      sub.type = "near",
+                                      sub.thresh = 0.05,
+                                      ncores = ncores,
+                                      verbose = TRUE)
+
+saveRDS(subset.list, file="rafael_analysis/paper/supp5_ksfb_subset500.RDS")
+subset.list <- readRDS("rafael_analysis/paper/supp5_ksfb_subset500.RDS")
+
+# results.subsets <- crawdad::findTrends(cells,
+#                                        dist = 100,
+#                                        shuffle.list = shuffle.list,
+#                                        subset.list = subset.list,
+#                                        ncores = ncores,
+#                                        verbose = TRUE,
+#                                        returnMeans = FALSE)
+# ## 8.0865 hours to run
+# results.subsets
+# saveRDS(results.subsets, file="rafael_analysis/paper/supp5_ksfb_results.subsets.RDS")
+# results.subsets <- readRDS("rafael_analysis/paper/supp5_ksfb_results.subsets.RDS")
+# 
+# 
+# 
+# ## subsets
+# dats <- crawdad::meltResultsList(results.subsets, withPerms = TRUE)
+# 
+# ## Multiple-test correction
+# ntestss <- length(unique(dats$reference)) * length(unique(dats$neighbor))
+# psigs <- 0.05/ntestss
+# zsigs <- round(qnorm(psigs/2, lower.tail = F), 2)
+# 
