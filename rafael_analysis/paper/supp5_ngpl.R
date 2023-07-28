@@ -3,7 +3,7 @@
 
 library(crawdad)
 library(tidyverse)
-ncores <- 1
+ncores <- 7
 
 ngpl <- read.csv2(file = paste0(here::here(), "/data/spleen/NGPL.meta.csv.gz"), row.names = 1)
 ngpl <- ngpl[,c("x", "y", "celltypes_folBcombined")]
@@ -53,7 +53,7 @@ results <- crawdad::findTrends(cells,
                                returnMeans = FALSE)
 
 save(results, shuffle.list, file="rafael_analysis/paper/supp5_ngpl.RData")
-load("rafael_analysis/paper/supp5_ngpl.RData")
+c
 
 dat <- crawdad::meltResultsList(results, withPerms = TRUE)
 head(dat)
@@ -381,6 +381,10 @@ dev.off()
 
 # Subsetting --------------------------------------------------------------
 
+cells <- crawdad::toSP(pos = ngpl[,c("x", "y")],
+                       celltypes = ngpl$celltypes)
+load("rafael_analysis/paper/supp5_ngpl.RData")
+
 binomMat <- crawdad::binomialTestMatrix(cells,
                                         neigh.dist = 500,
                                         ncores = ncores,
@@ -484,13 +488,63 @@ dev.off()
 
 # Trends podo 500 ----------------------------------------------
 
+load("rafael_analysis/paper/supp5_ngpl.RData")
+cells <- crawdad::toSP(pos = ngpl[,c("x", "y")],
+                       celltypes = ngpl$celltypes)
+binomMat <- readRDS("rafael_analysis/paper/supp5_ngpl_binomMat500.RDS")
+subset.list <- readRDS("rafael_analysis/paper/supp5_ngpl_subset500.RDS")
+
+## change cell types
+subset_names <- names(subset.list)
+subset_names <- str_replace(subset_names, "Podoplanin_near_Fol B cells", "temp")
+subset_names <- str_replace(subset_names, "Podoplanin_near_*", "Podoplanin_not_near_Fol B cells")
+subset_names <- str_replace(subset_names, "temp", "Podoplanin_near_Fol B cells")
+names(subset.list) <- subset_names
+
+results.subsets <- crawdad::findTrends(cells,
+                                       dist = 100,
+                                       shuffle.list = shuffle.list,
+                                       subset.list = subset.list,
+                                       ncores = ncores,
+                                       verbose = TRUE,
+                                       returnMeans = FALSE)
+## 8.0865 hours to run
+results.subsets
+saveRDS(results.subsets, file="rafael_analysis/paper/supp5_ngpl_podo_results500.subsets.RDS")
+results.subsets <- readRDS("rafael_analysis/paper/supp5_ngpl_podo_results500.subsets.RDS")
+
+
+
+## subsets
+dats <- crawdad::meltResultsList(results.subsets, withPerms = TRUE)
+
+## Multiple-test correction
+ntestss <- length(unique(dats$reference)) * length(unique(dats$neighbor))
+psigs <- 0.05/ntestss
+zsigs <- round(qnorm(psigs/2, lower.tail = F), 2)
+
+
+
+
+
+
+## select subsets
+c_podo_folb <- subcells[["Podoplanin_near_Fol B cells"]]
+c_podo <- which(ssample$celltypes == "Podoplanin")
+c_podo_notfolb <- c_podo[!c_podo %in% c_podo_folb]
+c_cd4 <- which(ssample$celltypes == "CD4 Memory T cells")
+
+## rewrite types
+ssample[c_podo_folb, ]$celltypes <- 'Podoplanin near Fol B cells'
+ssample[c_podo_notfolb, ]$celltypes <- 'Podoplanin not near Fol B cells'
+
+
 ## Podoplanin near follicle B cells (white pupl) colocalize with CD4 trend
 d1 <- dats[grepl(pattern = "Podoplanin_near_Fol B cells", 
                  dats$reference) & dats$neighbor %in% c("CD4 Memory T cells"),]
 plt <- vizTrends(dat = d1, facet = FALSE, id = "neighbor", 
                  title = "Podoplanin cells near Fol B cells") +
   ggplot2::scale_x_log10()
-# ggplot2::theme(legend.position="none")
 plt
 
 dat_filter <- d1 %>% 
@@ -504,11 +558,11 @@ dev.off()
 
 
 ## Podoplanin near follicle B cells (red pupl) colocalize with CD4 trend
-d1 <- dats[grepl(pattern = "Podoplanin_near_B cells, red pulp", 
+d1 <- dats[grepl(pattern = "Podoplanin_near_*", 
                  dats$reference) & dats$neighbor %in% c("CD4 Memory T cells"),]
+d1 <- d1[which(d1$reference != 'Podoplanin_near_Fol B cells')]
 plt <- vizTrends(dat = d1, facet = FALSE, id = "neighbor", title = "Podoplanin cells near B cells, red pulp") +
   ggplot2::scale_x_log10()
-# ggplot2::theme(legend.position="none")
 plt
 
 dat_filter <- d1 %>% 
