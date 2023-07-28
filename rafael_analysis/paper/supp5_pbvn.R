@@ -498,10 +498,11 @@ subset.list <- readRDS("rafael_analysis/paper/supp5_pbvn_subset500.RDS")
 
 ## change cell types
 subset_names <- names(subset.list)
-subset_names <- str_replace(subset_names, "Podoplanin_near_Fol B cells", "temp")
-subset_names <- str_replace(subset_names, "Podoplanin_near_*", "Podoplanin_not_near_Fol B cells")
-subset_names <- str_replace(subset_names, "temp", "Podoplanin_near_Fol B cells")
+subset_names[grepl("Podoplanin_near_Fol B cells", subset_names)] <- "temp"
+subset_names[grepl("^Podoplanin_near_", subset_names)] <- "Podoplanin_not_near_Fol B cells"
+subset_names[grepl("temp", subset_names)] <- "Podoplanin_near_Fol B cells"
 names(subset.list) <- subset_names
+
 
 results.subsets <- crawdad::findTrends(cells,
                                        dist = 100,
@@ -511,7 +512,6 @@ results.subsets <- crawdad::findTrends(cells,
                                        verbose = TRUE,
                                        returnMeans = FALSE)
 ## 8.0865 hours to run
-results.subsets
 saveRDS(results.subsets, file="rafael_analysis/paper/supp5_pbvn_podo_results500.subsets.RDS")
 results.subsets <- readRDS("rafael_analysis/paper/supp5_pbvn_podo_results500.subsets.RDS")
 
@@ -527,50 +527,34 @@ zsigs <- round(qnorm(psigs/2, lower.tail = F), 2)
 
 
 
-
-
-
-## select subsets
-c_podo_folb <- subcells[["Podoplanin_near_Fol B cells"]]
-c_podo <- which(ssample$celltypes == "Podoplanin")
-c_podo_notfolb <- c_podo[!c_podo %in% c_podo_folb]
-c_cd4 <- which(ssample$celltypes == "CD4 Memory T cells")
-
-## rewrite types
-ssample[c_podo_folb, ]$celltypes <- 'Podoplanin near Fol B cells'
-ssample[c_podo_notfolb, ]$celltypes <- 'Podoplanin not near Fol B cells'
-
-
-## Podoplanin near follicle B cells (white pupl) colocalize with CD4 trend
+## Podoplanin near follicle B cells
 d1 <- dats[grepl(pattern = "Podoplanin_near_Fol B cells", 
                  dats$reference) & dats$neighbor %in% c("CD4 Memory T cells"),]
 plt <- vizTrends(dat = d1, facet = FALSE, id = "neighbor", 
                  title = "Podoplanin cells near Fol B cells") +
   ggplot2::scale_x_log10()
 plt
-
 dat_filter <- d1 %>% 
   filter(neighbor == 'CD4 Memory T cells')
 p <- vizTrends(dat_filter, lines = T, withPerms = T, sig.thresh = zsigs)
 p
-pdf('rafael_analysis/paper/subsets500/pbvn_podofolB_CD4.pdf')
+pdf('rafael_analysis/paper/subsets500/pbvn_podo_near_folB_CD4.pdf')
 p 
 dev.off()
 
 
 
-## Podoplanin near follicle B cells (red pupl) colocalize with CD4 trend
-d1 <- dats[grepl(pattern = "Podoplanin_near_*", 
+## Podoplanin not near near follicle B cells
+d1 <- dats[grepl(pattern = "Podoplanin_not_near_Fol B cells", 
                  dats$reference) & dats$neighbor %in% c("CD4 Memory T cells"),]
-d1 <- d1[which(d1$reference != 'Podoplanin_near_Fol B cells')]
-plt <- vizTrends(dat = d1, facet = FALSE, id = "neighbor", title = "Podoplanin cells near B cells, red pulp") +
+plt <- vizTrends(dat = d1, facet = FALSE, id = "neighbor", 
+                 title = "Podoplanin cells not near Fol B cells") +
   ggplot2::scale_x_log10()
 plt
-
 dat_filter <- d1 %>% 
   filter(neighbor == 'CD4 Memory T cells')
 p <- vizTrends(dat_filter, lines = T, withPerms = T, sig.thresh = zsigs)
 p
-pdf('rafael_analysis/paper/replication/pbvn_podoredpulp_CD4.pdf')
+pdf('rafael_analysis/paper/subsets500/pbvn_podo_not_near_folB_CD4.pdf')
 p 
 dev.off()
