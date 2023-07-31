@@ -493,7 +493,6 @@ dev.off()
 load("rafael_analysis/paper/supp5_fsld.RData")
 cells <- crawdad::toSP(pos = fsld[,c("x", "y")],
                        celltypes = fsld$celltypes)
-binomMat <- readRDS("rafael_analysis/paper/supp5_fsld_binomMat500.RDS")
 subset.list <- readRDS("rafael_analysis/paper/supp5_fsld_subset500.RDS")
 
 ## change cell types

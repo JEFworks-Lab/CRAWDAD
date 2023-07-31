@@ -429,6 +429,8 @@ dev.off()
 # Trends podo 500 ---------------------------------------------------------
 
 load("rafael_analysis/paper/fig3.RData")
+data("pkhl")
+ncores <- 7
 cells <- crawdad::toSP(pos = pkhl[,c("x", "y")],
                        celltypes = pkhl$celltypes)
 subset.list <- readRDS("rafael_analysis/paper/data/fig3_subset2.RDS")
