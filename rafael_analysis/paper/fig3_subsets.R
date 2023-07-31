@@ -430,7 +430,7 @@ dev.off()
 
 load("rafael_analysis/paper/fig3.RData")
 data("pkhl")
-ncores <- 7
+ncores <- 21
 cells <- crawdad::toSP(pos = pkhl[,c("x", "y")],
                        celltypes = pkhl$celltypes)
 subset.list <- readRDS("rafael_analysis/paper/data/fig3_subset2.RDS")
@@ -451,8 +451,8 @@ results.subsets <- crawdad::findTrends(cells,
                                        verbose = TRUE,
                                        returnMeans = FALSE)
 ## 8.0865 hours to run
-saveRDS(results.subsets, file="rafael_analysis/paper/supp5_fsld_podo_results500.subsets.RDS")
-results.subsets <- readRDS("rafael_analysis/paper/supp5_fsld_podo_results500.subsets.RDS")
+saveRDS(results.subsets, file="rafael_analysis/paper/supp5_pkhl_podo_results500.subsets.RDS")
+results.subsets <- readRDS("rafael_analysis/paper/supp5_pkhl_podo_results500.subsets.RDS")
 
 
 
