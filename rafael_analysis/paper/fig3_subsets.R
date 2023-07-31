@@ -477,7 +477,7 @@ dat_filter <- d1 %>%
   filter(neighbor == 'CD4 Memory T cells')
 p <- vizTrends(dat_filter, lines = T, withPerms = T, sig.thresh = zsigs)
 p
-pdf('rafael_analysis/paper/subsets500/fsld_podo_near_folB_CD4.pdf')
+pdf('rafael_analysis/paper/subsets500/pkhl_podo_near_folB_CD4.pdf')
 p 
 dev.off()
 
@@ -494,7 +494,7 @@ dat_filter <- d1 %>%
   filter(neighbor == 'CD4 Memory T cells')
 p <- vizTrends(dat_filter, lines = T, withPerms = T, sig.thresh = zsigs)
 p
-pdf('rafael_analysis/paper/subsets500/fsld_podo_not_near_folB_CD4.pdf')
+pdf('rafael_analysis/paper/subsets500/pkhl_podo_not_near_folB_CD4.pdf')
 p 
 dev.off()
 
