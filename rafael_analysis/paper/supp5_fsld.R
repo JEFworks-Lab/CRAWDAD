@@ -488,6 +488,51 @@ dev.off()
 
 
 
+# Spat cts 500 prox ------------------------------------------------------
+
+ssample <- fsld
+prox_ct <- "Fol B cells"
+
+## select subsets
+c_podo <- which(ssample$celltypes == "Podoplanin")
+c_cd4 <- which(ssample$celltypes == "CD4 Memory T cells")
+c_other <- which(ssample$celltypes == prox_ct)
+
+## define cts of interest and colors
+cts_interest <- ssample$celltypes %in% c('CD4 Memory T cells', 
+                                         'Podoplanin near Fol B cells', 
+                                         'Podoplanin not near Fol B cells',
+                                         prox_ct)
+
+cols_ssample <- c("#0000FF", "#FF0000", "#FFFF00")
+names(cols_ssample) <-  c('CD4 Memory T cells', 
+                          'Podoplanin',
+                          prox_ct)
+
+df_cts <- ssample %>% 
+  filter(celltypes %in% names(cols_ssample))
+
+df_bkg <-  ssample %>% 
+  filter(!(celltypes %in% names(cols_ssample)))
+
+p <- ggplot() + 
+  geom_point(data = df_bkg, aes(x=x, y=y), 
+             color = 'lightgrey', size=1.5, alpha=0.5) + 
+  geom_point(data = df_cts[df_cts$celltypes == 'CD4 Memory T cells', ], 
+             aes(x=x, y=y), color = '#0000FF', size=1.5, alpha=0.5) + 
+  geom_point(data = df_cts[df_cts$celltypes == 'Podoplanin', ], 
+             aes(x=x, y=y), color = '#FF0000', size=1.5, alpha=0.5) + 
+  geom_point(data = df_cts[df_cts$celltypes == prox_ct, ], 
+             aes(x=x, y=y), color = '#FFFF00', size=1.5, alpha=0.5) + 
+  theme_void() + 
+  theme(legend.position="none")
+p
+png('rafael_analysis/paper/subsets500/prox/podo_fsld_spat_cts_500_folB.png', height = 1024, width = 1024)
+p 
+dev.off()
+
+
+
 # Trends podo 500 ----------------------------------------------
 
 load("rafael_analysis/paper/supp5_fsld.RData")

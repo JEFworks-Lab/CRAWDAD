@@ -476,7 +476,8 @@ p <- ggplot() +
   geom_point(data = df_cts[df_cts$celltypes == 'CD4 Memory T cells', ], 
              aes(x=x, y=y), color = '#FF0080', size=1.5, alpha=0.5) + 
   
-  geom_point(data = df_cts[df_cts$celltypes == 'Podoplanin near Fol B cells', ], 
+  geom_point(data = df_cts[df_cts$celltypes == '
+                           ', ], 
              aes(x=x, y=y), color = '#FFFF00', size=1.5, alpha=0.5) + 
   
   geom_point(data = df_cts[df_cts$celltypes == 'Podoplanin not near Fol B cells', ], 
