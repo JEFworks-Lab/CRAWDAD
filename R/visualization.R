@@ -816,6 +816,7 @@ transparentCol <- function(color, percent = 50, name = NULL) {
 #' zscore.limit, scores below -zscore.limit will be represented as -zscore.limit (default: 3).
 #' @param reorder boolean; if TRUE, reorder the cell types by clustering on the 
 #' z-score. If false, orders in alphabetical order (default: FALSE).
+#' @param only.significant boolean; plot only cell types with significant relationships (default: TRUE).
 #' @param colors character vector; colors for the gradient heatmap (low, mid, high).
 #' @param title character; plot title (default: NULL).
 #' 
@@ -832,6 +833,7 @@ transparentCol <- function(color, percent = 50, name = NULL) {
 #' @export
 vizColocDotplot <- function(dat, zsig.thresh = 1.96, psig.tresh = NULL,
                             zscore.limit = 3,  reorder = FALSE,
+                            only.significant = FALSE,
                             colors = c("blue", "white", "red"),
                             title = NULL){
   if (!is.null(psig.tresh)) {
@@ -885,7 +887,7 @@ vizColocDotplot <- function(dat, zsig.thresh = 1.96, psig.tresh = NULL,
   }
   
   ## plot figure
-  sig_dat %>% 
+  p <- sig_dat %>% 
     ggplot2::ggplot(ggplot2::aes(x=reference, y=neighbor, 
                                  color=Z, size=scale)) +
     ggplot2::geom_point() + 
@@ -903,5 +905,17 @@ vizColocDotplot <- function(dat, zsig.thresh = 1.96, psig.tresh = NULL,
                         range = c(1, 11)) + 
     ggplot2::scale_x_discrete(position = "top")  + 
     ggplot2::theme_bw()
+  
+  if (!only.significant) {
+    all_cts <- sort(unique(dat$reference))
+    alpha_cts <- sort(unique(dat$reference))
+    if (reorder) {
+      ct_order <- rownames(sig_mat)[hc$order]
+      all_cts <- c(ct_order, setdiff(alpha_cts, ct_order))
+    }
+    p <- p +
+      scale_x_discrete(limits = all_cts, position = 'top') +
+      scale_y_discrete(limits = all_cts) 
+  }
 }
 
