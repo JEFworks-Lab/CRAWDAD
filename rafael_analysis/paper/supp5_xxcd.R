@@ -123,6 +123,27 @@ zsigs <- round(qnorm(psigs/2, lower.tail = F), 2)
 
 
 
+# Figure 3e ---------------------------------------------------------------
+
+d1 <- dats %>% 
+  filter(neighbor == 'Podoplanin') %>% 
+  filter(reference == 'CD4 Memory T cells_near_Fol B cells')
+p <- vizTrends(d1, lines = T, withPerms = T, sig.thresh = zsigs)
+p
+pdf('rafael_analysis/paper/xxcd_CD4folB_podo.pdf')
+p 
+dev.off()
+
+d1 <- dats %>% 
+  filter(neighbor == 'CD4 Memory T cells') %>% 
+  filter(reference == 'Podoplanin_near_Fol B cells')
+p <- vizTrends(d1, lines = T, withPerms = T, sig.thresh = zsigs)
+p
+pdf('rafael_analysis/paper/xxcd_podofolB_CD4.pdf')
+p 
+dev.off()
+
+
 
 # Viz subsetting ----------------------------------------------------------
 
