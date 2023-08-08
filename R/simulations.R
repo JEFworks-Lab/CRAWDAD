@@ -16,7 +16,7 @@ simulate_background <- function(size = 10000, cts = c("A"), prob = c(1), seed = 
   p <- data.frame(x = x, y = y, type = sample(cts, size = size, replace = TRUE, prob = prob)
   )
   
-  ## scale to 3100 microns for different tile resolutions
+  ## scale to 3100 microns for different tile scales
   p$x <- p$x * scale
   p$y <- p$y * scale
   

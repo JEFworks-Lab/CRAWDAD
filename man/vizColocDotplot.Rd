@@ -9,36 +9,46 @@ vizColocDotplot(
   zsig.thresh = 1.96,
   psig.tresh = NULL,
   zscore.limit = 3,
+  reorder = FALSE,
   colors = c("blue", "white", "red"),
   title = NULL
 )
 }
 \arguments{
-\item{dat}{\code{findTrends()} data.frame; the information about the resolution, Z-score, reference and the neighbor cell. The input data.frame should be the results list from \code{findTrends()} that has been melted into a data.frame using \code{meltResultsList()}.}
+\item{dat}{\code{findTrends()} data.frame; the information about the scale,
+Z-score, reference and the neighbor cell. The input data.frame should be the
+results list from \code{findTrends()} that has been melted into a data.frame using \code{meltResultsList()}.}
 
 \item{zsig.thresh}{numeric; the Z score significance threshold (default: 1.96).}
 
-\item{psig.tresh}{numeric; the two-sided P value significance threshold. It can be used in place of the zsig.thresh parameter. If no value is provided, the zsig.thresh will be used.}
+\item{psig.tresh}{numeric; the two-sided P value significance threshold. It
+can be used in place of the zsig.thresh parameter. If no value is provided,
+the zsig.thresh will be used.}
 
-\item{zscore.limit}{numeric; limit the Z-score to look better in the graph scale gradient. Z-score values above zscore.limit will be represented as zscore.limit, scores below -zscore.limit will be represented as -zscore.limit (default: 3).}
+\item{zscore.limit}{numeric; limit the Z-score to look better in the graph
+scale gradient. Z-score values above zscore.limit will be represented as
+zscore.limit, scores below -zscore.limit will be represented as -zscore.limit (default: 3).}
+
+\item{reorder}{boolean; if TRUE, reorder the cell types by clustering on the
+z-score. If false, orders in alphabetical order (default: FALSE).}
 
 \item{colors}{character vector; colors for the gradient heatmap (low, mid, high).}
 
 \item{title}{character; plot title (default: NULL).}
 }
 \description{
-This fuction takes the \code{findTrends()} melted data frame and
-plots the resolution and the Z-score in which the trend first crossed the
-significance line (Z = 1.96). The Z-score was capped beween -3 and 3. Since
-the co-localization at smaller resolutions are more important thant those at
-greater ones, we plotted the inverse of the resolution so smaller ones would
+This function takes the \code{findTrends()} melted data frame and
+plots the scale and the Z-score in which the trend first crossed the
+significance line (Z = 1.96). The Z-score was capped between -3 and 3. Since
+the co-localization at smaller scales are more important than those at
+greater ones, we plotted the inverse of the scale so smaller ones would
 correspond to larger dots.
 }
 \examples{
 \dontrun{
 data(sim)
 cells <- toSP(pos = sim[,c("x", "y")], celltypes = slide$type)
-shuffle.list <- makeShuffledCells(cells, resolutions = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
+shuffle.list <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
 results <- findTrends(cells, dist = 100, shuffle.list = shuffle.list, ncores = 2)
 dat <- meltResultsList(results)
 vizColocDotplot(dat)

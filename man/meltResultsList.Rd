@@ -15,7 +15,7 @@ meltResultsList(resultsList, id = NA, withPerms = FALSE)
 }
 \description{
 idea is that the output of \code{findTrends()} is a list of dataframes, where each dataframe
-is for a reference cell type and contains the Z scores at each resolution for the neighbor cell types.
+is for a reference cell type and contains the Z scores at each scale for the neighbor cell types.
 So melt this list of dataframes into a single dataframe. Idea is to get a single dataframe setup for plotting with
 ggplot2 and tidyverse functions. \code{id} parameter allows adding a specific identifier for the given melted results so that
 one can combine multiple results dataframes and compare downstream.
@@ -23,13 +23,13 @@ For example, you melt a results list from \code{findTrends()} that was generated
 Then you generate another one that was done with neighbor distance of 200.
 The id column for each dataframe can be set to "100" and "200", respectively.
 Then both dataframes can be combined into one final dataframe.
-Now you have identifiers that include: resolution, neighbor, reference, and "id" (ie neighbor distance).
+Now you have identifiers that include: scale, neighbor, reference, and "id" (ie neighbor distance).
 }
 \examples{
 \dontrun{
 data(sim)
 cells <- toSP(pos = sim[,c("x", "y")], celltypes = slide$type)
-shuffle.list <- makeShuffledCells(cells, resolutions = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
+shuffle.list <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
 results <- findTrends(cells, dist = 100, shuffle.list = shuffle.list, ncores = 2)
 meltResultsList(results)
 }

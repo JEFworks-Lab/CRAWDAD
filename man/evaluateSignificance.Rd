@@ -27,11 +27,11 @@ evaluateSignificance(
 
 \item{removeDups}{remove duplicate neighbor cells to prevent them from being counted multiple times and inflate the Z scores (default: TRUE)}
 
-\item{returnMeans}{if multiple permutations, return the mean Z score across the permutations in each resolution with respect to each neighbor cell type (default: TRUE)}
+\item{returnMeans}{if multiple permutations, return the mean Z score across the permutations in each scale with respect to each neighbor cell type (default: TRUE)}
 }
 \description{
 for a given reference cell type, computes the Z scores for being colocalized or separated from each query cell type.
-If \code{returnMeans = TRUE}, then the result will be a data.frame where each row is a resolution, each column is a query cell type, and each value is the Z score.
-If \code{returnMeans = FALSE}, then the result will be a list of data.frames, where each data.frame is a resolution,
+If \code{returnMeans = TRUE}, then the result will be a data.frame where each row is a scale, each column is a query cell type, and each value is the Z score.
+If \code{returnMeans = FALSE}, then the result will be a list of data.frames, where each data.frame is a scale,
 the rows are permutations, the columns are query cell types, and each value is a Z score.
 }

@@ -1,11 +1,11 @@
-#' Shuffle the celltype labels at different shuffling resolutions
+#' Shuffle the celltype labels at different shuffling scales
 #'
-#' @description for each resolution, and for i number of permutations, shuffle the celltype labels.
+#' @description for each scale, and for i number of permutations, shuffle the celltype labels.
 #' Returns a list of lists, where each list is a factor of the shuffled celltype labels.
-#' Outer list is for each resolution of shuffling, and each inner list is for a given permutation with a given seed.
+#' Outer list is for each scale of shuffling, and each inner list is for a given permutation with a given seed.
 #' @param cells sp::SpatialPointsDataFrame object, with celltypes features and point geometries
-#' @param resolutions numeric vector of the different resolutions to shuffle at and subsequently compute significance at (default: c(50, 100, 200, 300, 400, 500))
-#' @param perms number of permutations to shuffle for each resolution (default = 1)
+#' @param scales numeric vector of the different scales to shuffle at and subsequently compute significance at (default: c(50, 100, 200, 300, 400, 500))
+#' @param perms number of permutations to shuffle for each scale (default = 1)
 #' @param ncores number of cores for parallelization (default 1)
 #' @param seed set seed for shuffling (if more than 1 permutation, each shuffling permutation has a seed equal to the permutation number)
 #' @param verbose Boolean for verbosity (default TRUE)
@@ -13,19 +13,19 @@
 #' @examples  
 #' \dontrun{
 #' data(sim)
-#' makeShuffledCells(sim, resolutions = c(50, 100, 200, 300, 400, 500), ncores = 2)
+#' makeShuffledCells(sim, scales = c(50, 100, 200, 300, 400, 500), ncores = 2)
 #' }
 #'
 #' @export
 makeShuffledCells <- function(cells,
-                              resolutions = c(50, 100, 200, 300, 400, 500),
+                              scales = c(50, 100, 200, 300, 400, 500),
                               perms = 1,
                               ncores = 1,
                               seed = 0,
                               verbose = TRUE){
   
   ## effectively will make a list of lists of randomly shuffled cell labels.
-  ## a list for each resolution that contains factors of shuffled cell labels for each permutation
+  ## a list for each scale that contains factors of shuffled cell labels for each permutation
   ## use the cell labels to reorder the labels of the `cells`
   
   ## check if cells is an `sp::SpatialPointsDataFrame object`
@@ -43,7 +43,7 @@ makeShuffledCells <- function(cells,
   
   cells_df <- crawdad::spToDF(cells)
   
-  randomcellslist <- lapply(resolutions, function(r) {
+  randomcellslist <- lapply(scales, function(r) {
     
     ## create list of offsets for the permutations
     offsets <- -seq(from = 0, to = r, by = r/perms)
@@ -66,7 +66,7 @@ makeShuffledCells <- function(cells,
                                offset = c(min(cells_df$x) + offsets[i], min(cells_df$y) + offsets[i]))
       
       if(verbose){
-        message(r, " unit resolution")
+        message(r, " unit scale")
         message(length(grid), " tiles to shuffle...")
       }
       
@@ -141,7 +141,7 @@ makeShuffledCells <- function(cells,
     message(sprintf("Time was %s mins", total_t))
   }
   
-  names(randomcellslist) <- resolutions
+  names(randomcellslist) <- scales
   return(randomcellslist)
 }
 
@@ -149,8 +149,8 @@ makeShuffledCells <- function(cells,
 #' compute significant different between real and randomly shuffled cell neighbor proportions
 #' 
 #' @description for a given reference cell type, computes the Z scores for being colocalized or separated from each query cell type. 
-#' If `returnMeans = TRUE`, then the result will be a data.frame where each row is a resolution, each column is a query cell type, and each value is the Z score.
-#' If `returnMeans = FALSE`, then the result will be a list of data.frames, where each data.frame is a resolution,
+#' If `returnMeans = TRUE`, then the result will be a data.frame where each row is a scale, each column is a query cell type, and each value is the Z score.
+#' If `returnMeans = FALSE`, then the result will be a list of data.frames, where each data.frame is a scale,
 #' the rows are permutations, the columns are query cell types, and each value is a Z score.
 #'
 #' @param cells sp::SpatialPointsDataFrame of all the cells
@@ -159,7 +159,7 @@ makeShuffledCells <- function(cells,
 #' @param cellBuffer Simple feature collection of the neighbor cells that are within "dist" of the ref cells (from sf::intersection)
 #' @param ncores number of cores for parallelization (default 1)
 #' @param removeDups remove duplicate neighbor cells to prevent them from being counted multiple times and inflate the Z scores (default: TRUE)
-#' @param returnMeans if multiple permutations, return the mean Z score across the permutations in each resolution with respect to each neighbor cell type (default: TRUE) 
+#' @param returnMeans if multiple permutations, return the mean Z score across the permutations in each scale with respect to each neighbor cell type (default: TRUE) 
 #'
 #'@export
 evaluateSignificance <- function(cells,
@@ -177,15 +177,15 @@ evaluateSignificance <- function(cells,
   ## if true, will return a data.frame
   if(returnMeans){
     
-    ## for each resolution:
+    ## for each scale:
     results <- do.call(rbind, BiocParallel::bplapply(randomcellslist, function(cellsAtRes){
       
-      ## Iterate through each permutation of a given resolution and 
+      ## Iterate through each permutation of a given scale and 
       ## produce the scores for each neighbor cell type. 
       ## Scores for a given permutation added as a row to a dataframe.
       ## Take the column mean of the scores for each neighbor cell type across permutations.
       ## The resulting vector of score means is returned and appended as a row in the `results` data,frame,
-      ## where each row is a resolution, and contains Z scores for each neighbor cell type (the columns)
+      ## where each row is a scale, and contains Z scores for each neighbor cell type (the columns)
       
       scores <- do.call(rbind, lapply(cellsAtRes, function(randomcellslabels){
         
@@ -220,7 +220,7 @@ evaluateSignificance <- function(cells,
         return(Z)
       }))
       
-      ## returning the mean Z score across permutations for the given resolution
+      ## returning the mean Z score across permutations for the given scale
       return(colMeans(scores))
       
     }, BPPARAM=BiocParallel::SnowParam(workers=ncores)))
@@ -228,15 +228,15 @@ evaluateSignificance <- function(cells,
     ## otherwise, returns a list
   } else {
     
-    ## for each resolution:
+    ## for each scale:
     results <- BiocParallel::bplapply(randomcellslist, function(cellsAtRes){
       
-      ## Iterate through each permutation of a given resolution and 
+      ## Iterate through each permutation of a given scale and 
       ## produce the scores for each neighbor cell type. 
       ## Scores for a given permutation added as a row to a dataframe.
       ## Take the column mean of the scores for each neighbor cell type across permutations.
       ## The resulting vector of score means is returned and appended as a row in the `results` data,frame,
-      ## where each row is a resolution, and contains Z scores for each neighbor cell type (the columns)
+      ## where each row is a scale, and contains Z scores for each neighbor cell type (the columns)
       
       scores <- do.call(rbind, lapply(cellsAtRes, function(randomcellslabels){
         
@@ -277,7 +277,7 @@ evaluateSignificance <- function(cells,
     }, BPPARAM=BiocParallel::SnowParam(workers=ncores))
     
     ## will be list of data.frame in this case
-    ## each data.frame is a resolution
+    ## each data.frame is a scale
     names(results) <- names(randomcellslist)
     
   }
@@ -304,7 +304,7 @@ evaluateSignificance <- function(cells,
 #' \dontrun{
 #' data(sim)
 #' cells <- toSP(pos = sim[,c("x", "y")], celltypes = slide$type)
-#' shuffle.list <- makeShuffledCells(cells, resolutions = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
+#' shuffle.list <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
 #' binomMat <- binomialTestMatrix(cells, neigh.dist = 100, ncores = 2)
 #' }
 #' 
@@ -393,7 +393,7 @@ binomialTestMatrix <- function(cells,
 #' \dontrun{
 #' data(sim)
 #' cells <- toSP(pos = sim[,c("x", "y")], celltypes = slide$type)
-#' shuffle.list <- makeShuffledCells(cells, resolutions = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
+#' shuffle.list <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
 #' binomMat <- binomialTestMatrix(cells, neigh.dist = 100, ncores = 2)
 #' subset.list <- selectSubsets(binomMat, cells$celltypes, sub.type = "near", sub.thresh = 0.05) 
 #' }
@@ -468,28 +468,28 @@ selectSubsets <- function(binomMatrix,
 }
 
 
-#' Compute trends of cell type colocalization for each cell type combination across specified resolutions
+#' Compute trends of cell type colocalization for each cell type combination across specified scales
 #'
 #' @description Trends are based on significant differences in cell type proportions between the real and randomly shuffled datasets.
 #' Cell type proportions are with respect to the different cell types that are neighboring the cells of a given reference cell type within a certain defined distance.
-#' This is done at difference resolutions, where a resolution is whether the cell type labels are shuffled locally or globally.
+#' This is done at difference scales, where a scale is whether the cell type labels are shuffled locally or globally.
 #' Trends are essentially built from significance values. The significance test basically asks if two cell types are localized or separated by assessing if the proportion of the neighboring cell type is significantly greater, or less than, random chance.
 #'
 #' @param cells sp::SpatialPointsDataFrame object, with celltypes features and point geometries
 #' @param dist numeric distance to define neighbor cells with respect to each reference cell (default: 50)
 #' @param ncores number of cores for parallelization (default 1)
-#' @param shuffle.list a list of cell type labels shuffled at different resolutions (output from `makeShuffledCells()`)
+#' @param shuffle.list a list of cell type labels shuffled at different scales (output from `makeShuffledCells()`)
 #' @param subset.list a subset list (output from `selectSubsets()`). Required if computing trends for subsets (default NULL)
 #' @param verbose Boolean for verbosity (default TRUE)
 #' @param removeDups remove duplicate neighbor cells to prevent them from being counted multiple times and inflate the Z scores (default: TRUE)
-#' @param returnMeans if multiple permutations, return the mean Z score across the permutations in each resolution with respect to each neighbor cell type (default: TRUE)
+#' @param returnMeans if multiple permutations, return the mean Z score across the permutations in each scale with respect to each neighbor cell type (default: TRUE)
 #'
-#' @return A list that contains a dataframe for each reference cell type, where the dataframe contains the significance values for each neighbor cell type at each resolution
+#' @return A list that contains a dataframe for each reference cell type, where the dataframe contains the significance values for each neighbor cell type at each scale
 #' 
 #' @examples
 #' \dontrun{
 #' data(sim)
-#' shuffle.list <- makeShuffledCells(sim, resolutions = c(50, 100, 200, 300, 400, 500))
+#' shuffle.list <- makeShuffledCells(sim, scales = c(50, 100, 200, 300, 400, 500))
 #' findTrends(sim, dist = 100, shuffle.list = shuffle.list, ncores = 2)
 #' }
 #' 
@@ -565,10 +565,10 @@ findTrends <- function(cells,
       }
       
       ## evaluate significance https://online.stat.psu.edu/stat415/lesson/9/9.4
-      ## chose to shuffle the resolutions in parallel, but in each resolution, the perms done linearly
+      ## chose to shuffle the scales in parallel, but in each scale, the perms done linearly
       ## I think a bottle neck originally was waiting for certain cell types to finish
-      ## so if I split up the resolutions, might be able to get through each cell type faster and speed up entire process?
-      ## I could also split up the permutations, but then each cell type for each resolution is done one by one
+      ## so if I split up the scales, might be able to get through each cell type faster and speed up entire process?
+      ## I could also split up the permutations, but then each cell type for each scale is done one by one
       ## I could do cell types in parallel, but then for each cell type need to go through each res and each perm one by one
       results <- evaluateSignificance(cells = cells,
                                       randomcellslist = shuffle.list,
@@ -603,7 +603,7 @@ findTrends <- function(cells,
     ## initialize list
     results.all <- list()
     
-    ## for each subset of cells, evaluate significance against each reference cell type across resolutions
+    ## for each subset of cells, evaluate significance against each reference cell type across scales
     for(i in combo_ids){
       
       if(verbose){
@@ -624,10 +624,10 @@ findTrends <- function(cells,
       }
       
       ## evaluate significance https://online.stat.psu.edu/stat415/lesson/9/9.4
-      ## chose to shuffle the resolutions in parallel, but in each resolution, the perms done linearly
+      ## chose to shuffle the scales in parallel, but in each scale, the perms done linearly
       ## I think a bottle neck originally was waiting for certain cell types to finish
-      ## so if I split up the resolutions, might be able to get through each cell type faster and speed up entire process?
-      ## I could also split up the permutations, but then each cell type for each resolution is done one by one
+      ## so if I split up the scales, might be able to get through each cell type faster and speed up entire process?
+      ## I could also split up the permutations, but then each cell type for each scale is done one by one
       ## I could do cell types in parallel, but then for each cell type need to go through each res and each perm one by one
       results <- evaluateSignificance(cells = cells,
                                       randomcellslist = shuffle.list,

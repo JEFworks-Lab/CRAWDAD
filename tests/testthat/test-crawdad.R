@@ -10,7 +10,7 @@ test_that("comprehensive testing for shuffling, get results, get subsets, etc", 
   
   ## Make shuffled background
   shuffle.list <- makeShuffledCells(cells,
-                                   resolutions = c(100, 200, 500, 800, 1000),
+                                   scales = c(100, 200, 500, 800, 1000),
                                    perms = 1,
                                    ncores = ncores,
                                    seed = 1,
@@ -27,7 +27,7 @@ test_that("comprehensive testing for shuffling, get results, get subsets, etc", 
   
   ## melt the results into a data.frame
   dat <- meltResultsList(results)
-  expect_equal(dat[1,], structure(list(resolution = 100,
+  expect_equal(dat[1,], structure(list(scale = 100,
                                        neighbor = structure(1L,
                                                             levels = c("A","B", "C", "D"),
                                                             class = "factor"),

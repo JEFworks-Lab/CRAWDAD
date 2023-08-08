@@ -20,7 +20,7 @@ diffTrendTesting(
 
 \item{neighID}{name of neighbor cell type for trend of interest}
 
-\item{zscores}{table of zscores for each cell type combo for each sample (rows) vs each resolution tested (columns)}
+\item{zscores}{table of zscores for each cell type combo for each sample (rows) vs each scale tested (columns)}
 
 \item{heatmap}{return heatmap of distances between sample trends (boolean, default: TRUE)}
 
@@ -30,7 +30,7 @@ diffTrendTesting(
 pvalues for each patient
 }
 \description{
-Computes summed distance between z scores at each resolution for two given trends.
+Computes summed distance between z scores at each scale for two given trends.
 Gets summed distances for combinations of intra patient trends, and inter patient trends.
 T-test between intra and inter distances to test for significant difference.
 Also can return heatmap matrix of distances between each dataset and distributions.

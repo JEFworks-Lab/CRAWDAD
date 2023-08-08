@@ -71,14 +71,14 @@ crawdad::vizEachCluster(cells = pkhl,
 
 ```{r}
 
-resolutions <- c(100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000, 6000)
+scales <- c(100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000, 6000)
 
 ```
 
 ```{r, eval=FALSE}
 ## generate background
 shuffle.list.pkhl <- crawdad:::makeShuffledCells(pkhl,
-                          resolutions = resolutions,
+                          scales = scales,
                           perms = 1,
                           ncores = ncores,
                           seed = 1,
@@ -216,14 +216,14 @@ crawdad::vizEachCluster(cells = ksfb,
 
 ```{r}
 
-resolutions <- c(100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000, 6000)
+scales <- c(100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000, 6000)
 
 ```
 
 ```{r, eval=FALSE}
 ## generate background
 shuffle.list.ksfb <- crawdad:::makeShuffledCells(ksfb,
-                          resolutions = resolutions,
+                          scales = scales,
                           perms = 1,
                           ncores = ncores,
                           seed = 1,

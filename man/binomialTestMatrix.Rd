@@ -25,7 +25,7 @@ pvalues are based on a binomial test and neighbors are defined within a given di
 \dontrun{
 data(sim)
 cells <- toSP(pos = sim[,c("x", "y")], celltypes = slide$type)
-shuffle.list <- makeShuffledCells(cells, resolutions = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
+shuffle.list <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
 binomMat <- binomialTestMatrix(cells, neigh.dist = 100, ncores = 2)
 }
 

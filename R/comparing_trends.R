@@ -1,6 +1,6 @@
 #' Test if intra sample vs inter samples trends are significantly different
 #' 
-#' @description Computes summed distance between z scores at each resolution for two given trends.
+#' @description Computes summed distance between z scores at each scale for two given trends.
 #'     Gets summed distances for combinations of intra patient trends, and inter patient trends.
 #'     T-test between intra and inter distances to test for significant difference.
 #'     Also can return heatmap matrix of distances between each dataset and distributions.
@@ -11,7 +11,7 @@
 #' @param samples list of sample set names for each patient ex: list(c("PKHL", "XXCD"),c("KSFB", "NGPL"),c("PBVN", "FSLD"))
 #' @param refID name of reference cell type for trend of interest
 #' @param neighID name of neighbor cell type for trend of interest
-#' @param zscores table of zscores for each cell type combo for each sample (rows) vs each resolution tested (columns)
+#' @param zscores table of zscores for each cell type combo for each sample (rows) vs each scale tested (columns)
 #' @param heatmap return heatmap of distances between sample trends (boolean, default: TRUE)
 #' @param distplot return plot of distirbutions of intra and inter trend distances (boolean, default: TRUE)
 #'
