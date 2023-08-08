@@ -53,7 +53,7 @@ results <- crawdad::findTrends(cells,
                                returnMeans = FALSE)
 
 save(results, shuffle.list, file="rafael_analysis/paper/supp5_ngpl.RData")
-c
+load("rafael_analysis/paper/supp5_ngpl.RData")
 
 dat <- crawdad::meltResultsList(results, withPerms = TRUE)
 head(dat)
@@ -120,6 +120,29 @@ dats <- crawdad::meltResultsList(results.subsets, withPerms = TRUE)
 ntestss <- length(unique(dats$reference)) * length(unique(dats$neighbor))
 psigs <- 0.05/ntestss
 zsigs <- round(qnorm(psigs/2, lower.tail = F), 2)
+
+
+
+
+# Figure 3e ---------------------------------------------------------------
+
+d1 <- dats %>% 
+  filter(neighbor == 'Podoplanin') %>% 
+  filter(reference == 'CD4 Memory T cells_near_Fol B cells')
+p <- vizTrends(d1, lines = T, withPerms = T, sig.thresh = zsigs)
+p
+pdf('rafael_analysis/paper/ngpl_CD4folB_podo.pdf')
+p 
+dev.off()
+
+d1 <- dats %>% 
+  filter(neighbor == 'CD4 Memory T cells') %>% 
+  filter(reference == 'Podoplanin_near_Fol B cells')
+p <- vizTrends(d1, lines = T, withPerms = T, sig.thresh = zsigs)
+p
+pdf('rafael_analysis/paper/ngpl_podofolB_CD4.pdf')
+p 
+dev.off()
 
 
 
@@ -426,6 +449,63 @@ dats <- crawdad::meltResultsList(results.subsets, withPerms = TRUE)
 ntestss <- length(unique(dats$reference)) * length(unique(dats$neighbor))
 psigs <- 0.05/ntestss
 zsigs <- round(qnorm(psigs/2, lower.tail = F), 2)
+
+
+
+
+# Subsets CD4 2 ------------------------------------------------------
+
+subset.list <- readRDS("rafael_analysis/paper/supp5_ngpl_subset500.RDS")
+subcells <- subset.list
+ssample <- ngpl
+
+## visualize names
+names(subcells)[grepl('CD4 Memory T cells_near_', names(subcells))]
+
+## select subsets
+c_cd4_folb <- subcells[["CD4 Memory T cells_near_Fol B cells"]]
+c_podo_folb <- subcells[["Podoplanin_near_Fol B cells"]]
+c_folb <- which(ssample$celltypes == "Fol B cells")
+
+## rewrite types
+ssample[c_cd4_folb, ]$celltypes <- 'CD4 Memory T cells_near_Fol B cells'
+ssample[c_podo_folb, ]$celltypes <- 'Podoplanin_near_Fol B cells'
+ssample[c_folb, ]$celltypes <- 'Fol B cells'
+
+## define cts of interest and colors
+cts_interest <- ssample$celltypes %in% c('Fol B cells', 
+                                         'Podoplanin_near_Fol B cells', 
+                                         'CD4 Memory T cells_near_Fol B cells')
+
+cols_ssample <- c("#FFFF00", "#FF0000", "#0000FF")
+names(cols_ssample) <-  c('Fol B cells', 
+                          'Podoplanin_near_Fol B cells', 
+                          'CD4 Memory T cells_near_Fol B cells')
+
+df_cts <- ssample %>% 
+  filter(celltypes %in% names(cols_ssample))
+
+df_bkg <-  ssample %>% 
+  filter(!(celltypes %in% names(cols_ssample)))
+
+p <- ggplot() + 
+  geom_point(data = df_bkg, aes(x=x, y=y), 
+             color = 'lightgrey', size=1.5, alpha=0.5) + 
+  
+  geom_point(data = df_cts[df_cts$celltypes == 'Fol B cells', ], 
+             aes(x=x, y=y), color = '#FFFF00', size=1.5, alpha=0.5) + 
+  
+  geom_point(data = df_cts[df_cts$celltypes == 'Podoplanin_near_Fol B cells', ], 
+             aes(x=x, y=y), color = '#FF0000', size=1.5, alpha=0.5) + 
+  
+  geom_point(data = df_cts[df_cts$celltypes == 'CD4 Memory T cells_near_Fol B cells', ], 
+             aes(x=x, y=y), color = '#0000FF', size=1.5, alpha=0.5) +
+  theme_void() + 
+  theme(legend.position="none")
+p
+png('rafael_analysis/paper/subsets2/ngpl_spat_cts_cd4folb2.png', height = 1024, width = 1024)
+p 
+dev.off()
 
 
 

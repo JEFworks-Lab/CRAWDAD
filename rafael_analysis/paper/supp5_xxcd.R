@@ -178,6 +178,62 @@ plt <- crawdad::vizAllClusters(cells = xxcd,
 plt
 
 
+# Subsets CD4 ------------------------------------------------------
+
+subset.list <- readRDS("rafael_analysis/paper/supp5_xxcd_subset.RDS")
+subcells <- subset.list
+ssample <- xxcd
+
+## visualize names
+names(subcells)[grepl('CD4 Memory T cells_near_', names(subcells))]
+
+## select subsets
+c_cd4_folb <- subcells[["CD4 Memory T cells_near_Fol B cells"]]
+c_podo_folb <- subcells[["Podoplanin_near_Fol B cells"]]
+c_folb <- which(ssample$celltypes == "Fol B cells")
+
+## rewrite types
+ssample[c_cd4_folb, ]$celltypes <- 'CD4 Memory T cells_near_Fol B cells'
+ssample[c_podo_folb, ]$celltypes <- 'Podoplanin_near_Fol B cells'
+ssample[c_folb, ]$celltypes <- 'Fol B cells'
+
+## define cts of interest and colors
+cts_interest <- ssample$celltypes %in% c('Fol B cells', 
+                                         'Podoplanin_near_Fol B cells', 
+                                         'CD4 Memory T cells_near_Fol B cells')
+
+cols_ssample <- c("#FFFF00", "#FF0000", "#0000FF")
+names(cols_ssample) <-  c('Fol B cells', 
+                          'Podoplanin_near_Fol B cells', 
+                          'CD4 Memory T cells_near_Fol B cells')
+
+df_cts <- ssample %>% 
+  filter(celltypes %in% names(cols_ssample))
+
+df_bkg <-  ssample %>% 
+  filter(!(celltypes %in% names(cols_ssample)))
+
+p <- ggplot() + 
+  geom_point(data = df_bkg, aes(x=x, y=y), 
+             color = 'lightgrey', size=1.5, alpha=0.5) + 
+  
+  geom_point(data = df_cts[df_cts$celltypes == 'Fol B cells', ], 
+             aes(x=x, y=y), color = '#FFFF00', size=1.5, alpha=0.5) + 
+  
+  geom_point(data = df_cts[df_cts$celltypes == 'Podoplanin_near_Fol B cells', ], 
+             aes(x=x, y=y), color = '#FF0000', size=1.5, alpha=0.5) + 
+  
+  geom_point(data = df_cts[df_cts$celltypes == 'CD4 Memory T cells_near_Fol B cells', ], 
+             aes(x=x, y=y), color = '#0000FF', size=1.5, alpha=0.5) +
+  theme_void() + 
+  theme(legend.position="none")
+p
+png('rafael_analysis/paper/subsets/xxcd_spat_cts_cd4folb.png', height = 1024, width = 1024)
+p 
+dev.off()
+
+
+
 
 # Figure 3f ---------------------------------------------------------------
 
@@ -231,7 +287,7 @@ pdf('rafael_analysis/paper/supp5c_xxcd.pdf', height = 7.7, width = 6.05)
 p 
 dev.off()
 
-## reorder according to pkhl
+## reorder according to xxcd
 ct_ordered <- readRDS("rafael_analysis/paper/ct_ordered_spleen.RDS")
 p <- vizColocDotplot(dat_filtered, reorder = TRUE, zsig.thresh = zsig, zscore.limit = zsig*2) + 
   scale_x_discrete(position = 'bottom', limits=ct_ordered) +
@@ -429,7 +485,7 @@ saveRDS(subset.list, file="rafael_analysis/paper/supp5_xxcd_subset500.RDS")
 subset.list <- readRDS("rafael_analysis/paper/supp5_xxcd_subset500.RDS")
 
 results.subsets <- crawdad::findTrends(cells,
-                                       dist = 100,
+                                       dist = 500,
                                        shuffle.list = shuffle.list,
                                        subset.list = subset.list,
                                        ncores = ncores,
@@ -449,6 +505,64 @@ dats <- crawdad::meltResultsList(results.subsets, withPerms = TRUE)
 ntestss <- length(unique(dats$reference)) * length(unique(dats$neighbor))
 psigs <- 0.05/ntestss
 zsigs <- round(qnorm(psigs/2, lower.tail = F), 2)
+
+
+
+# Subsets CD4 2 ------------------------------------------------------
+
+subset.list <- readRDS("rafael_analysis/paper/supp5_xxcd_subset500.RDS")
+subcells <- subset.list
+ssample <- xxcd
+
+## visualize names
+names(subcells)[grepl('CD4 Memory T cells_near_', names(subcells))]
+
+## select subsets
+c_cd4_folb <- subcells[["CD4 Memory T cells_near_Fol B cells"]]
+c_podo_folb <- subcells[["Podoplanin_near_Fol B cells"]]
+c_folb <- which(ssample$celltypes == "Fol B cells")
+
+## rewrite types
+ssample[c_cd4_folb, ]$celltypes <- 'CD4 Memory T cells_near_Fol B cells'
+ssample[c_podo_folb, ]$celltypes <- 'Podoplanin_near_Fol B cells'
+ssample[c_folb, ]$celltypes <- 'Fol B cells'
+
+## define cts of interest and colors
+cts_interest <- ssample$celltypes %in% c('Fol B cells', 
+                                         'Podoplanin_near_Fol B cells', 
+                                         'CD4 Memory T cells_near_Fol B cells')
+
+cols_ssample <- c("#FFFF00", "#FF0000", "#0000FF")
+names(cols_ssample) <-  c('Fol B cells', 
+                          'Podoplanin_near_Fol B cells', 
+                          'CD4 Memory T cells_near_Fol B cells')
+
+df_cts <- ssample %>% 
+  filter(celltypes %in% names(cols_ssample))
+
+df_bkg <-  ssample %>% 
+  filter(!(celltypes %in% names(cols_ssample)))
+
+p <- ggplot() + 
+  geom_point(data = df_bkg, aes(x=x, y=y), 
+             color = 'lightgrey', size=1.5, alpha=0.5) + 
+  
+  geom_point(data = df_cts[df_cts$celltypes == 'Fol B cells', ], 
+             aes(x=x, y=y), color = '#FFFF00', size=1.5, alpha=0.5) + 
+  
+  geom_point(data = df_cts[df_cts$celltypes == 'Podoplanin_near_Fol B cells', ], 
+             aes(x=x, y=y), color = '#FF0000', size=1.5, alpha=0.5) + 
+  
+  geom_point(data = df_cts[df_cts$celltypes == 'CD4 Memory T cells_near_Fol B cells', ], 
+             aes(x=x, y=y), color = '#0000FF', size=1.5, alpha=0.5) +
+  theme_void() + 
+  theme(legend.position="none")
+p
+png('rafael_analysis/paper/subsets2/xxcd_spat_cts_cd4folb2.png', height = 1024, width = 1024)
+p 
+dev.off()
+
+
 
 
 
