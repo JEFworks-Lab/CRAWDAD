@@ -3,7 +3,7 @@
 
 library(crawdad)
 library(tidyverse)
-ncores <- 7
+ncores <- 21
 
 xxcd <- read.csv2(file = paste0(here::here(), "/data/spleen/XXCD.meta.csv.gz"), row.names = 1)
 xxcd <- xxcd[,c("x", "y", "celltypes_folBcombined")]
@@ -458,7 +458,7 @@ dev.off()
 
 
 
-# Subsetting --------------------------------------------------------------
+# Subsetting 500 --------------------------------------------------------------
 
 cells <- crawdad::toSP(pos = xxcd[,c("x", "y")],
                        celltypes = xxcd$celltypes)
@@ -485,7 +485,7 @@ saveRDS(subset.list, file="rafael_analysis/paper/supp5_xxcd_subset500.RDS")
 subset.list <- readRDS("rafael_analysis/paper/supp5_xxcd_subset500.RDS")
 
 results.subsets <- crawdad::findTrends(cells,
-                                       dist = 500,
+                                       dist = 100,
                                        shuffle.list = shuffle.list,
                                        subset.list = subset.list,
                                        ncores = ncores,
@@ -495,8 +495,6 @@ results.subsets <- crawdad::findTrends(cells,
 results.subsets
 saveRDS(results.subsets, file="rafael_analysis/paper/supp5_xxcd_results500.subsets.RDS")
 results.subsets <- readRDS("rafael_analysis/paper/supp5_xxcd_results500.subsets.RDS")
-
-
 
 ## subsets
 dats <- crawdad::meltResultsList(results.subsets, withPerms = TRUE)
@@ -564,6 +562,23 @@ dev.off()
 
 
 
+# Fig 3e 500 --------------------------------------------------------------
+
+## CD4+ memory near follicle B cells colocalize with podoplanin trend
+d1 <- dats[grepl(pattern = "CD4 Memory T cells_near_Fol B cells", 
+                 dats$reference) & dats$neighbor %in% c("Fol B cells", "Podoplanin"),]
+plt <- vizTrends(dat = d1, facet = FALSE, id = "neighbor", title = "CD4 Memory T cells near Fol B cells") +
+  ggplot2::scale_x_log10()
+# ggplot2::theme(legend.position="none")
+plt
+
+dat_filter <- d1 %>% 
+  filter(neighbor == 'Podoplanin')
+p <- vizTrends(dat_filter, lines = T, withPerms = T, sig.thresh = zsigs)
+p
+pdf('rafael_analysis/paper/fig3/xxcd_cd4folb_podo_trend500.pdf')
+p 
+dev.off()
 
 
 

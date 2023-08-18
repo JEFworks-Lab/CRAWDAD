@@ -418,7 +418,7 @@ dev.off()
 
 
 
-# Subsetting 2 ------------------------------------------------------------
+# Subsetting 500 ------------------------------------------------------------
 
 cells <- crawdad::toSP(pos = pkhl[,c("x", "y")],
                        celltypes = pkhl$celltypes)
@@ -442,6 +442,26 @@ subset.list <- crawdad::selectSubsets(binomMat,
 
 saveRDS(subset.list, file="rafael_analysis/paper/data/fig3_subset2.RDS")
 subset.list <- readRDS("rafael_analysis/paper/data/fig3_subset2.RDS")
+
+results.subsets <- crawdad::findTrends(cells,
+                                       dist = 100,
+                                       shuffle.list = shuffle.list,
+                                       subset.list = subset.list,
+                                       ncores = ncores,
+                                       verbose = TRUE,
+                                       returnMeans = FALSE)
+## 8.0865 hours to run
+results.subsets
+saveRDS(results.subsets, file="rafael_analysis/paper/fig3/supp5_pkhl_results500.subsets.RDS")
+results.subsets <- readRDS("rafael_analysis/paper/fig3/supp5_pkhl_results500.subsets.RDS")
+
+## subsets
+dats <- crawdad::meltResultsList(results.subsets, withPerms = TRUE)
+
+## Multiple-test correction
+ntestss <- length(unique(dats$reference)) * length(unique(dats$neighbor))
+psigs <- 0.05/ntestss
+zsigs <- round(qnorm(psigs/2, lower.tail = F), 2)
 
 
 
