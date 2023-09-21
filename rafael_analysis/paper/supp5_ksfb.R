@@ -453,6 +453,26 @@ psigs <- 0.05/ntestss
 zsigs <- round(qnorm(psigs/2, lower.tail = F), 2)
 
 
+# Fig 3e 500 --------------------------------------------------------------
+
+## CD4+ memory near follicle B cells colocalize with podoplanin trend
+d1 <- dats[grepl(pattern = "CD4 Memory T cells_near_Fol B cells", 
+                 dats$reference) & dats$neighbor %in% c("Fol B cells", "Podoplanin"),]
+plt <- vizTrends(dat = d1, facet = FALSE, id = "neighbor", title = "CD4 Memory T cells near Fol B cells") +
+  ggplot2::scale_x_log10()
+# ggplot2::theme(legend.position="none")
+plt
+
+dat_filter <- d1 %>% 
+  filter(neighbor == 'Podoplanin')
+p <- vizTrends(dat_filter, lines = T, withPerms = T, sig.thresh = zsigs)
+p
+pdf('rafael_analysis/paper/fig3/ksfb_cd4folb_podo_trend500.pdf')
+p 
+dev.off()
+
+
+
 
 
 # Subsets CD4 2 ------------------------------------------------------

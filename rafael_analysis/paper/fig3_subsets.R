@@ -418,7 +418,7 @@ dev.off()
 
 
 
-# Subsetting 2 ------------------------------------------------------------
+# Subsetting 500 ------------------------------------------------------------
 
 cells <- crawdad::toSP(pos = pkhl[,c("x", "y")],
                        celltypes = pkhl$celltypes)
@@ -442,6 +442,26 @@ subset.list <- crawdad::selectSubsets(binomMat,
 
 saveRDS(subset.list, file="rafael_analysis/paper/data/fig3_subset2.RDS")
 subset.list <- readRDS("rafael_analysis/paper/data/fig3_subset2.RDS")
+
+results.subsets <- crawdad::findTrends(cells,
+                                       dist = 100,
+                                       shuffle.list = shuffle.list,
+                                       subset.list = subset.list,
+                                       ncores = ncores,
+                                       verbose = TRUE,
+                                       returnMeans = FALSE)
+## 8.0865 hours to run
+results.subsets
+saveRDS(results.subsets, file="rafael_analysis/paper/fig3/supp5_pkhl_results500.subsets.RDS")
+results.subsets <- readRDS("rafael_analysis/paper/fig3/supp5_pkhl_results500.subsets.RDS")
+
+## subsets
+dats <- crawdad::meltResultsList(results.subsets, withPerms = TRUE)
+
+## Multiple-test correction
+ntestss <- length(unique(dats$reference)) * length(unique(dats$neighbor))
+psigs <- 0.05/ntestss
+zsigs <- round(qnorm(psigs/2, lower.tail = F), 2)
 
 
 
@@ -498,6 +518,27 @@ p
 png('rafael_analysis/paper/subsets2/pkhl_spat_cts_cd4folb2.png', height = 1024, width = 1024)
 p 
 dev.off()
+
+
+
+# Fig 3e 500 --------------------------------------------------------------
+
+## CD4+ memory near follicle B cells colocalize with podoplanin trend
+d1 <- dats[grepl(pattern = "CD4 Memory T cells_near_Fol B cells", 
+                 dats$reference) & dats$neighbor %in% c("Fol B cells", "Podoplanin"),]
+plt <- vizTrends(dat = d1, facet = FALSE, id = "neighbor", title = "CD4 Memory T cells near Fol B cells") +
+  ggplot2::scale_x_log10()
+# ggplot2::theme(legend.position="none")
+plt
+
+dat_filter <- d1 %>% 
+  filter(neighbor == 'Podoplanin')
+p <- vizTrends(dat_filter, lines = T, withPerms = T, sig.thresh = zsigs)
+p
+pdf('rafael_analysis/paper/fig3/pkhl_cd4folb_podo_trend500.pdf')
+p 
+dev.off()
+
 
 
 
