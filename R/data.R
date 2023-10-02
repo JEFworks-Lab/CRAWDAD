@@ -41,5 +41,5 @@
 #'         `x` and `y` are x-y coordinates,
 #'         `celltypes` are cell type annotations
 #' 
-#' @usage data(pkhl)
+#' @usage data(sim)
 "sim"
