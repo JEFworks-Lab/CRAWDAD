@@ -33,7 +33,7 @@ shuffle.list <- crawdad:::makeShuffledCells(cells,
                                             scales = scales,
                                             perms = 3,
                                             ncores = 7,
-                                            seed = 42,
+                                            seed = 1,
                                             verbose = TRUE)
 ## calculate the zscore for the cell-type pairs at different scales
 results <- crawdad::findTrends(cells,
