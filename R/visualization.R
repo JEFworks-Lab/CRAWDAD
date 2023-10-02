@@ -842,7 +842,6 @@ vizColocDotplot <- function(dat, zsig.thresh = 1.96, psig.tresh = NULL,
   
   ## create data.frame with the Z-scores and scales at the first scale
   ## the trend becomes significant
-<<<<<<< HEAD
   ## get mean Z
   mean_dat <- dat %>% 
     dplyr::group_by(neighbor, scale, reference) %>% 
@@ -856,12 +855,6 @@ vizColocDotplot <- function(dat, zsig.thresh = 1.96, psig.tresh = NULL,
     dplyr::group_by(neighbor, reference) %>% 
     dplyr::filter(scale == min(scale, na.rm = TRUE))
   
-=======
-  sig_dat <- dat %>%
-    dplyr::filter(abs(Z) >= sig.thresh) %>% 
-    dplyr::group_by(neighbor, reference) %>% 
-    dplyr::filter(resolution == min(resolution, na.rm = TRUE))
->>>>>>> 2de54f7 (fix vizColocDotplot with dependencies access)
   ## limit the z-score for the gradient in the figure to look better
   sig_dat$Z[sig_dat$Z > zscore.limit] <- zscore.limit
   sig_dat$Z[sig_dat$Z < -zscore.limit] <- -zscore.limit
@@ -894,7 +887,6 @@ vizColocDotplot <- function(dat, zsig.thresh = 1.96, psig.tresh = NULL,
   }
   
   ## plot figure
-<<<<<<< HEAD
   p <- sig_dat %>% 
     ggplot2::ggplot(ggplot2::aes(x=reference, y=neighbor, 
                                  color=Z, size=scale)) +
@@ -902,23 +894,15 @@ vizColocDotplot <- function(dat, zsig.thresh = 1.96, psig.tresh = NULL,
     ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, 
                                                        vjust = 0.5, 
                                                        hjust=1)) +
-=======
-  sig_dat %>% 
-    ggplot2::ggplot() +
-    ggplot2::geom_point(ggplot2::aes(x=reference, y=neighbor, 
-                   color=Z, size=rank(1/resolution))) + 
-    ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust=1)) +
->>>>>>> 2de54f7 (fix vizColocDotplot with dependencies access)
     ggplot2::scale_colour_gradient2(
       low = colors[1],
       mid = colors[2],
       high = colors[3],
       na.value = "#eeeeee"
     ) + 
-<<<<<<< HEAD
     ggplot2::scale_radius(trans = 'reverse',
-                        breaks = legend_sizes,
-                        range = c(1, 11)) + 
+                          breaks = legend_sizes,
+                          range = c(1, 11)) + 
     ggplot2::scale_x_discrete(position = "top")  + 
     ggplot2::theme_bw()
   
@@ -933,10 +917,5 @@ vizColocDotplot <- function(dat, zsig.thresh = 1.96, psig.tresh = NULL,
       scale_x_discrete(limits = all_cts, position = 'top') +
       scale_y_discrete(limits = all_cts) 
   }
-=======
-    ggplot2::scale_size_continuous(range = c(1, 10)) + 
-    ggplot2::scale_x_discrete(position = "top")  + 
-    ggplot2::theme_bw()
->>>>>>> 2de54f7 (fix vizColocDotplot with dependencies access)
 }
 

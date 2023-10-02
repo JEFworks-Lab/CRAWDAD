@@ -10,6 +10,7 @@ vizColocDotplot(
   psig.tresh = NULL,
   zscore.limit = 3,
   reorder = FALSE,
+  only.significant = FALSE,
   colors = c("blue", "white", "red"),
   title = NULL
 )
@@ -31,6 +32,8 @@ zscore.limit, scores below -zscore.limit will be represented as -zscore.limit (d
 
 \item{reorder}{boolean; if TRUE, reorder the cell types by clustering on the
 z-score. If false, orders in alphabetical order (default: FALSE).}
+
+\item{only.significant}{boolean; plot only cell types with significant relationships (default: TRUE).}
 
 \item{colors}{character vector; colors for the gradient heatmap (low, mid, high).}
 
