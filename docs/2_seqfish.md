@@ -1,35 +1,35 @@
 This vignette will go through analyses to reproduce the results and
-figures of the SeqFISH dataset.
+figures of a mouse embryo SeqFISH dataset.
 
 ``` r
 library(crawdad)
-library(dplyr)
+library(tidyverse)
 ```
 
+    ## ── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
+    ## ✔ dplyr     1.1.2     ✔ readr     2.1.4
+    ## ✔ forcats   1.0.0     ✔ stringr   1.5.0
+    ## ✔ ggplot2   3.4.2     ✔ tibble    3.2.1
+    ## ✔ lubridate 1.9.2     ✔ tidyr     1.3.0
+    ## ✔ purrr     1.0.1     
+    ## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+    ## ✖ dplyr::filter() masks stats::filter()
+    ## ✖ dplyr::lag()    masks stats::lag()
+    ## ℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors
+
 ``` r
-ncores = 2
+ncores = 7
 ```
 
 # Load data
 
 ``` r
-seq <- read.csv2(file = paste0(here::here(), "/data/seqfish/seqfish.meta.csv"), row.names = 1, sep = ",")
-seq <- seq[,c("x", "y", "cluster")]
-## make sure the coordinates are numeric
-seq <- seq %>%
-  dplyr::mutate_at(vars(x, y), as.numeric)
-
-## convert to SP
-seq <- crawdad:::toSP(pos = seq[,c("x", "y")],
-                        celltypes = seq$cluster)
-seq
-```
-
-``` r
-## the above dataset has been saved as an rda file and able to load here:
 data(seq)
 
-## convert to SP
+## invert coordinates
+seq$y <- -seq$y
+
+## convert to sp::SpatialPointsDataFrame
 seq <- crawdad:::toSP(pos = seq[,c("x", "y")],
                         celltypes = seq$celltypes)
 ```
@@ -37,29 +37,6 @@ seq <- crawdad:::toSP(pos = seq[,c("x", "y")],
     ## Warning: 'celltypes' does not have levels. Creating levels from values
 
     ## creating `sp::SpatialPointsDataFrame`
-
-``` r
-seq
-```
-
-    ## Simple feature collection with 19416 features and 1 field
-    ## Attribute-geometry relationship: 1 constant, 0 aggregate, 0 identity
-    ## Geometry type: POINT
-    ## Dimension:     XY
-    ## Bounding box:  xmin: -2549.368 ymin: -3492.084 xmax: 2520.294 ymax: 3492.084
-    ## CRS:           NA
-    ## First 10 features:
-    ##                 celltypes                   geometry
-    ## 1             Low quality POINT (729.2607 -2821.746)
-    ## 2  Lateral plate mesoderm POINT (708.4369 -2707.126)
-    ## 3               Erythroid  POINT (961.726 -2943.951)
-    ## 4  Lateral plate mesoderm POINT (976.3043 -2517.971)
-    ## 5               Erythroid POINT (959.8796 -3000.712)
-    ## 6               Allantois POINT (974.9348 -2673.964)
-    ## 7                Gut tube POINT (983.0538 -3284.372)
-    ## 8             Endothelium POINT (993.3884 -3200.491)
-    ## 9             Low quality POINT (977.8156 -3099.205)
-    ## 10 Lateral plate mesoderm  POINT (983.8553 -2634.19)
 
 # Visualize celltypes
 
@@ -69,7 +46,7 @@ crawdad::vizEachCluster(cells = seq,
                         s = 2)
 ```
 
-![](2_seqfish_files/figure-markdown_github/unnamed-chunk-5-1.png)
+![](2_seqfish_files/figure-markdown_github/celltypes-1.png)
 
     ## TableGrob (4 x 6) "arrange": 22 grobs
     ##     z     cells    name           grob
@@ -99,451 +76,314 @@ crawdad::vizEachCluster(cells = seq,
 # Make shuffled background
 
 ``` r
-resolutions = c(100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000, 6000)
+scales <- seq(100, 1000, by=100)
 ```
 
 ``` r
-oldw <- getOption("warn")
-options(warn = -1)
-
 ## generate background
 shuffle.list <- crawdad:::makeShuffledCells(seq,
-                          resolutions = resolutions,
-                          perms = 1,
+                          scales = scales,
+                          perms = 3,
                           ncores = ncores,
                           seed = 1,
                           verbose = TRUE)
-
-options(warn = oldw)
-
-## note: 0.77 minutes with 7 cores, 2.3 GHz Quad-Core Intel Core i7
 ```
 
-save shuffled object
+    ## shuffling permutation 1 using seed 1
+
+    ## 100 unit scale
+
+    ## 3570 tiles to shuffle...
+
+    ## shuffling permutation 2 using seed 2
+
+    ## 100 unit scale
+
+    ## 3692 tiles to shuffle...
+
+    ## shuffling permutation 3 using seed 3
+
+    ## 100 unit scale
+
+    ## 3692 tiles to shuffle...
+
+    ## shuffling permutation 1 using seed 1
+
+    ## 200 unit scale
+
+    ## 910 tiles to shuffle...
+
+    ## shuffling permutation 2 using seed 2
+
+    ## 200 unit scale
+
+    ## 936 tiles to shuffle...
+
+    ## shuffling permutation 3 using seed 3
+
+    ## 200 unit scale
+
+    ## 972 tiles to shuffle...
+
+    ## shuffling permutation 1 using seed 1
+
+    ## 300 unit scale
+
+    ## 408 tiles to shuffle...
+
+    ## shuffling permutation 2 using seed 2
+
+    ## 300 unit scale
+
+    ## 432 tiles to shuffle...
+
+    ## shuffling permutation 3 using seed 3
+
+    ## 300 unit scale
+
+    ## 432 tiles to shuffle...
+
+    ## shuffling permutation 1 using seed 1
+
+    ## 400 unit scale
+
+    ## 234 tiles to shuffle...
+
+    ## shuffling permutation 2 using seed 2
+
+    ## 400 unit scale
+
+    ## 252 tiles to shuffle...
+
+    ## shuffling permutation 3 using seed 3
+
+    ## 400 unit scale
+
+    ## 266 tiles to shuffle...
+
+    ## shuffling permutation 1 using seed 1
+
+    ## 500 unit scale
+
+    ## 154 tiles to shuffle...
+
+    ## shuffling permutation 2 using seed 2
+
+    ## 500 unit scale
+
+    ## 165 tiles to shuffle...
+
+    ## shuffling permutation 3 using seed 3
+
+    ## 500 unit scale
+
+    ## 165 tiles to shuffle...
+
+    ## shuffling permutation 1 using seed 1
+
+    ## 600 unit scale
+
+    ## 108 tiles to shuffle...
+
+    ## shuffling permutation 2 using seed 2
+
+    ## 600 unit scale
+
+    ## 108 tiles to shuffle...
+
+    ## shuffling permutation 3 using seed 3
+
+    ## 600 unit scale
+
+    ## 130 tiles to shuffle...
+
+    ## shuffling permutation 1 using seed 1
+
+    ## 700 unit scale
+
+    ## 80 tiles to shuffle...
+
+    ## shuffling permutation 2 using seed 2
+
+    ## 700 unit scale
+
+    ## 88 tiles to shuffle...
+
+    ## shuffling permutation 3 using seed 3
+
+    ## 700 unit scale
+
+    ## 88 tiles to shuffle...
+
+    ## shuffling permutation 1 using seed 1
+
+    ## 800 unit scale
+
+    ## 63 tiles to shuffle...
+
+    ## shuffling permutation 2 using seed 2
+
+    ## 800 unit scale
+
+    ## 70 tiles to shuffle...
+
+    ## shuffling permutation 3 using seed 3
+
+    ## 800 unit scale
+
+    ## 80 tiles to shuffle...
+
+    ## shuffling permutation 1 using seed 1
+
+    ## 900 unit scale
+
+    ## 48 tiles to shuffle...
+
+    ## shuffling permutation 2 using seed 2
+
+    ## 900 unit scale
+
+    ## 54 tiles to shuffle...
+
+    ## shuffling permutation 3 using seed 3
+
+    ## 900 unit scale
+
+    ## 63 tiles to shuffle...
+
+    ## shuffling permutation 1 using seed 1
+
+    ## 1000 unit scale
+
+    ## 42 tiles to shuffle...
+
+    ## shuffling permutation 2 using seed 2
+
+    ## 1000 unit scale
+
+    ## 48 tiles to shuffle...
+
+    ## shuffling permutation 3 using seed 3
+
+    ## 1000 unit scale
+
+    ## 48 tiles to shuffle...
+
+    ## Time was 6.45 mins
 
 ``` r
-saveRDS(shuffle.list, paste0(here::here(), "/data/seqfish/sp.seqfish.shuffled_res100-6000.rds"))
+## note: 1.94 minutes with 7 M2 cores
 ```
 
 # Run pairwise analysis
 
 ``` r
-oldw <- getOption("warn")
-options(warn = -1)
-
 ## find trends, passing background as parameter
 results <- crawdad::findTrends(seq,
                         dist = 100,
                         shuffle.list = shuffle.list,
                         ncores = ncores,
-                        verbose = TRUE)
-
-options(warn = oldw)
-
-## note: 1.02 minutes with 7 cores, 2.3 GHz Quad-Core Intel Core i7
-```
-
-save pairwise results object
-
-``` r
-saveRDS(results, paste0(here::here(), "/data/seqfish/sp.seqfish.pairwise.results.dist100.res100-6000.rds"))
-
-## object with distances 50-300: sp.seqfish.pairwise.50-300.results.res100-6000.removeDups.rds
-```
-
-# Filter trends
-
-``` r
-results <- readRDS(paste0(here::here(), "/data/seqfish/sp.seqfish.pairwise.results.dist100.res100-6000.rds"))
-
-results.coloc <- crawdad::filterCoTrends(results = results, alpha = 0.05)
-results.sep <- crawdad::filterSepTrends(results = results, alpha = 0.05)
-results.change <- crawdad::filterChangeTrends(results = results, alpha = 0.05)
-```
-
-# Defining subsets
-
-``` r
-oldw <- getOption("warn")
-options(warn = -1)
-
-binomMat <- crawdad::binomialTestMatrix(seq,
-                               neigh.dist = 100,
-                               ncores = ncores,
-                               verbose = TRUE)
-
-head(binomMat)
-
-options(warn = oldw)
-
-## note: 2.49 minutes with 7 cores, 2.3 GHz Quad-Core Intel Core i7
-## previous code iteration on rockfish took 21 minutes with 32 cores! much better now 
-```
-
-save the binomial matrix
-
-``` r
-saveRDS(binomMat, paste0(here::here(), "/data/seqfish/sp.seqfish.binomMat.near.subdist100.rds"))
-```
-
-``` r
-oldw <- getOption("warn")
-options(warn = -1)
-
-subset.list <- crawdad::selectSubsets(binomMat,
-                             seq$celltypes,
-                             sub.type = "near",
-                             sub.thresh = 0.05,
-                             ncores = ncores,
-                             verbose = TRUE)
-
-options(warn = oldw)
-```
-
-save the subsets
-
-``` r
-saveRDS(subset.list, paste0(here::here(), "/data/seqfish/sp.seqfish.subsets.near.subdist100.rds"))
-```
-
-# Run analysis on subsets
-
-``` r
-oldw <- getOption("warn")
-options(warn = -1)
-
-results.subsets <- crawdad::findTrends(seq,
-                        dist = 100,
-                        shuffle.list = shuffle.list,
-                        subset.list = subset.list,
-                        ncores = ncores,
-                        verbose = TRUE)
-
-options(warn = oldw)
-
-## note: 11.68 minutes with 7 cores, 2.3 GHz Quad-Core Intel Core i7; vs 7.53 minutes 14 cores on rockfish
-```
-
-save the results
-
-``` r
-saveRDS(results.subsets, paste0(here::here(), "/data/seqfish/sp.seqfish.subset.results.dist100.res100-6000.rds"))
-
-## sp.seqfish.triplet.near.binom.subdist100.dist100.results.res100-6000.removeDups.rds
-```
-
-# ———————————
-
-# Figures
-
-stored on `brendan` branch in: `/plots/seqfish/`
-
-## load data
-
-``` r
-## folder on `brendan` branch
-figpath <- paste0(here::here(), "/plots/seqfish")
-
-shuffle.list <- readRDS(paste0(here::here(), "/data/seqfish/sp.seqfish.shuffled_res100-6000.rds"))
-
-binomMat <- readRDS(paste0(here::here(), "/data/seqfish/sp.seqfish.binomMat.near.subdist100.rds"))
-subset.list <- readRDS(paste0(here::here(), "/data/seqfish/sp.seqfish.subsets.near.subdist100.rds"))
-
-results <- readRDS(paste0(here::here(), "/data/seqfish/sp.seqfish.pairwise.results.dist100.res100-6000.rds"))
-results.subsets <- readRDS(paste0(here::here(), "/data/seqfish/sp.seqfish.subset.results.dist100.res100-6000.rds"))
-
-shuffle.list2 <- readRDS(paste0(here::here(), "/data/seqfish/sp.seqfish.shuffled_perms_res100-6000.rds"))
-results2 <- readRDS(paste0(here::here(), "/data/seqfish/sp.seqfish.results_perms10.dist100.res100-6000.rds"))
-```
-
-## Fig 2 - mesoderms on tissue
-
-``` r
-plt <- crawdad::vizAllClusters(cells = seq,
-                        coms = as.factor(seq$celltypes),
-                        ofInterest = c("Lateral plate mesoderm", "Intermediate mesoderm"),
-                        s = 2) +
-  # ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
-  ggplot2::theme(legend.position="none")
-plt
-```
-
-![](2_seqfish_files/figure-markdown_github/unnamed-chunk-19-1.png)
-
-``` r
-# ggplot2::ggsave(filename = "2_seqfish_mesoderm_tissue.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 6,
-#                 height = 6,
-#                 units = c("in"))
-```
-
-``` r
-## shuffling grid
-grid <- sf::st_make_grid(seq, cellsize = 1000)
-
-## centers of the grids to add the tile IDs
-grid_coords_centroids <- as.data.frame(sf::st_coordinates(sf::st_centroid(grid)))
-grid_coords_centroids$name <- as.character(rownames(grid_coords_centroids))
-
-
-plt <- crawdad::vizAllClusters(cells = seq,
-                        coms = as.factor(seq$celltypes),
-                        ofInterest = c("Lateral plate mesoderm", "Intermediate mesoderm"),
-                        s = 2) +
-  # ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
-  ggplot2::theme(legend.position="none") +
-  # ggplot2::theme(legend.position="none") +
-  
-  ## add in the grid information on top of the plot
-  ggplot2::geom_sf(data = grid, fill = NA) 
-  # ggplot2::geom_text(data = grid_coords_centroids, ggplot2::aes(X, Y, label = name))
-plt
-
-ggplot2::ggsave(filename = "2B_mesoderm_tissue_grid.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 6,
-                height = 6,
-                units = c("in"))
-```
-
-``` r
-## pull out cells in specific grid regions
-int <- sf::st_intersection(seq, grid[c(22,23,28,29)])
-cells2 <- seq[rownames(int),]
-
-## grid 11 real
-plt <- crawdad::vizAllClusters(cells = cells2,
-                               coms = cells2$celltypes,
-                               ofInterest = c("Lateral plate mesoderm", "Intermediate mesoderm"),
-                               title = "grid 22,23,28,29",
-                               axisAdj = 1, s = 10, a = 0.5) +
-  # ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
-  ggplot2::theme(legend.position="none")
-plt
-
-ggplot2::ggsave(filename = "2_seqfish_mesoderm_tissue_zoom.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 6,
-                height = 6,
-                units = c("in"))
-```
-
-## Fig 2 - endothelium on tissue
-
-Endothelium Haematoendothelial progenitors
-
-``` r
-plt <- crawdad::vizAllClusters(cells = seq,
-                        coms = as.factor(seq$celltypes),
-                        ofInterest = c("Endothelium", "Haematoendothelial progenitors"),
-                        s = 2) +
-  # ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
-  ggplot2::theme(legend.position="none")
-plt
-```
-
-![](2_seqfish_files/figure-markdown_github/unnamed-chunk-22-1.png)
-
-``` r
-# ggplot2::ggsave(filename = "2_seqfish_endothelium_tissue.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 6,
-#                 height = 6,
-#                 units = c("in"))
-```
-
-``` r
-## shuffling grid
-grid <- sf::st_make_grid(seq, cellsize = 1000)
-
-## centers of the grids to add the tile IDs
-grid_coords_centroids <- as.data.frame(sf::st_coordinates(sf::st_centroid(grid)))
-grid_coords_centroids$name <- as.character(rownames(grid_coords_centroids))
-
-
-plt <- crawdad::vizAllClusters(cells = seq,
-                        coms = as.factor(seq$celltypes),
-                        ofInterest = c("Endothelium", "Haematoendothelial progenitors"),
-                        s = 2) +
-  # ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
-  ggplot2::theme(legend.position="none") +
-  
-  ## add in the grid information on top of the plot
-  ggplot2::geom_sf(data = grid, fill = NA) +
-  ggplot2::geom_text(data = grid_coords_centroids, ggplot2::aes(X, Y, label = name))
-plt
-
-ggplot2::ggsave(filename = "2B_endothelium_tissue_grid.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 6,
-                height = 6,
-                units = c("in"))
-```
-
-``` r
-## pull out cells in specific grid regions
-int <- sf::st_intersection(seq, grid[c(22,23,28,29)])
-cells2 <- seq[rownames(int),]
-
-## grid 11 real
-plt <- crawdad::vizAllClusters(cells = cells2,
-                               coms = cells2$celltypes,
-                               ofInterest = c("Endothelium", "Haematoendothelial progenitors"),
-                               title = "grid 22,23,28,29",
-                               axisAdj = 1, s = 10, a = 0.5) +
-  # ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
-  ggplot2::theme(legend.position="none")
-  # ggplot2::theme(legend.position="none") +
-plt
-
-ggplot2::ggsave(filename = "2_seqfish_endothelium_tissue_zoom.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 6,
-                height = 6,
-                units = c("in"))
-```
-
-## Fig 2 - trends
-
-``` r
-dat <- crawdad::meltResultsList(results)
-d <- dat[dat$reference %in% c("Lateral plate mesoderm", "Intermediate mesoderm", "Endothelium", "Haematoendothelial progenitors") & dat$neighbor %in% c("Lateral plate mesoderm", "Intermediate mesoderm", "Endothelium", "Haematoendothelial progenitors"),]
-
-plt <- vizTrends.heatmap(dat = d)
-plt
-```
-
-![](2_seqfish_files/figure-markdown_github/unnamed-chunk-25-1.png)
-
-``` r
-# ggplot2::ggsave(filename = "2_slideseq_trends_heatmap.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 9,
-#                 height = 6,
-#                 units = c("in"))
-```
-
-## Fig 2 - trends with permutations
-
-``` r
-data(seq)
-
-## convert to SP
-seq <- crawdad:::toSP(pos = seq[,c("x", "y")],
-                        celltypes = seq$celltypes)
-
-ncores = 2
-resolutions = c(100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000, 6000)
-
-oldw <- getOption("warn")
-options(warn = -1)
-
-## generate background
-shuffle.list2 <- crawdad:::makeShuffledCells(seq,
-                          resolutions = resolutions,
-                          perms = 10,
-                          ncores = ncores,
-                          verbose = TRUE)
-
-options(warn = oldw)
-```
-
-``` r
-saveRDS(shuffle.list2, paste0(here::here(), "/data/seqfish/sp.seqfish.shuffled_perms_res100-6000.rds"))
-```
-
-``` r
-oldw <- getOption("warn")
-options(warn = -1)
-
-## find trends, passing background as parameter
-results2 <- crawdad::findTrends(seq,
-                        dist = 100,
-                        shuffle.list = shuffle.list2,
-                        ncores = ncores,
                         verbose = TRUE,
                         returnMeans = FALSE)
+```
 
-options(warn = oldw)
+    ## Evaluating significance for each cell type
+
+    ## using neighbor distance of 100
+
+    ## Calculating for pairwise combinations
+
+    ## Allantois
+
+    ## Anterior somitic tissues
+
+    ## Cardiomyocytes
+
+    ## Cranial mesoderm
+
+    ## Definitive endoderm
+
+    ## Dermomyotome
+
+    ## Endothelium
+
+    ## Erythroid
+
+    ## Forebrain/Midbrain/Hindbrain
+
+    ## Gut tube
+
+    ## Haematoendothelial progenitors
+
+    ## Intermediate mesoderm
+
+    ## Lateral plate mesoderm
+
+    ## Low quality
+
+    ## Mixed mesenchymal mesoderm
+
+    ## Neural crest
+
+    ## NMP
+
+    ## Presomitic mesoderm
+
+    ## Sclerotome
+
+    ## Spinal cord
+
+    ## Splanchnic mesoderm
+
+    ## Surface ectoderm
+
+    ## Time was 1.42 mins
+
+``` r
+## note: 1.73 minutes with 7 M2 cores
 ```
 
 ``` r
-saveRDS(results2, paste0(here::here(), "/data/seqfish/sp.seqfish.results_perms10.dist100.res100-6000.rds"))
+## convert results to data.frame
+dat <- crawdad::meltResultsList(results, withPerms = T)
 ```
+
+# Visualize results
 
 ``` r
-dat <- crawdad::meltResultsList(results2, withPerms = TRUE)
-d1 <- dat[dat$reference == "Lateral plate mesoderm" & dat$neighbor == "Intermediate mesoderm",]
-d2 <- dat[dat$reference == "Endothelium" & dat$neighbor == "Haematoendothelial progenitors",]
-## combine the trends into one data.frame, and have the "id" column label the combo, plot both lines on same plot
-## turn off the facet wrap so just coloring the two trends, which are labeled using the "id" column
-d1$id <- "Lateral plate mesoderm with Intermediate mesoderm"
-d2$id <- "Endothelium with Haematoendothelial progenitors"
-d <- dplyr::bind_rows(list(d1, d2))
-# resolutions as numeric:
-d <- d %>%
-  dplyr::mutate_at(vars(resolution), as.numeric)
-
-# mean_line <- d %>%
-#   group_by(reference, resolution) %>%
-#   summarise(Mean = mean(Z))
-
-plt <- vizTrends(dat = d1, facet = TRUE, lines = FALSE) +
-  ggplot2::geom_smooth(data = d1, 
-                       ggplot2::aes(x = resolution, y = Z, color = id, fill = id)) +
-  ggplot2::scale_x_log10() +
-  ggplot2::ylim(c(-3, 15)) +
-  ggplot2::theme(legend.position="none")
-plt
+## multiple-test correction
+ntests <- length(unique(dat$reference)) * length(unique(dat$reference))
+psig <- 0.05/ntests
+zsig <- round(qnorm(psig/2, lower.tail = F), 2)
 ```
 
-    ## `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
-
-![](2_seqfish_files/figure-markdown_github/unnamed-chunk-30-1.png)
+Summary visualization of CRAWDAD’s multi-scale cell-type spatial
+relationship analysis.
 
 ``` r
-plt <- vizTrends(dat = d2, facet = TRUE, lines = FALSE) +
-  ggplot2::geom_smooth(data = d2, 
-                       ggplot2::aes(x = resolution, y = Z, color = id, fill = id)) +
-  ggplot2::scale_x_log10() +
-  ggplot2::ylim(c(-3, 15)) +
-  ggplot2::theme(legend.position="none")
-plt
+vizColocDotplot(dat, reorder = TRUE, zsig.thresh = zsig, zscore.limit = zsig*2) +
+  theme(legend.position='right',
+        axis.text.x = element_text(angle = 45, h = 0))
 ```
 
-    ## `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
+![](2_seqfish_files/figure-markdown_github/colocalization-1.png)
 
-![](2_seqfish_files/figure-markdown_github/unnamed-chunk-30-2.png)
+Visualize specific trends.
 
 ``` r
-# ggplot2::ggsave(filename = "2_seqfish_trends_permutations_endo.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 6,
-#                 height = 6,
-#                 units = c("in"))
+dat_filter <- dat %>% 
+  filter(reference == 'Endothelium') %>% 
+  filter(neighbor == 'Haematoendothelial progenitors')
+vizTrends(dat_filter, lines = T, withPerms = T, sig.thresh = zsig)
 ```
+
+![](2_seqfish_files/figure-markdown_github/endo_haematoprog-1.png)
+
+``` r
+dat_filter <- dat %>% 
+  filter(reference == 'Intermediate mesoderm') %>% 
+  filter(neighbor == 'Lateral plate mesoderm')
+vizTrends(dat_filter, lines = T, withPerms = T, sig.thresh = zsig)
+```
+
+![](2_seqfish_files/figure-markdown_github/intermeso_latmeso-1.png)
