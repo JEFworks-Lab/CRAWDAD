@@ -10,7 +10,7 @@ data.frame object where rows are cells,
 \code{celltypes} are cell type annotations
 }
 \usage{
-data(pkhl)
+data(sim)
 }
 \description{
 Simulation
