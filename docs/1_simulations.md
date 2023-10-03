@@ -1,132 +1,54 @@
 ``` r
 library(crawdad)
-library(dplyr)
+library(tidyverse)
 ```
 
+    ## ── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
+    ## ✔ dplyr     1.1.2     ✔ readr     2.1.4
+    ## ✔ forcats   1.0.0     ✔ stringr   1.5.0
+    ## ✔ ggplot2   3.4.2     ✔ tibble    3.2.1
+    ## ✔ lubridate 1.9.2     ✔ tidyr     1.3.0
+    ## ✔ purrr     1.0.1     
+    ## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+    ## ✖ dplyr::filter() masks stats::filter()
+    ## ✖ dplyr::lag()    masks stats::lag()
+    ## ℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors
+
 ``` r
-ncores = 2
+ncores = 7
 ```
 
-``` r
-## folder on `brendan` branch
-figpath <- paste0(here::here(), "/plots/sim")
-```
+# Load data
 
-## Make simulated dataset
-
-``` r
-## cells
-set.seed(1)
-size <- 8000
-x <- runif(size, min = 0, max = 2000)
-y <- runif(size, min = 0, max = 2000)
-p <- data.frame(x = x, y = y, type='D')
-rownames(p) <- paste0('cell', 1:size)
-
-## structures
-
-## large A circles
-as <- c(250, 250, 750, 750)*2
-bs <- c(250, 750, 250, 750)*2
-invisible(sapply(1:4, function(i) {
-  a <- as[i]
-  b <- bs[i]
-  ro <- 150*2
-  co <- 'A'
-  po <- 1
-  c1o <- rownames(p[((p$x-a)^2 + (p$y - b)^2 < ro^2),])
-  p[c1o,]$type <<- sample(co, size = length(c1o), replace = TRUE, prob = po)
-}))
-
-## B blobs inside A blobs
-invisible(sapply(1:4, function(i) {
-  ro <- 50*2 # 80
-  # co <- 'B'
-  co <- c('B', 'C')
-  # po <- 1
-  po <- c(0.5, 0.5)
-  
-  ## inside structure
-  a <- as[i]
-  b <- bs[i]
-  c1o <- rownames(p[((p$x-a)^2 + (p$y - b)^2 < ro^2),])
-  p[c1o,]$type <<- sample(co, size = length(c1o), replace = TRUE, prob = po)
-}))
-
-## visualize
-plt <- crawdad::vizAllClusters(cells = p,
-                               coms = p$type,
-                               title = "sim",
-                               axisAdj = 1, s = 6, a = 0.5) +
-  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
-plt
-```
-
-![](1_simulations_files/figure-markdown_github/unnamed-chunk-4-1.png)
+Load data.frame of cell positions and labels and convert it to an
+`sp::SpatialPointsDataFrame` object. This is because CRAWDAD builds upon
+the `sf` library in R.
 
 ``` r
-# ggplot2::ggsave(filename = "1_sim_tissue_legend.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 6,
-#                 height = 6,
-#                 units = c("in"))
-```
+data(sim)
 
-Convert the data.frame of cells to an `sp::SpatialPointsDataFrame`
-object. This is because CRAWDAD builds upon the `sf` library in R.
-
-``` r
-## convert to SP
-cells <- crawdad::toSP(pos = p[,c("x", "y")],
-                        celltypes = p$type)
+## convert to sp::SpatialPointsDataFrame
+cells <- crawdad:::toSP(pos = sim[,c("x", "y")],
+                        celltypes = sim$celltypes)
 ```
 
     ## Warning: 'celltypes' does not have levels. Creating levels from values
 
     ## creating `sp::SpatialPointsDataFrame`
 
-``` r
-cells
-```
-
-    ## Simple feature collection with 8000 features and 1 field
-    ## Attribute-geometry relationship: 1 constant, 0 aggregate, 0 identity
-    ## Geometry type: POINT
-    ## Dimension:     XY
-    ## Bounding box:  xmin: 0.2128673 ymin: 0.2413117 xmax: 1999.861 ymax: 1999.71
-    ## CRS:           NA
-    ## First 10 features:
-    ##    celltypes                  geometry
-    ## 1          A POINT (531.0173 256.5303)
-    ## 2          D  POINT (744.2478 255.383)
-    ## 3          D POINT (1145.707 1555.465)
-    ## 4          D POINT (1816.416 840.3007)
-    ## 5          A POINT (403.3639 1431.804)
-    ## 6          D POINT (1796.779 306.6082)
-    ## 7          D POINT (1889.351 176.4733)
-    ## 8          A POINT (1321.596 410.0539)
-    ## 9          D POINT (1258.228 42.36819)
-    ## 10         D POINT (123.5725 1190.803)
-
-## Make shuffled background
+# Make shuffled background
 
 `CRAWDAD` identifies cell type spatial relationships by comparing cell
 type organizational patterns in the real data to a set of null
-distributions, which are a datasets in which cell labels have been
+distributions, which are a datasets that the cell labels have been
 shuffled at different scales, or resolutions. We can generate this list
 of shuffled datasets with the following code:
 
 ``` r
-oldw <- getOption("warn")
-options(warn = -1)
-
 ## generate background
 shuffle.list <- crawdad::makeShuffledCells(cells,
-                          resolutions = c(150, 250, 500, 750, 1000, 1500, 2000),
-                          perms = 1,
+                          scales = seq(100, 1000, by=50),
+                          perms = 3,
                           ncores = ncores,
                           seed = 1,
                           verbose = TRUE)
@@ -134,71 +56,364 @@ shuffle.list <- crawdad::makeShuffledCells(cells,
 
     ## shuffling permutation 1 using seed 1
 
-    ## 150 unit resolution
+    ## 100 unit scale
+
+    ## 400 tiles to shuffle...
+
+    ## shuffling permutation 2 using seed 2
+
+    ## 100 unit scale
+
+    ## 441 tiles to shuffle...
+
+    ## shuffling permutation 3 using seed 3
+
+    ## 100 unit scale
+
+    ## 441 tiles to shuffle...
+
+    ## shuffling permutation 1 using seed 1
+
+    ## 150 unit scale
+
+    ## 196 tiles to shuffle...
+
+    ## shuffling permutation 2 using seed 2
+
+    ## 150 unit scale
+
+    ## 196 tiles to shuffle...
+
+    ## shuffling permutation 3 using seed 3
+
+    ## 150 unit scale
 
     ## 196 tiles to shuffle...
 
     ## shuffling permutation 1 using seed 1
 
-    ## 250 unit resolution
+    ## 200 unit scale
+
+    ## 100 tiles to shuffle...
+
+    ## shuffling permutation 2 using seed 2
+
+    ## 200 unit scale
+
+    ## 121 tiles to shuffle...
+
+    ## shuffling permutation 3 using seed 3
+
+    ## 200 unit scale
+
+    ## 121 tiles to shuffle...
+
+    ## shuffling permutation 1 using seed 1
+
+    ## 250 unit scale
+
+    ## 64 tiles to shuffle...
+
+    ## shuffling permutation 2 using seed 2
+
+    ## 250 unit scale
+
+    ## 81 tiles to shuffle...
+
+    ## shuffling permutation 3 using seed 3
+
+    ## 250 unit scale
+
+    ## 81 tiles to shuffle...
+
+    ## shuffling permutation 1 using seed 1
+
+    ## 300 unit scale
+
+    ## 49 tiles to shuffle...
+
+    ## shuffling permutation 2 using seed 2
+
+    ## 300 unit scale
+
+    ## 49 tiles to shuffle...
+
+    ## shuffling permutation 3 using seed 3
+
+    ## 300 unit scale
 
     ## 64 tiles to shuffle...
 
     ## shuffling permutation 1 using seed 1
 
-    ## 500 unit resolution
+    ## 350 unit scale
+
+    ## 36 tiles to shuffle...
+
+    ## shuffling permutation 2 using seed 2
+
+    ## 350 unit scale
+
+    ## 49 tiles to shuffle...
+
+    ## shuffling permutation 3 using seed 3
+
+    ## 350 unit scale
+
+    ## 49 tiles to shuffle...
+
+    ## shuffling permutation 1 using seed 1
+
+    ## 400 unit scale
+
+    ## 25 tiles to shuffle...
+
+    ## shuffling permutation 2 using seed 2
+
+    ## 400 unit scale
+
+    ## 36 tiles to shuffle...
+
+    ## shuffling permutation 3 using seed 3
+
+    ## 400 unit scale
+
+    ## 36 tiles to shuffle...
+
+    ## shuffling permutation 1 using seed 1
+
+    ## 450 unit scale
+
+    ## 25 tiles to shuffle...
+
+    ## shuffling permutation 2 using seed 2
+
+    ## 450 unit scale
+
+    ## 25 tiles to shuffle...
+
+    ## shuffling permutation 3 using seed 3
+
+    ## 450 unit scale
+
+    ## 36 tiles to shuffle...
+
+    ## shuffling permutation 1 using seed 1
+
+    ## 500 unit scale
+
+    ## 16 tiles to shuffle...
+
+    ## shuffling permutation 2 using seed 2
+
+    ## 500 unit scale
+
+    ## 25 tiles to shuffle...
+
+    ## shuffling permutation 3 using seed 3
+
+    ## 500 unit scale
+
+    ## 25 tiles to shuffle...
+
+    ## shuffling permutation 1 using seed 1
+
+    ## 550 unit scale
+
+    ## 16 tiles to shuffle...
+
+    ## shuffling permutation 2 using seed 2
+
+    ## 550 unit scale
+
+    ## 16 tiles to shuffle...
+
+    ## shuffling permutation 3 using seed 3
+
+    ## 550 unit scale
+
+    ## 25 tiles to shuffle...
+
+    ## shuffling permutation 1 using seed 1
+
+    ## 600 unit scale
+
+    ## 16 tiles to shuffle...
+
+    ## shuffling permutation 2 using seed 2
+
+    ## 600 unit scale
+
+    ## 16 tiles to shuffle...
+
+    ## shuffling permutation 3 using seed 3
+
+    ## 600 unit scale
 
     ## 16 tiles to shuffle...
 
     ## shuffling permutation 1 using seed 1
 
-    ## 750 unit resolution
+    ## 650 unit scale
+
+    ## 16 tiles to shuffle...
+
+    ## shuffling permutation 2 using seed 2
+
+    ## 650 unit scale
+
+    ## 16 tiles to shuffle...
+
+    ## shuffling permutation 3 using seed 3
+
+    ## 650 unit scale
+
+    ## 16 tiles to shuffle...
+
+    ## shuffling permutation 1 using seed 1
+
+    ## 700 unit scale
+
+    ## 9 tiles to shuffle...
+
+    ## shuffling permutation 2 using seed 2
+
+    ## 700 unit scale
+
+    ## 16 tiles to shuffle...
+
+    ## shuffling permutation 3 using seed 3
+
+    ## 700 unit scale
+
+    ## 16 tiles to shuffle...
+
+    ## shuffling permutation 1 using seed 1
+
+    ## 750 unit scale
+
+    ## 9 tiles to shuffle...
+
+    ## shuffling permutation 2 using seed 2
+
+    ## 750 unit scale
+
+    ## 9 tiles to shuffle...
+
+    ## shuffling permutation 3 using seed 3
+
+    ## 750 unit scale
+
+    ## 16 tiles to shuffle...
+
+    ## shuffling permutation 1 using seed 1
+
+    ## 800 unit scale
+
+    ## 9 tiles to shuffle...
+
+    ## shuffling permutation 2 using seed 2
+
+    ## 800 unit scale
+
+    ## 9 tiles to shuffle...
+
+    ## shuffling permutation 3 using seed 3
+
+    ## 800 unit scale
+
+    ## 16 tiles to shuffle...
+
+    ## shuffling permutation 1 using seed 1
+
+    ## 850 unit scale
+
+    ## 9 tiles to shuffle...
+
+    ## shuffling permutation 2 using seed 2
+
+    ## 850 unit scale
+
+    ## 9 tiles to shuffle...
+
+    ## shuffling permutation 3 using seed 3
+
+    ## 850 unit scale
+
+    ## 16 tiles to shuffle...
+
+    ## shuffling permutation 1 using seed 1
+
+    ## 900 unit scale
+
+    ## 9 tiles to shuffle...
+
+    ## shuffling permutation 2 using seed 2
+
+    ## 900 unit scale
+
+    ## 9 tiles to shuffle...
+
+    ## shuffling permutation 3 using seed 3
+
+    ## 900 unit scale
 
     ## 9 tiles to shuffle...
 
     ## shuffling permutation 1 using seed 1
 
-    ## 1000 unit resolution
+    ## 950 unit scale
 
-    ## 4 tiles to shuffle...
+    ## 9 tiles to shuffle...
+
+    ## shuffling permutation 2 using seed 2
+
+    ## 950 unit scale
+
+    ## 9 tiles to shuffle...
+
+    ## shuffling permutation 3 using seed 3
+
+    ## 950 unit scale
+
+    ## 9 tiles to shuffle...
 
     ## shuffling permutation 1 using seed 1
 
-    ## 1500 unit resolution
+    ## 1000 unit scale
 
     ## 4 tiles to shuffle...
 
-    ## shuffling permutation 1 using seed 1
+    ## shuffling permutation 2 using seed 2
 
-    ## 2000 unit resolution
+    ## 1000 unit scale
 
-    ## 1 tiles to shuffle...
+    ## 9 tiles to shuffle...
 
-    ## Time was 0.29 mins
+    ## shuffling permutation 3 using seed 3
 
-``` r
-options(warn = oldw)
-```
+    ## 1000 unit scale
 
-## Run pairwise analysis
+    ## 9 tiles to shuffle...
+
+    ## Time was 11.1 mins
+
+# Run pairwise analysis
 
 We can identify trends that describe spatial relationships between
 pairwise combinations of cell types in our data. `dist` refers to the
 distance at which neighbor cells are defined. In this example, we assess
 if the neighbors of each cell type are enriched or depleted in cells of
-another given cell type compared to each shuffled resolution of the
-data.
+another given cell type compared to each shuffled scale of the data.
 
 ``` r
-oldw <- getOption("warn")
-options(warn = -1)
-
 ## find trends, passing background as parameter
 results <- crawdad::findTrends(cells,
                         dist = 100,
                         shuffle.list = shuffle.list,
                         ncores = ncores,
-                        verbose = TRUE)
+                        verbose = TRUE, 
+                        returnMeans = FALSE)
 ```
 
     ## Evaluating significance for each cell type
@@ -215,98 +430,52 @@ results <- crawdad::findTrends(cells,
 
     ## D
 
-    ## Time was 0.63 mins
+    ## Time was 1.23 mins
 
 ``` r
-options(warn = oldw)
+## convert results to data.frame
+dat <- crawdad::meltResultsList(results, withPerms = T)
 ```
+
+# Visualize results
 
 ``` r
-dat <- crawdad::meltResultsList(results)
-
-plt <- ggplot2::ggplot(dat, ggplot2::aes(x=resolution, y=Z, col=neighbor)) +
-  ggplot2::geom_line() +
-  ggplot2::facet_grid(rows = ggplot2::vars(reference)) +
-  ggplot2::theme_classic() +
-  ggplot2::geom_hline(yintercept = 2, col='lightgrey' ,linetype="dotted") + 
-  ggplot2::geom_hline(yintercept = -2, col='lightgrey',linetype="dotted") +
-  ggplot2::scale_x_continuous(trans='log10', breaks = c(150, 250, 500, 1000, 2000)) +
-  
-  ggplot2::theme(axis.text.x = ggplot2::element_text(size=12, color = "black", angle = -90, vjust = 0.5, hjust = 0),
-                   # axis.text.y = ggplot2::element_text(size=12, color = "black"),
-                   # axis.title.y = ggplot2::element_text(size=15),
-                   # axis.title.x = ggplot2::element_text(size=15),
-                   # axis.ticks.x = ggplot2::element_blank(),
-                   # plot.title = ggplot2::element_text(size=15),
-                   plot.background = ggplot2::element_blank(),
-                   legend.background = ggplot2::element_blank(),
-                   panel.background = ggplot2::element_blank()
-                   # panel.grid.major =  ggplot2::element_line(size = 0.1, colour = "black"),
-                   # panel.border = ggplot2::element_rect(colour = "black", fill=NA, size=1),
-                   # axis.line = ggplot2::element_line(size = 0, colour = "black"),
-                   # panel.spacing = ggplot2::unit(0.1, "lines"),
-                   # strip.text = ggplot2::element_text(size = 12),
-                   # legend.title = ggplot2::element_blank(),
-                   # legend.position="none"
-    )
-plt
+## multiple-test correction
+ntests <- length(unique(dat$reference)) * length(unique(dat$reference))
+psig <- 0.05/ntests
+zsig <- round(qnorm(psig/2, lower.tail = F), 2)
 ```
 
-![](1_simulations_files/figure-markdown_github/unnamed-chunk-8-1.png)
+Summary visualization of CRAWDAD’s multi-scale cell-type spatial
+relationship analysis.
 
 ``` r
-# ggplot2::ggsave(filename = "1_sim_trends.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 8,
-#                 height = 6,
-#                 units = c("in"))
+vizColocDotplot(dat, reorder = TRUE, zsig.thresh = zsig, zscore.limit = zsig*2) +
+  theme(legend.position='right',
+        axis.text.x = element_text(angle = 45, h = 0))
 ```
+
+    ## Scale for x is already present.
+    ## Adding another scale for x, which will replace the existing scale.
+
+![](1_simulations_files/figure-markdown_github/colocalization-1.png)
+
+Visualize specific trends.
 
 ``` r
-plt <- vizTrends.heatmap(dat = results)
+dat_filter <- dat %>% 
+  filter(reference == 'C') %>% 
+  filter(neighbor == 'B')
+vizTrends(dat_filter, lines = T, withPerms = T, sig.thresh = zsig)
 ```
 
-    ## results detected to be a list. Melting to data.frame.
+![](1_simulations_files/figure-markdown_github/c_b-1.png)
 
 ``` r
-plt
+dat_filter <- dat %>% 
+  filter(reference == 'A') %>% 
+  filter(neighbor == 'B')
+vizTrends(dat_filter, lines = T, withPerms = T, sig.thresh = zsig)
 ```
 
-![](1_simulations_files/figure-markdown_github/unnamed-chunk-9-1.png)
-
-``` r
-# ggplot2::ggsave(filename = "S1_sim_trends_heatmap.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 6,
-#                 height = 2,
-#                 units = c("in"))
-```
-
-``` r
-dat <- crawdad::meltResultsList(results)
-
-dat <- dat[dat$reference %in% c("A", "B", "C") & dat$neighbor %in% c("A", "B", "C"),]
-
-plt <- vizTrends(dat = dat) +
-  ggplot2::scale_x_log10()
-plt
-```
-
-![](1_simulations_files/figure-markdown_github/unnamed-chunk-10-1.png)
-
-``` r
-# ggplot2::ggsave(filename = "1_sim_trends_selected.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 8,
-#                 height = 6,
-#                 units = c("in"))
-```
+![](1_simulations_files/figure-markdown_github/a_b-1.png)
