@@ -114,9 +114,11 @@ zsig <- round(qnorm(psig/2, lower.tail = F), 2)
 Summary visualization of CRAWDAD’s multi-scale cell-type spatial relationship analysis.
 
 ```{r colocalization, fig.height=9, fig.width=11}
+
 vizColocDotplot(dat, reorder = TRUE, zsig.thresh = zsig, zscore.limit = zsig*2) +
   theme(legend.position='right',
         axis.text.x = element_text(angle = 45, h = 0))
+
 ```
 
 Visualize specific trends.
