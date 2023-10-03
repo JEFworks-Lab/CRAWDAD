@@ -6,7 +6,7 @@
 
 `CRAWDAD` is a statistical framework that uses labeled spatial omics data to identify the colocalization or separation of cell types at different scales. CRAWDAD identifies regions where multiple cells colocalize, the scale of such colocalization, and also subsets the cell types based on their proximity to others. Therefore, CRAWDAD is a powerful tool for tissue characterization and comparison.
 
-<img src="https://github.com/JEFworks/CRAWDAD/blob/devel/docs/img/CRAWDAD_workflow.png?raw=true"/>
+<img src="https://github.com/JEFworks/CRAWDAD/blob/main/docs/img/CRAWDAD_workflow.png?raw=true"/>
 
 ## Installation
 
@@ -52,7 +52,7 @@ vizColocDotplot(dat, zsig.thresh = zsig, zscore.limit = 2*zsig) +
   theme(axis.text.x = element_text(angle = 35, h = 0))
 ```
 
-<img src="https://github.com/JEFworks/CRAWDAD/blob/devel/docs/img/coloc.png?raw=true"/>
+<img src="https://github.com/JEFworks/CRAWDAD/blob/main/docs/img/coloc.png?raw=true"/>
 
 ``` r
 ## visualize trend for one cell-type pair
@@ -62,10 +62,12 @@ dat %>%
   vizTrends(lines = TRUE, withPerms = TRUE, sig.thresh = zsig)
 ```
 
+<img src="https://github.com/JEFworks/CRAWDAD/blob/main/docs/img/trend.png?raw=true"/>
+
 More details can be found in the tutorials.
 
 ## Tutorials
-- [`CRAWDAD` applied to simulated data](https://github.com/JEFworks/CRAWDAD/blob/devel/docs/1_simulations.md)
-- [`CRAWDAD` applied to a mouse embryo seqfish data](https://github.com/JEFworks/CRAWDAD/blob/devel/docs/additional_features.md)
-- [`CRAWDAD` applied to a mouse cerebellum slideseq data](https://github.com/JEFworks/CRAWDAD/blob/devel/docs/celltype_annotation.md)
-- [`CRAWDAD` applied to a human spleen codex data](https://github.com/JEFworks/CRAWDAD/blob/devel/docs/visium_10x.md)
+- [`CRAWDAD` applied to simulated data](https://github.com/JEFworks/CRAWDAD/blob/main/docs/1_simulations.md)
+- [`CRAWDAD` applied to a mouse embryo seqfish data](https://github.com/JEFworks/CRAWDAD/blob/main/docs/additional_features.md)
+- [`CRAWDAD` applied to a mouse cerebellum slideseq data](https://github.com/JEFworks/CRAWDAD/blob/main/docs/celltype_annotation.md)
+- [`CRAWDAD` applied to a human spleen codex data](https://github.com/JEFworks/CRAWDAD/blob/main/docs/visium_10x.md)
