@@ -1,11 +1,13 @@
 ---
-title: "CODEX Spleen"
-author: "Brendan F. Miller"
-date: "4/10/2023"
-output: rmarkdown::html_document
-# output:
-#   md_document:
-#     variant: markdown_github
+title: "CODEX Spleen Analysis"
+author: 
+- "Rafael dos Santos Peixoto"
+- "Brendan F. Miller"
+date: "10/03/2023"
+# output: rmarkdown::html_document
+output:
+  md_document:
+    variant: markdown_github
 vignette: >
   %\VignetteIndexEntry{CODEX spleen analysis}
   %\VignetteEncoding{UTF-8}
@@ -17,49 +19,33 @@ This vignette will go through analyses to reproduce the results and figures of t
 ```{r}
 
 library(crawdad)
-library(dplyr)
+library(tidyverse)
 
 ```
 
 ```{r}
 
-ncores = 2
+ncores = 7
 
 ```
 
-# PKHL
+# PKHL Sample
 
 ## Load data
 
-```{r, eval=FALSE}
+```{r, warning=FALSE}
 
-pkhl <- read.csv2(file = paste0(here::here(), "/data/spleen/PKHL.meta.csv.gz"), row.names = 1)
-pkhl <- pkhl[,c("x", "y", "celltypes_folBcombined")]
-## make sure the coordinates are numeric
-pkhl <- pkhl %>%
-  dplyr::mutate_at(vars(x, y), as.numeric)
-
-## convert to SP
-pkhl <- crawdad::toSP(pos = pkhl[,c("x", "y")],
-                        celltypes = pkhl$celltypes_folBcombined)
-pkhl
-
-```
-
-```{r}
-## the above dataset has been saved as an rda file and able to load here:
 data(pkhl)
 
-## convert to SP
-pkhl <- crawdad::toSP(pos = pkhl[,c("x", "y")],
-                        celltypes = pkhl$celltypes)
-pkhl
+## convert to sp::SpatialPointsDataFrame
+pkhl <- crawdad:::toSP(pos = pkhl[,c("x", "y")],
+                       celltypes = pkhl$celltypes)
 
 ```
 
 ## Visualize celltypes
 
-```{r, fig.height=24, fig.width=24}
+```{r celltypes, warning=FALSE, message=FALSE, fig.height=24, fig.width=24}
 
 crawdad::vizEachCluster(cells = pkhl,
                         coms = as.factor(pkhl$celltypes),
@@ -71,119 +57,166 @@ crawdad::vizEachCluster(cells = pkhl,
 
 ```{r}
 
-scales <- c(100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000, 6000)
+scales <- seq(100, 1000, by=100)
 
 ```
 
-```{r, eval=FALSE}
+```{r, warning=FALSE}
+
 ## generate background
-shuffle.list.pkhl <- crawdad:::makeShuffledCells(pkhl,
+shuffle.list <- crawdad:::makeShuffledCells(pkhl,
                           scales = scales,
-                          perms = 1,
+                          perms = 3,
                           ncores = ncores,
                           seed = 1,
-                          verbose = TRUE)
-
-## note: 13.29 minutes with 7 cores, 2.3 GHz Quad-Core Intel Core i7
-```
-
-save shuffled object
-```{r, eval=FALSE}
-
-saveRDS(shuffle.list.pkhl, paste0(here::here(), "/data/spleen/PKHL/pkhl.folBcombined.shuffled_res100-6000.rds"))
+                          verbose = FALSE)
 
 ```
 
 ## Run pairwise analysis
 
-```{r, eval=FALSE}
+```{r, warning=FALSE}
 
 ## find trends, passing background as parameter
-results.pkhl <- crawdad::findTrends(pkhl,
+results <- crawdad::findTrends(pkhl,
                         dist = 100,
-                        shuffle.list = shuffle.list.pkhl,
+                        shuffle.list = shuffle.list,
                         ncores = ncores,
-                        verbose = TRUE)
-
-## note: 9.92 minutes with 7 cores, 2.3 GHz Quad-Core Intel Core i7
+                        verbose = FALSE,
+                        returnMeans = FALSE)
 
 ```
 
-save pairwise results object
-```{r, eval=FALSE}
+```{r}
 
-saveRDS(results.pkhl, paste0(here::here(), "/data/spleen/PKHL/pkhl.folBcombined.pairwise.results.dist100.res100-6000.rds"))
+## convert results to data.frame
+dat <- crawdad::meltResultsList(results, withPerms = T)
 
-## object with distances 100-200: pkhl.pairwise.100-200.folBcombined.results.res100-6000.removeDups.rds
+```
+
+## Visualize results
+
+```{r}
+
+## multiple-test correction
+ntests <- length(unique(dat$reference)) * length(unique(dat$reference))
+psig <- 0.05/ntests
+zsig <- round(qnorm(psig/2, lower.tail = F), 2)
+
+```
+
+Summary visualization of CRAWDAD’s multi-scale cell-type spatial relationship analysis.
+
+```{r colocalization, fig.height=9, fig.width=11}
+
+vizColocDotplot(dat, reorder = TRUE, zsig.thresh = zsig, zscore.limit = zsig*2) +
+  theme(legend.position='right',
+        axis.text.x = element_text(angle = 45, h = 0))
 
 ```
 
 ## Defining subsets
 
-```{r, eval=FALSE}
+```{r, warning=FALSE}
 
-binomMat.pkhl <- crawdad::binomialTestMatrix(pkhl,
-                               neigh.dist = 100,
-                               ncores = ncores,
-                               verbose = TRUE)
-
-head(binomMat.pkhl)
-
-## note: 143.72 minutes with 7 cores, 2.3 GHz Quad-Core Intel Core i7
-## previous code iteration on rockfish took 15:09:48 hours with 32 cores! much better now 
+binomMat <- crawdad::binomialTestMatrix(pkhl,
+                                        neigh.dist = 100,
+                                        ncores = ncores,
+                                        verbose = TRUE)
 
 ```
 
-save the binomial matrix
-```{r, eval=FALSE}
+## Select subsets
 
-saveRDS(binomMat.pkhl, paste0(here::here(), "/data/spleen/PKHL/pkhl.folBcombined.binomMat.near.subdist100.rds"))
+```{r, warning=FALSE}
 
-```
-
-```{r, eval=FALSE}
-
-subset.list.pkhl <- crawdad::selectSubsets(binomMat.pkhl,
-                             pkhl$celltypes,
-                             sub.type = "near",
-                             sub.thresh = 0.05,
-                             ncores = ncores,
-                             verbose = TRUE)
-
-```
-
-save the subsets
-```{r, eval=FALSE}
-
-saveRDS(subset.list.pkhl, paste0(here::here(), "/data/spleen/PKHL/pkhl.folBcombined.subsets.near.subdist100.rds"))
+subset.list <- crawdad::selectSubsets(binomMat,
+                                      pkhl$celltypes,
+                                      sub.type = "near",
+                                      sub.thresh = 0.05,
+                                      ncores = ncores,
+                                      verbose = TRUE)
 
 ```
 
 ## Run analysis on subsets
 
-```{r, eval=FALSE}
+```{r, warning=FALSE}
 
-results.subsets.pkhl <- crawdad::findTrends(pkhl,
-                        dist = 100,
-                        shuffle.list = shuffle.list.pkhl,
-                        subset.list = subset.list.pkhl,
-                        ncores = ncores,
-                        verbose = TRUE)
-
-## note: 22.36 minutes with 7 cores, 2.3 GHz Quad-Core Intel Core i7; vs 12:23 minutes 14 cores on rockfish
-
-```
-
-save the results
-```{r, eval=FALSE}
-
-saveRDS(results.subsets.pkhl, paste0(here::here(), "/data/spleen/PKHL/pkhl.folBcombined.subset.results.dist100.res100-6000.rds"))
-
-## pkhl.triplet.near.binom.subdist100.dist100.folBcombined.results.res100-6000.removeDups.rds
+results.subsets <- crawdad::findTrends(pkhl,
+                                       dist = 100,
+                                       shuffle.list = shuffle.list,
+                                       subset.list = subset.list,
+                                       ncores = ncores,
+                                       verbose = TRUE,
+                                       returnMeans = FALSE)
 
 ```
 
-# KSFB
+```{r}
+
+## convert results to data.frame
+dats <- crawdad::meltResultsList(results.subsets, withPerms = TRUE)
+
+```
+
+## Visualize subset results
+
+```{r}
+
+## multiple-test correction for the number of subsets
+ntestss <- length(unique(dats$reference)) * length(unique(dats$neighbor))
+psigs <- 0.05/ntestss
+zsigs <- round(qnorm(psigs/2, lower.tail = F), 2)
+
+```
+
+Visualize specific subset trends.
+
+```{r pkhl_subset_trend, warning=FALSE}
+
+dats %>% 
+  filter(neighbor == 'Podoplanin') %>% 
+  filter(reference == 'CD4 Memory T cells_near_Fol B cells') %>% 
+  vizTrends(lines = T, withPerms = T, sig.thresh = zsigs)
+
+```
+
+Visualize cell-type proportions.
+
+```{r}
+
+ct_ngb <- 'CD4 Memory T cells' ## neighbor cell type
+ct_ref <- 'Fol B cells' ## reference cell type
+df <- pkhl
+sample <- 'pkhl'
+
+## select cells from each subset
+c_ctn_near <- subset.list[[paste(ct_ngb, 'near', ct_ref, sep = '_')]]
+c_ctn <- which(df$celltypes == ct_ngb)
+c_ctn_notnear <- c_ctn[!c_ctn %in% c_ctn_near]
+c_ctr <- which(df$celltypes == ct_ref)
+
+## create data.frame of cell counts in each cell type
+df_freq_ct <- as.data.frame(table(df$celltypes))
+colnames(df_freq_ct) <- c('celltypes', 'frequency')
+df_freq_sub <- data.frame(celltypes = c(paste(ct_ngb, 'near', ct_ref),
+                                        paste(ct_ngb, 'not near', ct_ref)),
+                          frequency = c(length(c_ctn_near),
+                                        length(c_ctn_notnear)))
+df_freq <- rbind(df_freq_ct, df_freq_sub)
+df_freq$sample <- sample_name
+
+## barplot
+df_freq %>% 
+  filter(grepl(paste0(ct_ref, '$'), celltypes)) %>% 
+  ggplot(aes(x = sample, y = frequency, fill = celltypes)) +
+  geom_bar(stat = "identity", position = "dodge") 
+
+```
+
+
+# KSFB Sample
 
 ## Load data
 
@@ -202,132 +235,8 @@ ksfb
 
 ```
 
-## Visualize celltypes
 
-```{r, fig.height=24, fig.width=24}
-
-crawdad::vizEachCluster(cells = ksfb,
-                        coms = as.factor(ksfb$celltypes),
-                        s = 2)
-
-```
-
-## Make shuffled background
-
-```{r}
-
-scales <- c(100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000, 6000)
-
-```
-
-```{r, eval=FALSE}
-## generate background
-shuffle.list.ksfb <- crawdad:::makeShuffledCells(ksfb,
-                          scales = scales,
-                          perms = 1,
-                          ncores = ncores,
-                          seed = 1,
-                          verbose = TRUE)
-
-## note:  minutes with 7 cores, 2.3 GHz Quad-Core Intel Core i7
-```
-
-save shuffled object
-```{r, eval=FALSE}
-
-saveRDS(shuffle.list.ksfb, paste0(here::here(), "/data/spleen/KSFB/ksfb.folBcombined.shuffled_res100-6000.rds"))
-
-```
-
-## Run pairwise analysis
-
-```{r, eval=FALSE}
-
-## find trends, passing background as parameter
-results.ksfb <- crawdad::findTrends(ksfb,
-                        dist = 100,
-                        shuffle.list = shuffle.list.ksfb,
-                        ncores = ncores,
-                        verbose = TRUE)
-
-## note:  minutes with 7 cores, 2.3 GHz Quad-Core Intel Core i7
-
-```
-
-save pairwise results object
-```{r, eval=FALSE}
-
-saveRDS(results.ksfb, paste0(here::here(), "/data/spleen/KSFB/ksfb.folBcombined.pairwise.results.dist100.res100-6000.rds"))
-
-## object with distances 100-200: ksfb.pairwise.100-200.folBcombined.results.res100-6000.removeDups.rds
-
-```
-
-## Defining subsets
-
-```{r, eval=FALSE}
-
-binomMat.ksfb <- crawdad::binomialTestMatrix(ksfb,
-                               neigh.dist = 100,
-                               ncores = ncores,
-                               verbose = TRUE)
-
-head(binomMat.ksfb)
-
-## note:  minutes with 7 cores, 2.3 GHz Quad-Core Intel Core i7
-
-```
-
-save the binomial matrix
-```{r, eval=FALSE}
-
-saveRDS(binomMat.ksfb, paste0(here::here(), "/data/spleen/KSFB/ksfb.folBcombined.binomMat.near.subdist100.rds"))
-
-```
-
-```{r, eval=FALSE}
-
-subset.list.ksfb <- crawdad::selectSubsets(binomMat.ksfb,
-                             ksfb$celltypes,
-                             sub.type = "near",
-                             sub.thresh = 0.05,
-                             ncores = ncores,
-                             verbose = TRUE)
-
-```
-
-save the subsets
-```{r, eval=FALSE}
-
-saveRDS(subset.list.ksfb, paste0(here::here(), "/data/spleen/KSFB/ksfb.folBcombined.subsets.near.subdist100.rds"))
-
-```
-
-## Run analysis on subsets
-
-```{r, eval=FALSE}
-
-results.subsets.ksfb <- crawdad::findTrends(ksfb,
-                        dist = 100,
-                        shuffle.list = shuffle.list.ksfb,
-                        subset.list = subset.list.ksfb,
-                        ncores = ncores,
-                        verbose = TRUE)
-
-## note:  minutes with 7 cores, 2.3 GHz Quad-Core Intel Core i7; vs 12:23 minutes 14 cores on rockfish
-
-```
-
-save the results
-```{r, eval=FALSE}
-
-saveRDS(results.subsets.ksfb, paste0(here::here(), "/data/spleen/KSFB/ksfb.folBcombined.subset.results.dist100.res100-6000.rds"))
-
-## ksfb.triplet.near.binom.subdist100.dist100.folBcombined.results.res100-6000.removeDups.rds
-
-```
-
-# XXCD
+# XXCD Sample
 
 ## Load data
 
@@ -346,7 +255,7 @@ xxcd
 
 ```
 
-# PBVN
+# PBVN Sample
 
 ## Load data
 
@@ -365,7 +274,7 @@ pbvn
 
 ```
 
-# FSLD
+# FSLD Sample
 
 ## Load data
 
@@ -384,7 +293,7 @@ fsld
 
 ```
 
-# NGPL
+# NGPL Sample
 
 ## Load data
 
@@ -400,1004 +309,6 @@ ngpl <- ngpl %>%
 ngpl <- crawdad::toSP(pos = ngpl[,c("x", "y")],
                         celltypes = ngpl$celltypes_folBcombined)
 ngpl
-
-```
-
-# ---------------------------------
-# Figures
-
-## A. load data
-
-### PKHL
-
-primary spleen dataset (PKHL):
-
-```{r, eval=TRUE}
-
-## folder on `brendan` branch
-figpath <- paste0(here::here(), "/plots/spleen")
-
-shuffle.list.pkhl <- readRDS(paste0(here::here(), "/data/spleen/PKHL/pkhl.folBcombined.shuffled_res100-6000.rds"))
-
-binomMat.pkhl <- readRDS(paste0(here::here(), "/data/spleen/PKHL/pkhl.folBcombined.binomMat.near.subdist100.rds"))
-subset.list.pkhl <- readRDS(paste0(here::here(), "/data/spleen/PKHL/pkhl.folBcombined.subsets.near.subdist100.rds"))
-
-results.pkhl <- readRDS(paste0(here::here(), "/data/spleen/PKHL/pkhl.folBcombined.pairwise.results.dist100.res100-6000.rds")) ## newest
-# results.pkhl <- readRDS(paste0(here::here(), "/data/spleen/PKHL/pkhl.pairwise.100-200.folBcombined.results.res100-6000.removeDups.rds")) ## old file, but should be equal
-
-results.subsets.pkhl <- readRDS(paste0(here::here(), "/data/spleen/PKHL/pkhl.folBcombined.subset.results.dist100.res100-6000.rds")) ## newest
-# results.subsets.pkhl <- readRDS(paste0(here::here(), "/data/spleen/PKHL/pkhl.triplet.near.binom.subdist100.dist100.folBcombined.results.res100-6000.removeDups.rds")) ## old file but, but should be equal
-
-```
-
-other spleen datasets:
-
-### KSFB
-
-```{r, eval=TRUE}
-
-shuffle.list.ksfb <- readRDS(paste0(here::here(), "/data/spleen/KSFB/ksfb.folBcombined.shuffled_res100-6000.rds"))
-
-# binomMat.ksfb <- readRDS(paste0(here::here(), "/data/spleen/KSFB/ksfb.folBcombined.binomMat.near.subdist100.rds"))
-subset.list.ksfb <- readRDS(paste0(here::here(), "/data/spleen/KSFB/ksfb.folBcombined.subsets.near.subdist100.rds"))
-
-# results.ksfb <- readRDS(paste0(here::here(), "/data/spleen/KSFB/ksfb.folBcombined.pairwise.results.dist100.res100-6000.rds")) ## newest
-results.ksfb <- readRDS(paste0(here::here(), "/data/spleen/KSFB/ksfb.pairwise.100-200.folBcombined.results.res100-6000.removeDups.rds")) ## old file, but should be equal
-
-# results.subsets.ksfb <- readRDS(paste0(here::here(), "/data/spleen/KSFB/ksfb.folBcombined.subset.results.dist100.res100-6000.rds")) ## newest
-results.subsets.ksfb <- readRDS(paste0(here::here(), "/data/spleen/KSFB/ksfb.triplet.near.binom.subdist100.dist100.folBcombined.results.res100-6000.removeDups.rds")) ## old file, but should be equal
-
-```
-
-### XXCD
-
-```{r, eval=TRUE}
-
-shuffle.list.xxcd <- readRDS(paste0(here::here(), "/data/spleen/XXCD/xxcd.folBcombined.shuffled_res100-6000.rds"))
-
-# binomMat.xxcd <- readRDS(paste0(here::here(), "/data/spleen/XXCD/xxcd.folBcombined.binomMat.near.subdist100.rds"))
-subset.list.xxcd <- readRDS(paste0(here::here(), "/data/spleen/XXCD/xxcd.folBcombined.subsets.near.subdist100.rds"))
-
-# results.xxcd <- readRDS(paste0(here::here(), "/data/spleen/XXCD/xxcd.folBcombined.pairwise.results.dist100.res100-6000.rds")) ## newest
-results.xxcd <- readRDS(paste0(here::here(), "/data/spleen/XXCD/xxcd.pairwise.100-200.folBcombined.results.res100-6000.removeDups.rds")) ## old file, but should be equal
-
-# results.subsets.xxcd <- readRDS(paste0(here::here(), "/data/spleen/XXCD/xxcd.folBcombined.subset.results.dist100.res100-6000.rds")) ## newest
-results.subsets.xxcd <- readRDS(paste0(here::here(), "/data/spleen/XXCD/xxcd.triplet.near.binom.subdist100.dist100.folBcombined.results.res100-6000.removeDups.rds")) ## old file, but should be equal
-
-```
-
-### PBVN
-
-```{r, eval=TRUE}
-
-shuffle.list.pbvn <- readRDS(paste0(here::here(), "/data/spleen/PBVN/pbvn.folBcombined.shuffled_res100-6000.rds"))
-
-# binomMat.pbvn <- readRDS(paste0(here::here(), "/data/spleen/PBVN/pbvn.folBcombined.binomMat.near.subdist100.rds"))
-subset.list.pbvn <- readRDS(paste0(here::here(), "/data/spleen/PBVN/pbvn.folBcombined.subsets.near.subdist100.rds"))
-
-# results.pbvn <- readRDS(paste0(here::here(), "/data/spleen/PBVN/pbvn.folBcombined.pairwise.results.dist100.res100-6000.rds")) ## newest
-results.pbvn <- readRDS(paste0(here::here(), "/data/spleen/PBVN/pbvn.pairwise.100-200.folBcombined.results.res100-6000.removeDups.rds")) ## old file, but should be equal
-
-# results.subsets.pbvn <- readRDS(paste0(here::here(), "/data/spleen/PBVN/pbvn.folBcombined.subset.results.dist100.res100-6000.rds")) ## newest
-results.subsets.pbvn <- readRDS(paste0(here::here(), "/data/spleen/PBVN/pbvn.triplet.near.binom.subdist100.dist100.folBcombined.results.res100-6000.removeDups.rds")) ## old file, but should be equal
-
-```
-
-### FSLD
-
-```{r, eval=TRUE}
-
-shuffle.list.fsld <- readRDS(paste0(here::here(), "/data/spleen/FSLD/fsld.folBcombined.shuffled_res100-6000.rds"))
-
-# binomMat.fsld <- readRDS(paste0(here::here(), "/data/spleen/FSLD/fsld.folBcombined.binomMat.near.subdist100.rds"))
-subset.list.fsld <- readRDS(paste0(here::here(), "/data/spleen/FSLD/fsld.folBcombined.subsets.near.subdist100.rds"))
-
-# results.fsld <- readRDS(paste0(here::here(), "/data/spleen/FSLD/fsld.folBcombined.pairwise.results.dist100.res100-6000.rds")) ## newest
-results.fsld <- readRDS(paste0(here::here(), "/data/spleen/FSLD/fsld.pairwise.100-200.folBcombined.results.res100-6000.removeDups.rds")) ## old file, but should be equal
-
-# results.subsets.fsld <- readRDS(paste0(here::here(), "/data/spleen/FSLD/fsld.folBcombined.subset.results.dist100.res100-6000.rds")) ## newest
-results.subsets.fsld <- readRDS(paste0(here::here(), "/data/spleen/FSLD/fsld.triplet.near.binom.subdist100.dist100.folBcombined.results.res100-6000.removeDups.rds")) ## old file, but should be equal
-
-```
-
-### NGPL
-
-```{r, eval=TRUE}
-
-shuffle.list.ngpl <- readRDS(paste0(here::here(), "/data/spleen/NGPL/ngpl.folBcombined.shuffled_res100-6000.rds"))
-
-# binomMat.ngpl <- readRDS(paste0(here::here(), "/data/spleen/NGPL/ngpl.folBcombined.binomMat.near.subdist100.rds"))
-subset.list.ngpl <- readRDS(paste0(here::here(), "/data/spleen/NGPL/ngpl.folBcombined.subsets.near.subdist100.rds"))
-
-# results.ngpl <- readRDS(paste0(here::here(), "/data/spleen/NGPL/ngpl.folBcombined.pairwise.results.dist100.res100-6000.rds")) ## newest
-results.ngpl <- readRDS(paste0(here::here(), "/data/spleen/NGPL/ngpl.pairwise.100-200.folBcombined.results.res100-6000.removeDups.rds")) ## old file, but should be equal
-
-# results.subsets.ngpl <- readRDS(paste0(here::here(), "/data/spleen/NGPL/ngpl.folBcombined.subset.results.dist100.res100-6000.rds")) ## newest
-results.subsets.ngpl <- readRDS(paste0(here::here(), "/data/spleen/NGPL/ngpl.triplet.near.binom.subdist100.dist100.folBcombined.results.res100-6000.removeDups.rds")) ## old file, but should be equal
-
-```
-
-## B. plotting
-
-### Fig 3 - PKHL
-
-#### tissue
-
-```{r}
-
-plt <- crawdad::vizAllClusters(cells = pkhl,
-                        coms = as.factor(pkhl$celltypes),
-                        ofInterest = c("CD4 Memory T cells", "Fol B cells", "Podoplanin"),
-                        nacol = crawdad:::transparentCol(color = "white", percent = 100),
-                        axisAdj = 1, s = 1, a = 0.5) +
-  ggplot2::theme(legend.position="none")
-  # ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
-plt
-
-# ggplot2::ggsave(filename = "3_spleen_pkhl_tissue.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 6,
-#                 height = 6,
-#                 units = c("in"))
-
-```
-
-#### subsets tissue
-
-```{r}
-
-## make a temporary annotation factor with annotations for cells that are of a specific subsets
-annots_temp <- crawdad::selectLabels(df = pkhl,
-                                     com = pkhl$celltypes,
-                                     subset_list = subset.list.pkhl,
-                                     cellIDs = c("Fol B cells", "Podoplanin"),
-                                     subsetIDs = c("CD4 Memory T cells_near_Neutrophils/Monocytes"))
-
-## visualize the subset only
-plt <- crawdad::vizAllClusters(cells = pkhl,
-                               coms = annots_temp,
-                               ofInterest = NULL,
-                               title = "PKHL",
-                               nacol = crawdad:::transparentCol(color = "white", percent = 100),
-                               axisAdj = 1, s = 1, a = 0.5) +
-  # ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
-  ggplot2::theme(legend.position="none")
-plt
-
-# ggplot2::ggsave(filename = "3_spleen_pkhl_cd4_subsets_outsideFol_tissue.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 10,
-#                 height = 7,
-#                 units = c("in"))
-
-```
-
-```{r}
-
-## make a temporary annotation factor with annotations for cells that are of a specific subsets
-annots_temp <- crawdad::selectLabels(df = pkhl,
-                                     com = pkhl$celltypes,
-                                     subset_list = subset.list.pkhl,
-                                     cellIDs = c("Fol B cells", "Podoplanin"),
-                                     subsetIDs = c("CD4 Memory T cells_near_Fol B cells"))
-
-## visualize the subset only
-plt <- crawdad::vizAllClusters(cells = pkhl,
-                               coms = annots_temp,
-                               ofInterest = NULL,
-                               title = "PKHL",
-                               nacol = crawdad:::transparentCol(color = "white", percent = 100),
-                               axisAdj = 1, s = 1, a = 0.5) +
-  # ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
-  ggplot2::theme(legend.position="none")
-plt
-
-# ggplot2::ggsave(filename = "3_spleen_pkhl_cd4_subsets_insideFol_tissue.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 10,
-#                 height = 7,
-#                 units = c("in"))
-
-```
-
-#### tissue zoom
-
-```{r}
-
-## shuffling grid
-grid <- sf::st_make_grid(pkhl, cellsize = 1000)
-
-## centers of the grids to add the tile IDs
-grid_coords_centroids <- as.data.frame(sf::st_coordinates(sf::st_centroid(grid)))
-grid_coords_centroids$name <- as.character(rownames(grid_coords_centroids))
-
-
-plt <- crawdad::vizAllClusters(cells = pkhl,
-                               coms = pkhl$celltypes,
-                               ofInterest = c("CD4 Memory T cells", "Fol B cells", "Podoplanin"),
-                               title = "pkhl",
-                               axisAdj = 1, s = 1, a = 0.5) +
-  # ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
-  ggplot2::theme(legend.position="none") +
-  
-  ## add in the grid information on top of the plot
-  ggplot2::geom_sf(data = grid, fill = NA) +
-  ggplot2::geom_text(data = grid_coords_centroids, ggplot2::aes(X, Y, label = name))
-  
-plt
-
-# ggplot2::ggsave(filename = "3_spleen_pkhl_grid_tissue.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 10,
-#                 height = 7,
-#                 units = c("in"))
-
-```
-
-```{r}
-
-## pull out cells in specific grid regions
-int <- sf::st_intersection(pkhl, grid[c(38,39)])
-cells2 <- pkhl[rownames(int),]
-
-## grid 11 real
-plt <- crawdad::vizAllClusters(cells = cells2,
-                               coms = cells2$celltypes,
-                               ofInterest = c("CD4 Memory T cells", "Fol B cells", "Podoplanin"),
-                               title = "grid 38,39",
-                               axisAdj = 1, s = 10, a = 0.5) +
-  # ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
-  ggplot2::theme(legend.position="none")
-plt
-
-# ggplot2::ggsave(filename = "3_spleen_pkhl_grid_38_39_tissue_zoom.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 4,
-#                 height = 3,
-#                 units = c("in"))
-
-```
-
-```{r}
-
-## pull out cells in specific grid regions
-int <- sf::st_intersection(pkhl, grid[c(67,77)])
-cells2 <- pkhl[rownames(int),]
-
-## grid 11 real
-plt <- crawdad::vizAllClusters(cells = cells2,
-                               coms = cells2$celltypes,
-                               ofInterest = c("CD4 Memory T cells", "Fol B cells", "Podoplanin"),
-                               title = "grid 66,77",
-                               axisAdj = 1, s = 10, a = 0.5) +
-  # ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
-  ggplot2::theme(legend.position="none")
-plt
-
-# ggplot2::ggsave(filename = "3_spleen_pkhl_grid_66_77_tissue_zoom.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 3,
-#                 height = 4,
-#                 units = c("in"))
-
-```
-
-#### cd4,folB,podo trends
-
-```{r}
-
-dat <- crawdad::meltResultsList(results.pkhl)
-
-d1 <- dat[dat$reference == "CD4 Memory T cells" & dat$neighbor == "Fol B cells",]
-d2 <- dat[dat$reference == "CD4 Memory T cells" & dat$neighbor == "Podoplanin",]
-d3 <- dat[dat$reference == "Fol B cells" & dat$neighbor == "CD4 Memory T cells",]
-
-## combine the trends into one data.frame, and have the "id" column label the combo, plot both lines on same plot
-## turn off the facet wrap so just coloring the two trends, which are labeled using the "id" column
-
-d1$id <- "Fol B cells"
-d2$id <- "Podoplanin"
-d3$id <- "Fol B cells vs CD4 Memory T cells"
-
-d <- dplyr::bind_rows(list(d1, d2))
-
-plt <- crawdad::vizTrends(dat = d, facet = FALSE) +
-  ggplot2::scale_x_log10() +
-  ggplot2::ggtitle("CD4 Memory T cells")
-  # ggplot2::theme(legend.position="none")
-plt 
-
-# ggplot2::ggsave(filename = "3_spleen_pkhl_cd4_trends.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 6,
-#                 height = 4,
-#                 units = c("in"))
-
-plt <- vizTrends.heatmap(dat = d, annotation = FALSE)
-plt
-
-# ggplot2::ggsave(filename = "S6_spleen_pkhl_cd4_trends_heatmap.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 6,
-#                 height = 3,
-#                 units = c("in"))
-
-```
-
-```{r}
-
-dat <- crawdad::meltResultsList(results.pkhl)
-plt <- vizTrends.heatmap(dat = dat, annotation = FALSE, title = "PKHL")
-plt
-
-# ggplot2::ggsave(filename = "3B_spleen_pkhl_all_trends_heatmap.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 12,
-#                 height = 10,
-#                 units = c("in"))
-
-```
-
-#### subset trends
-
-```{r}
-
-dat <- crawdad::meltResultsList(results.subsets.pkhl)
-
-d1 <- dat[grepl(pattern = "CD4 Memory T cells_near_Fol B cells", dat$reference) & dat$neighbor %in% c("Fol B cells", "Podoplanin"),]
-plt <- vizTrends(dat = d1, facet = FALSE, id = "neighbor", title = "CD4 Memory T cells near Fol B cells") +
-  ggplot2::scale_x_log10()
-  # ggplot2::theme(legend.position="none")
-plt
-
-# ggplot2::ggsave(filename = "3_spleen_pkhl_cd4_near_folB_trends.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 6,
-#                 height = 4,
-#                 units = c("in"))
-
-
-d2 <- dat[grepl(pattern = "CD4 Memory T cells_near_Neutrophils/Monocytes", dat$reference) & dat$neighbor %in% c("Fol B cells", "Podoplanin"),]
-plt <- vizTrends(dat = d2, facet = FALSE, id = "neighbor", title = "CD4 Memory T cells near Neutrophils/Monocytes") +
-  ggplot2::scale_x_log10()
-  # ggplot2::theme(legend.position="none")
-plt
-
-# ggplot2::ggsave(filename = "3_spleen_pkhl_cd4_near_neutro_trends.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 6,
-#                 height = 4,
-#                 units = c("in"))
-
-d <- dplyr::bind_rows(list(d1, d2))
-
-plt <- vizTrends.heatmap(dat = d, annotation = FALSE)
-plt
-
-# ggplot2::ggsave(filename = "3_spleen_pkhl_cd4_subset_trends_heatmap.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 8,
-#                 height = 3,
-#                 units = c("in"))
-
-```
-
-### Other Spleens
-
-#### Supplementary Figs
-
-##### tissue
-
-```{r, fig.height=4, fig.width=4}
-
-## KSFB
-plt <- crawdad::vizAllClusters(cells = ksfb,
-                        coms = as.factor(ksfb$celltypes),
-                        # ofInterest = c("CD4 Memory T cells", "Fol B cells", "Podoplanin"),
-                        title = "KSFB",
-                        s = 1) +
-  ggplot2::theme(legend.position="none")
-  # ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
-plt
-
-# ggplot2::ggsave(filename = "S8_spleen_ksfb_tissue.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 6,
-#                 height = 6,
-#                 units = c("in"))
-
-## XXCD
-plt <- crawdad::vizAllClusters(cells = xxcd,
-                        coms = as.factor(xxcd$celltypes),
-                        # ofInterest = c("CD4 Memory T cells", "Fol B cells", "Podoplanin"),
-                        title = "XXCD",
-                        s = 1) +
-  ggplot2::theme(legend.position="none")
-  # ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
-plt
-
-# ggplot2::ggsave(filename = "S8_spleen_xxcd_tissue.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 6,
-#                 height = 6,
-#                 units = c("in"))
-
-## PBVN
-plt <- crawdad::vizAllClusters(cells = pbvn,
-                        coms = as.factor(pbvn$celltypes),
-                        # ofInterest = c("CD4 Memory T cells", "Fol B cells", "Podoplanin"),
-                        title = "PBVN",
-                        s = 1) +
-  ggplot2::theme(legend.position="none")
-  # ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
-plt
-
-# ggplot2::ggsave(filename = "S8_spleen_pbvn_tissue.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 6,
-#                 height = 6,
-#                 units = c("in"))
-
-## FSLD
-plt <- crawdad::vizAllClusters(cells = fsld,
-                        coms = as.factor(fsld$celltypes),
-                        # ofInterest = c("CD4 Memory T cells", "Fol B cells", "Podoplanin"),
-                        title = "FSLD",
-                        s = 1) +
-  ggplot2::theme(legend.position="none")
-  # ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
-plt
-
-# ggplot2::ggsave(filename = "S8_spleen_fsld_tissue.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 6,
-#                 height = 6,
-#                 units = c("in"))
-
-## NGPL
-plt <- crawdad::vizAllClusters(cells = ngpl,
-                        coms = as.factor(ngpl$celltypes),
-                        # ofInterest = c("CD4 Memory T cells", "Fol B cells", "Podoplanin"),
-                        title = "NGPL",
-                        s = 1) +
-  ggplot2::theme(legend.position="none")
-  # ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
-plt
-
-# ggplot2::ggsave(filename = "S8_spleen_ngpl_tissue.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 6,
-#                 height = 6,
-#                 units = c("in"))
-
-```
-
-##### cd4,folB,podo trends
-
-```{r}
-
-dat <- crawdad::meltResultsList(results.xxcd$`100`)
-d1 <- dat[dat$reference == "CD4 Memory T cells" & dat$neighbor == "Fol B cells",]
-d2 <- dat[dat$reference == "CD4 Memory T cells" & dat$neighbor == "Podoplanin",]
-df1 <- dplyr::bind_rows(list(d1, d2))
-df1$reference <- "XXCD"
-
-dat <- crawdad::meltResultsList(results.ksfb$`100`)
-d1 <- dat[dat$reference == "CD4 Memory T cells" & dat$neighbor == "Fol B cells",]
-d2 <- dat[dat$reference == "CD4 Memory T cells" & dat$neighbor == "Podoplanin",]
-df2 <- dplyr::bind_rows(list(d1, d2))
-df2$reference <- "KSFB"
-
-dat <- crawdad::meltResultsList(results.ngpl$`100`)
-d1 <- dat[dat$reference == "CD4 Memory T cells" & dat$neighbor == "Fol B cells",]
-d2 <- dat[dat$reference == "CD4 Memory T cells" & dat$neighbor == "Podoplanin",]
-df3 <- dplyr::bind_rows(list(d1, d2))
-df3$reference <- "NGPL"
-
-dat <- crawdad::meltResultsList(results.pbvn$`100`)
-d1 <- dat[dat$reference == "CD4 Memory T cells" & dat$neighbor == "Fol B cells",]
-d2 <- dat[dat$reference == "CD4 Memory T cells" & dat$neighbor == "Podoplanin",]
-df4 <- dplyr::bind_rows(list(d1, d2))
-df4$reference <- "PBVN"
-
-dat <- crawdad::meltResultsList(results.fsld$`100`)
-d1 <- dat[dat$reference == "CD4 Memory T cells" & dat$neighbor == "Fol B cells",]
-d2 <- dat[dat$reference == "CD4 Memory T cells" & dat$neighbor == "Podoplanin",]
-df5 <- dplyr::bind_rows(list(d1, d2))
-df5$reference <- "FSLD"
-
-df <- dplyr::bind_rows(list(df1, df2, df3, df4, df5))
-
-plt <- vizTrends.heatmap(dat = df, annotation = FALSE, title = "CD4 Memory T cells", ncols = 5)
-plt
-
-# ggplot2::ggsave(filename = "S9_spleen_cd4_trends_heatmap.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 12,
-#                 height = 3,
-#                 units = c("in"))
-
-```
-
-```{r}
-
-dat <- crawdad::meltResultsList(results.ksfb$`100`)
-
-d1 <- dat[dat$reference == "CD4 Memory T cells" & dat$neighbor == "Fol B cells",]
-d2 <- dat[dat$reference == "CD4 Memory T cells" & dat$neighbor == "Podoplanin",]
-d3 <- dat[dat$reference == "Fol B cells" & dat$neighbor == "CD4 Memory T cells",]
-
-## combine the trends into one data.frame, and have the "id" column label the combo, plot both lines on same plot
-## turn off the facet wrap so just coloring the two trends, which are labeled using the "id" column
-
-d1$id <- "Fol B cells"
-d2$id <- "Podoplanin"
-d3$id <- "Fol B cells vs CD4 Memory T cells"
-
-d <- dplyr::bind_rows(list(d1, d2))
-
-plt <- crawdad::vizTrends(dat = d, facet = FALSE) +
-  ggplot2::scale_x_log10()
-  # ggplot2::theme(legend.position="none")
-plt 
-
-# ggplot2::ggsave(filename = "S9_spleen_ksfb_cd4_folB_podo_trends.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 6,
-#                 height = 4,
-#                 units = c("in"))
-
-```
-
-```{r}
-
-dat <- crawdad::meltResultsList(results.xxcd$`100`)
-
-d1 <- dat[dat$reference == "CD4 Memory T cells" & dat$neighbor == "Fol B cells",]
-d2 <- dat[dat$reference == "CD4 Memory T cells" & dat$neighbor == "Podoplanin",]
-d3 <- dat[dat$reference == "Fol B cells" & dat$neighbor == "CD4 Memory T cells",]
-
-## combine the trends into one data.frame, and have the "id" column label the combo, plot both lines on same plot
-## turn off the facet wrap so just coloring the two trends, which are labeled using the "id" column
-
-d1$id <- "Fol B cells"
-d2$id <- "Podoplanin"
-d3$id <- "Fol B cells vs CD4 Memory T cells"
-
-d <- dplyr::bind_rows(list(d1, d2))
-
-plt <- crawdad::vizTrends(dat = d, facet = FALSE) +
-  ggplot2::scale_x_log10()
-  # ggplot2::theme(legend.position="none")
-plt 
-
-# ggplot2::ggsave(filename = "S9_spleen_xxcd_cd4_folB_podo_trends.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 6,
-#                 height = 4,
-#                 units = c("in"))
-
-```
-
-```{r}
-
-dat <- crawdad::meltResultsList(results.pbvn$`100`)
-
-d1 <- dat[dat$reference == "CD4 Memory T cells" & dat$neighbor == "Fol B cells",]
-d2 <- dat[dat$reference == "CD4 Memory T cells" & dat$neighbor == "Podoplanin",]
-d3 <- dat[dat$reference == "Fol B cells" & dat$neighbor == "CD4 Memory T cells",]
-
-## combine the trends into one data.frame, and have the "id" column label the combo, plot both lines on same plot
-## turn off the facet wrap so just coloring the two trends, which are labeled using the "id" column
-
-d1$id <- "Fol B cells"
-d2$id <- "Podoplanin"
-d3$id <- "Fol B cells vs CD4 Memory T cells"
-
-d <- dplyr::bind_rows(list(d1, d2))
-
-plt <- crawdad::vizTrends(dat = d, facet = FALSE) +
-  ggplot2::scale_x_log10()
-  # ggplot2::theme(legend.position="none")
-plt 
-
-# ggplot2::ggsave(filename = "S9_spleen_pbvn_cd4_folB_podo_trends.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 6,
-#                 height = 4,
-#                 units = c("in"))
-
-```
-
-```{r}
-
-dat <- crawdad::meltResultsList(results.fsld$`100`)
-
-d1 <- dat[dat$reference == "CD4 Memory T cells" & dat$neighbor == "Fol B cells",]
-d2 <- dat[dat$reference == "CD4 Memory T cells" & dat$neighbor == "Podoplanin",]
-d3 <- dat[dat$reference == "Fol B cells" & dat$neighbor == "CD4 Memory T cells",]
-
-## combine the trends into one data.frame, and have the "id" column label the combo, plot both lines on same plot
-## turn off the facet wrap so just coloring the two trends, which are labeled using the "id" column
-
-d1$id <- "Fol B cells"
-d2$id <- "Podoplanin"
-d3$id <- "Fol B cells vs CD4 Memory T cells"
-
-d <- dplyr::bind_rows(list(d1, d2))
-
-plt <- crawdad::vizTrends(dat = d, facet = FALSE) +
-  ggplot2::scale_x_log10()
-  # ggplot2::theme(legend.position="none")
-plt 
-
-# ggplot2::ggsave(filename = "S9_spleen_fsld_cd4_folB_podo_trends.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 6,
-#                 height = 4,
-#                 units = c("in"))
-
-```
-
-```{r}
-
-dat <- crawdad::meltResultsList(results.ngpl$`100`)
-
-d1 <- dat[dat$reference == "CD4 Memory T cells" & dat$neighbor == "Fol B cells",]
-d2 <- dat[dat$reference == "CD4 Memory T cells" & dat$neighbor == "Podoplanin",]
-d3 <- dat[dat$reference == "Fol B cells" & dat$neighbor == "CD4 Memory T cells",]
-
-## combine the trends into one data.frame, and have the "id" column label the combo, plot both lines on same plot
-## turn off the facet wrap so just coloring the two trends, which are labeled using the "id" column
-
-d1$id <- "Fol B cells"
-d2$id <- "Podoplanin"
-d3$id <- "Fol B cells vs CD4 Memory T cells"
-
-d <- dplyr::bind_rows(list(d1, d2))
-
-plt <- crawdad::vizTrends(dat = d, facet = FALSE) +
-  ggplot2::scale_x_log10()
-  # ggplot2::theme(legend.position="none")
-plt 
-
-# ggplot2::ggsave(filename = "S9_spleen_ngpl_cd4_folB_podo_trends.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 6,
-#                 height = 4,
-#                 units = c("in"))
-
-```
-
-##### subset trends
-
-```{r}
-
-dat <- crawdad::meltResultsList(results.subsets.xxcd$`100`)
-df1 <- dat[grepl(pattern = "CD4 Memory T cells_near_Fol B cells", dat$reference) & dat$neighbor %in% c("Fol B cells", "Podoplanin"),]
-df1$reference <- "XXCD"
-
-dat <- crawdad::meltResultsList(results.subsets.ksfb$`100`)
-df2 <- dat[grepl(pattern = "CD4 Memory T cells_near_Fol B cells", dat$reference) & dat$neighbor %in% c("Fol B cells", "Podoplanin"),]
-df2$reference <- "KSFB"
-
-dat <- crawdad::meltResultsList(results.subsets.ngpl$`100`)
-df3 <- dat[grepl(pattern = "CD4 Memory T cells_near_Fol B cells", dat$reference) & dat$neighbor %in% c("Fol B cells", "Podoplanin"),]
-df3$reference <- "NGPL"
-
-dat <- crawdad::meltResultsList(results.subsets.pbvn$`100`)
-df4 <- dat[grepl(pattern = "CD4 Memory T cells_near_Fol B cells", dat$reference) & dat$neighbor %in% c("Fol B cells", "Podoplanin"),]
-df4$reference <- "PBVN"
-
-dat <- crawdad::meltResultsList(results.subsets.fsld$`100`)
-df5 <- dat[grepl(pattern = "CD4 Memory T cells_near_Fol B cells", dat$reference) & dat$neighbor %in% c("Fol B cells", "Podoplanin"),]
-df5$reference <- "FSLD"
-
-df <- dplyr::bind_rows(list(df1, df2, df3, df4, df5))
-
-plt <- vizTrends.heatmap(dat = df, annotation = FALSE, title = "CD4 Memory T cells_near_Fol B cells", ncols = 5)
-plt
-
-# ggplot2::ggsave(filename = "S9_spleen_cd4_near_folB_trends_heatmap.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 12,
-#                 height = 3,
-#                 units = c("in"))
-
-```
-
-```{r}
-
-dat <- crawdad::meltResultsList(results.subsets.xxcd$`100`)
-df1 <- dat[grepl(pattern = "CD4 Memory T cells_near_Neutrophils/Monocytes", dat$reference) & dat$neighbor %in% c("Fol B cells", "Podoplanin"),]
-df1$reference <- "XXCD"
-
-dat <- crawdad::meltResultsList(results.subsets.ksfb$`100`)
-df2 <- dat[grepl(pattern = "CD4 Memory T cells_near_Neutrophils/Monocytes", dat$reference) & dat$neighbor %in% c("Fol B cells", "Podoplanin"),]
-df2$reference <- "KSFB"
-
-dat <- crawdad::meltResultsList(results.subsets.ngpl$`100`)
-df3 <- dat[grepl(pattern = "CD4 Memory T cells_near_Neutrophils/Monocytes", dat$reference) & dat$neighbor %in% c("Fol B cells", "Podoplanin"),]
-df3$reference <- "NGPL"
-
-dat <- crawdad::meltResultsList(results.subsets.pbvn$`100`)
-df4 <- dat[grepl(pattern = "CD4 Memory T cells_near_Neutrophils/Monocytes", dat$reference) & dat$neighbor %in% c("Fol B cells", "Podoplanin"),]
-df4$reference <- "PBVN"
-
-dat <- crawdad::meltResultsList(results.subsets.fsld$`100`)
-df5 <- dat[grepl(pattern = "CD4 Memory T cells_near_Neutrophils/Monocytes", dat$reference) & dat$neighbor %in% c("Fol B cells", "Podoplanin"),]
-df5$reference <- "FSLD"
-
-df <- dplyr::bind_rows(list(df1, df2, df3, df4, df5))
-
-plt <- vizTrends.heatmap(dat = df, annotation = FALSE, title = "CD4 Memory T cells_near_Neutrophils/Monocytes", ncols = 5)
-plt
-
-# ggplot2::ggsave(filename = "S9_spleen_cd4_near_neutro_trends_heatmap.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 12,
-#                 height = 3,
-#                 units = c("in"))
-
-```
-
-```{r}
-
-dat <- crawdad::meltResultsList(results.subsets.ksfb$`100`)
-
-d <- dat[grepl(pattern = "CD4 Memory T cells_near_Fol B cells", dat$reference) & dat$neighbor %in% c("Fol B cells", "Podoplanin"),]
-plt <- crawdad::vizTrends(dat = d, facet = FALSE, id = "neighbor", title = "CD4 Memory T cells near Fol B cells") +
-  ggplot2::scale_x_log10()
-  # ggplot2::theme(legend.position="none")
-plt
-
-# ggplot2::ggsave(filename = "S12_spleen_cd4_near_folB_trends_ksfb.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 6,
-#                 height = 4,
-#                 units = c("in"))
-
-
-d <- dat[grepl(pattern = "CD4 Memory T cells_near_Neutrophils/Monocytes", dat$reference) & dat$neighbor %in% c("Fol B cells", "Podoplanin"),]
-plt <- crawdad::vizTrends(dat = d, facet = FALSE, id = "neighbor", title = "CD4 Memory T cells near Neutrophils/Monocytes") +
-  ggplot2::scale_x_log10()
-  # ggplot2::theme(legend.position="none")
-plt
-
-# ggplot2::ggsave(filename = "S9_spleen_cd4_near_neutro_trends_ksfb.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 6,
-#                 height = 4,
-#                 units = c("in"))
-
-```
-
-```{r}
-
-dat <- crawdad::meltResultsList(results.subsets.xxcd$`100`)
-
-d <- dat[grepl(pattern = "CD4 Memory T cells_near_Fol B cells", dat$reference) & dat$neighbor %in% c("Fol B cells", "Podoplanin"),]
-plt <- crawdad::vizTrends(dat = d, facet = FALSE, id = "neighbor", title = "CD4 Memory T cells near Fol B cells") +
-  ggplot2::scale_x_log10()
-  # ggplot2::theme(legend.position="none")
-plt
-
-# ggplot2::ggsave(filename = "S9_spleen_cd4_near_folB_trends_xxcd.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 6,
-#                 height = 4,
-#                 units = c("in"))
-
-
-d <- dat[grepl(pattern = "CD4 Memory T cells_near_Neutrophils/Monocytes", dat$reference) & dat$neighbor %in% c("Fol B cells", "Podoplanin"),]
-plt <- crawdad::vizTrends(dat = d, facet = FALSE, id = "neighbor", title = "CD4 Memory T cells near Neutrophils/Monocytes") +
-  ggplot2::scale_x_log10()
-  # ggplot2::theme(legend.position="none")
-plt
-
-# ggplot2::ggsave(filename = "S9_spleen_cd4_near_neutro_trends_xxcd.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 6,
-#                 height = 4,
-#                 units = c("in"))
-
-```
-
-```{r}
-
-dat <- crawdad::meltResultsList(results.subsets.pbvn$`100`)
-
-d <- dat[grepl(pattern = "CD4 Memory T cells_near_Fol B cells", dat$reference) & dat$neighbor %in% c("Fol B cells", "Podoplanin"),]
-plt <- crawdad::vizTrends(dat = d, facet = FALSE, id = "neighbor", title = "CD4 Memory T cells near Fol B cells") +
-  ggplot2::scale_x_log10()
-  # ggplot2::theme(legend.position="none")
-plt
-
-# ggplot2::ggsave(filename = "S9_spleen_cd4_near_folB_trends_pbvn.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 6,
-#                 height = 4,
-#                 units = c("in"))
-
-
-d <- dat[grepl(pattern = "CD4 Memory T cells_near_Neutrophils/Monocytes", dat$reference) & dat$neighbor %in% c("Fol B cells", "Podoplanin"),]
-plt <- crawdad::vizTrends(dat = d, facet = FALSE, id = "neighbor", title = "CD4 Memory T cells near Neutrophils/Monocytes") +
-  ggplot2::scale_x_log10()
-  # ggplot2::theme(legend.position="none")
-plt
-
-# ggplot2::ggsave(filename = "S9_spleen_cd4_near_neutro_trends_pbvn.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 6,
-#                 height = 4,
-#                 units = c("in"))
-
-```
-
-```{r}
-
-dat <- crawdad::meltResultsList(results.subsets.fsld$`100`)
-
-d <- dat[grepl(pattern = "CD4 Memory T cells_near_Fol B cells", dat$reference) & dat$neighbor %in% c("Fol B cells", "Podoplanin"),]
-plt <- crawdad::vizTrends(dat = d, facet = FALSE, id = "neighbor", title = "CD4 Memory T cells near Fol B cells") +
-  ggplot2::scale_x_log10()
-  # ggplot2::theme(legend.position="none")
-plt
-
-# ggplot2::ggsave(filename = "S9_spleen_cd4_near_folB_trends_fsld.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 6,
-#                 height = 4,
-#                 units = c("in"))
-
-
-d <- dat[grepl(pattern = "CD4 Memory T cells_near_Neutrophils/Monocytes", dat$reference) & dat$neighbor %in% c("Fol B cells", "Podoplanin"),]
-plt <- crawdad::vizTrends(dat = d, facet = FALSE, id = "neighbor", title = "CD4 Memory T cells near Neutrophils/Monocytes") +
-  ggplot2::scale_x_log10()
-  # ggplot2::theme(legend.position="none")
-plt
-
-# ggplot2::ggsave(filename = "S9_spleen_cd4_near_neutro_trends_fsld.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 6,
-#                 height = 4,
-#                 units = c("in"))
-
-```
-
-```{r}
-
-dat <- crawdad::meltResultsList(results.subsets.ngpl$`100`)
-
-d <- dat[grepl(pattern = "CD4 Memory T cells_near_Fol B cells", dat$reference) & dat$neighbor %in% c("Fol B cells", "Podoplanin"),]
-plt <- crawdad::vizTrends(dat = d, facet = FALSE, id = "neighbor", title = "CD4 Memory T cells near Fol B cells") +
-  ggplot2::scale_x_log10()
-  # ggplot2::theme(legend.position="none")
-plt
-
-# ggplot2::ggsave(filename = "S9_spleen_cd4_near_folB_trends_ngpl.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 6,
-#                 height = 4,
-#                 units = c("in"))
-
-
-d <- dat[grepl(pattern = "CD4 Memory T cells_near_Neutrophils/Monocytes", dat$reference) & dat$neighbor %in% c("Fol B cells", "Podoplanin"),]
-plt <- crawdad::vizTrends(dat = d, facet = FALSE, id = "neighbor", title = "CD4 Memory T cells near Neutrophils/Monocytes") +
-  ggplot2::scale_x_log10()
-  # ggplot2::theme(legend.position="none")
-plt
-
-# ggplot2::ggsave(filename = "S9_spleen_cd4_near_neutro_trends_ngpl.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 6,
-#                 height = 4,
-#                 units = c("in"))
 
 ```
 
