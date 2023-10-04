@@ -50,7 +50,7 @@ cells <- crawdad:::toSP(pos = sim[,c("x", "y")],
 
 ## generate background
 shuffle.list <- crawdad::makeShuffledCells(cells,
-                          scales = seq(100, 1000, by=50),
+                          scales = seq(100, 1000, by=100),
                           perms = 3,
                           ncores = ncores,
                           seed = 1,
