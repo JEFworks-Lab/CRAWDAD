@@ -1,11 +1,13 @@
 ---
-title: "Slide-seq"
-author: "Brendan F. Miller"
-date: "4/10/2023"
-output: rmarkdown::html_document
-# output:
-#   md_document:
-#     variant: markdown_github
+title: "Slide-seq Analysis"
+author: 
+- "Rafael dos Santos Peixoto"
+- "Brendan F. Miller"
+date: "10/03/2023"
+# output: rmarkdown::html_document
+output:
+  md_document:
+    variant: markdown_github
 vignette: >
   %\VignetteIndexEntry{Slide-seq analysis}
   %\VignetteEncoding{UTF-8}
@@ -17,48 +19,32 @@ This vignette will go through analyses to reproduce the results and figures of t
 ```{r}
 
 library(crawdad)
-library(dplyr)
+library(tidyverse)
 
 ```
 
 ```{r}
 
-ncores = 2
+ncores = 7
 
 ```
 
 # Load data
 
-```{r, eval=FALSE}
+```{r, warning=FALSE}
 
-slide <- read.csv2(file = paste0(here::here(), "/data/slideseq/slideseq.puck190926_08.rctd.meta.csv.gz"), row.names = 1, sep = ",")
-slide <- slide[,c("x", "y", "class")]
-## make sure the coordinates are numeric
-slide <- slide %>%
-  dplyr::mutate_at(vars(x, y), as.numeric)
-
-## convert to SP
-slide <- crawdad:::toSP(pos = slide[,c("x", "y")],
-                        celltypes = slide$class)
-slide
-
-```
-
-```{r}
-
-## the above dataset has been saved as an rda file and able to load here:
 data(slide)
 
-## convert to SP
+## convert to sp::SpatialPointsDataFrame
 slide <- crawdad:::toSP(pos = slide[,c("x", "y")],
                         celltypes = slide$celltypes)
-slide
 
 ```
+
 
 # Visualize celltypes
 
-```{r, fig.height=24, fig.width=24}
+```{r, warning=FALSE, message=FALSE, fig.height=24, fig.width=24}
 
 crawdad::vizEachCluster(cells = slide,
                         coms = as.factor(slide$celltypes),
@@ -70,703 +56,81 @@ crawdad::vizEachCluster(cells = slide,
 
 ```{r}
 
-scales <- c(100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1200, 1500, 3000, 6000)
+scales <- seq(100, 1000, by=100)
 
 ```
 
-```{r, eval=FALSE}
-
-oldw <- getOption("warn")
-options(warn = -1)
+```{r, warning=FALSE}
 
 ## generate background
 shuffle.list <- crawdad:::makeShuffledCells(slide,
                           scales = scales,
-                          perms = 1,
+                          perms = 3,
                           ncores = ncores,
                           seed = 1,
-                          verbose = TRUE)
-
-options(warn = oldw)
-
-## note: 0.34 minutes with 7 cores, 2.3 GHz Quad-Core Intel Core i7
-```
-
-save shuffled object
-```{r, eval=FALSE}
-
-saveRDS(shuffle.list, paste0(here::here(), "/data/slideseq/slideseqPuck.190926_08.shuffled_res100-6000.rds"))
-
-## slideseqPuck.190926_08.rctd.shuffled_res30-6000.rds
+                          verbose = FALSE)
 
 ```
+
 
 # Run pairwise analysis
 
-```{r, eval=FALSE}
-
-oldw <- getOption("warn")
-options(warn = -1)
+```{r, warning=FALSE}
 
 ## find trends, passing background as parameter
 results <- crawdad::findTrends(slide,
                         dist = 100,
                         shuffle.list = shuffle.list,
                         ncores = ncores,
-                        verbose = TRUE)
-
-
-options(warn = oldw)
-
-## note: 1.3 minutes with 7 cores, 2.3 GHz Quad-Core Intel Core i7
-
-```
-
-save pairwise results object
-```{r, eval=FALSE}
-
-saveRDS(results, paste0(here::here(), "/data/slideseq/slideseqPuck.190926_08.pairwise.results.dist100.res100-6000.rds"))
-
-## object with distances 30-300: slideseqPuck.190926_08.rctd.pairwise.30-300.results.removeDups.rds
-
-```
-
-# Filter trends
-
-```{r}
-
-table(slide$celltypes)
-
-```
-
-Ignore poorly represented cell types like:
-Choroid, Candelabrum, Ependymal, Globular, Macrophages
-
-```{r}
-
-results <- readRDS(paste0(here::here(), "/data/slideseq/slideseqPuck.190926_08.pairwise.results.dist100.res100-6000.rds"))
-
-results.coloc <- crawdad::filterCoTrends(results = results, alpha = 0.05)
-results.sep <- crawdad::filterSepTrends(results = results, alpha = 0.05)
-results.change <- crawdad::filterChangeTrends(results = results, alpha = 0.05)
+                        verbose = FALSE,
+                        returnMeans = FALSE)
 
 ```
 
 ```{r}
 
-## example: neighbor cell types that are significantly co-localized or separated with Purkinje at some scale
-results.coloc$`Purkinje`
-results.sep$`Purkinje`
+## convert results to data.frame
+dat <- crawdad::meltResultsList(results, withPerms = T)
 
 ```
+
+# Visualize results
 
 ```{r}
 
-ignore <- c("Choroid", "Candelabrum", "Ependymal", "Globular", "Macrophages")
-
-length(unlist(lapply(names(results.coloc), function(ct){
-  if(!ct %in% ignore){
-    df <- results.coloc[[ct]]
-    cts <- setdiff(colnames(df), ignore)
-    return(cts)
-  } else {
-    NULL
-  }
-})))
-
-length(unlist(lapply(names(results.sep), function(ct){
-  if(!ct %in% ignore){
-    df <- results.sep[[ct]]
-    cts <- setdiff(colnames(df), ignore)
-    return(cts)
-  } else {
-    NULL
-  }
-})))
-
-length(unlist(lapply(names(results.change), function(ct){
-  if(!ct %in% ignore){
-    df <- results.change[[ct]]
-    cts <- setdiff(colnames(df), ignore)
-    return(cts)
-  } else {
-    NULL
-  }
-})))
+## multiple-test correction
+ntests <- length(unique(dat$reference)) * length(unique(dat$reference))
+psig <- 0.05/ntests
+zsig <- round(qnorm(psig/2, lower.tail = F), 2)
 
 ```
 
-# Defining subsets
+Summary visualization of CRAWDAD’s multi-scale cell-type spatial relationship analysis.
 
-```{r, eval=FALSE}
+```{r colocalization, fig.height=9, fig.width=11}
 
-oldw <- getOption("warn")
-options(warn = -1)
-
-binomMat <- crawdad::binomialTestMatrix(slide,
-                               neigh.dist = 100,
-                               ncores = ncores,
-                               verbose = TRUE)
-
-head(binomMat)
-
-options(warn = oldw)
-
-## note: 0.8 minutes with 7 cores, 2.3 GHz Quad-Core Intel Core i7
-## previous code iteration on rockfish took 3:56 minutes with 32 cores! much better now 
+vizColocDotplot(dat, reorder = TRUE, zsig.thresh = zsig, zscore.limit = zsig*2) +
+  theme(legend.position='right',
+        axis.text.x = element_text(angle = 45, h = 0))
 
 ```
 
-save the binomial matrix
-```{r, eval=FALSE}
+Visualize specific trends.
 
-saveRDS(binomMat, paste0(here::here(), "/data/slideseq/slideseqPuck.190926_08.binomMat.near.subdist100.rds"))
+```{r purk_berg}
 
-```
-
-```{r, eval=FALSE}
-
-oldw <- getOption("warn")
-options(warn = -1)
-
-subset.list <- crawdad::selectSubsets(binomMat,
-                             slide$celltypes,
-                             sub.type = "near",
-                             sub.thresh = 0.05,
-                             ncores = ncores,
-                             verbose = TRUE)
-
-options(warn = oldw)
+dat_filter <- dat %>% 
+  filter(reference == 'Purkinje') %>% 
+  filter(neighbor == 'Bergmann')
+vizTrends(dat_filter, lines = T, withPerms = T, sig.thresh = zsig)
 
 ```
 
-save the subsets
-```{r, eval=FALSE}
-
-saveRDS(subset.list, paste0(here::here(), "/data/slideseq/slideseqPuck.190926_08.subsets.near.subdist100.rds"))
-
-## slideseqPuck.190926_08.rctd.subsets.near.subdist100.rds
-
-```
-
-# Run analysis on subsets
-
-```{r, eval=FALSE}
-
-oldw <- getOption("warn")
-options(warn = -1)
-
-results.subsets <- crawdad::findTrends(slide,
-                        dist = 100,
-                        shuffle.list = shuffle.list,
-                        subset.list = subset.list,
-                        ncores = ncores,
-                        verbose = TRUE)
-
-options(warn = oldw)
-
-## note: 27.85 minutes with 7 cores, 2.3 GHz Quad-Core Intel Core i7; vs 2:46 minutes 14 cores on rockfish
-
-```
-
-save the results
-```{r, eval=FALSE}
-
-saveRDS(results.subsets, paste0(here::here(), "/data/slideseq/slideseqPuck.190926_08.subset.results.dist100.res100-6000.rds"))
-
-## slideseqPuck.190926_08.rctd.near.binom.subdist100.dist100.results.removeDups.rds
-
-```
-
-# ---------------------------------
-# Figures
-
-## load data
-
-```{r}
-
-## folder on `brendan` branch
-figpath <- paste0(here::here(), "/plots/slideseq")
-
-shuffle.list <- readRDS(paste0(here::here(), "/data/slideseq/slideseqPuck.190926_08.shuffled_res100-6000.rds"))
-
-binomMat <- readRDS(paste0(here::here(), "/data/slideseq/slideseqPuck.190926_08.binomMat.near.subdist100.rds"))
-subset.list <- readRDS(paste0(here::here(), "/data/slideseq/slideseqPuck.190926_08.subsets.near.subdist100.rds"))
-
-results <- readRDS(paste0(here::here(), "/data/slideseq/slideseqPuck.190926_08.pairwise.results.dist100.res100-6000.rds"))
-results.subsets <- readRDS(paste0(here::here(), "/data/slideseq/slideseqPuck.190926_08.subset.results.dist100.res100-6000.rds"))
-
-```
-
-## Fig 2 - tissue
-
-```{r, fig.height=12, fig.width=12}
-
-plt <- crawdad::vizAllClusters(cells = slide,
-                        coms = as.factor(slide$celltypes),
-                        ofInterest = c("Bergmann", "MLI1", "MLI2", "Purkinje"),
-                        s = 2) +
-  # ggplot2::theme(legend.position="none")
-  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
-plt
-
-# ggplot2::ggsave(filename = "2_slideseq_purk_berg_tissue_legend.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 6,
-#                 height = 6,
-#                 units = c("in"))
-
-```
-
-```{r, fig.height=12, fig.width=12}
-
-plt <- crawdad::vizAllClusters(cells = slide,
-                        coms = as.factor(slide$celltypes),
-                        ofInterest = c("Bergmann", "MLI1", "MLI2", "Purkinje", "Granule", "Oligodendrocytes"),
-                        s = 2) +
-  # ggplot2::theme(legend.position="none")
-  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
-plt
-
-# ggplot2::ggsave(filename = "S1_slideseq_purk_berg_tissue_sep_legend.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 6,
-#                 height = 6,
-#                 units = c("in"))
-
-```
-
-```{r, fig.height=12, fig.width=12}
-
-crawdad::vizAllClusters(cells = slide,
-                        coms = as.factor(slide$celltypes),
-                        ofInterest = c("Bergmann", "MLI1", "Purkinje"),
-                        s = 2)
-
-```
-
-```{r, fig.height=12, fig.width=12, eval=FALSE}
-
-## shuffling grid
-grid <- sf::st_make_grid(slide, cellsize = 1000)
-grid_coords <- as.data.frame(sf::st_coordinates(grid))
-
-## centers of the grids to add the tile IDs
-grid_coords_centroids <- as.data.frame(sf::st_coordinates(sf::st_centroid(grid)))
-grid_coords_centroids$name <- as.character(rownames(grid_coords_centroids))
-
-
-plt <- crawdad::vizAllClusters(cells = slide,
-                        coms = as.factor(slide$celltypes),
-                        ofInterest = c("Bergmann", "MLI1", "MLI2", "Purkinje"),
-                        s = 2) +
-  ggplot2::theme(legend.position="none") +
-  # ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
-  
-  ## add in the grid information on top of the plot
-  ggplot2::geom_sf(data = grid, fill = NA) 
-  # ggplot2::geom_text(data = grid_coords_centroids, ggplot2::aes(X, Y, label = name))
-
-ggplot2::ggsave(filename = "2A_slideseq_purk_berg_tissue_grid.pdf",
-                plot = plt,
-                device = "pdf",
-                path = figpath,
-                scale = 1,
-                width = 6,
-                height = 6,
-                units = c("in"))
-  
-plt
-
-```
-
-```{r, eval=FALSE}
-
-## pull out cells in specific grid regions
-int <- sf::st_intersection(slide, grid[[14]])
-cells2 <- slide[rownames(int),]
-
-## grid 11 real
-plt <- crawdad::vizAllClusters(cells = cells2,
-                               coms = cells2$celltypes,
-                               ofInterest = c("Bergmann", "MLI1", "MLI2", "Purkinje"),
-                               title = "grid14",
-                               axisAdj = 1, s = 10, a = 0.5) +
-  # ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
-  ggplot2::theme(legend.position="none") +
-  ggplot2::labs(x = "x",
-                y = "y")
-plt
-
-# ggplot2::ggsave(filename = "2_slideseq_purk_berg_tissue_zoom.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 6,
-#                 height = 6,
-#                 units = c("in"))
-
-
-```
-
-```{r, eval=FALSE}
-
-## pull out cells in specific grid regions
-int <- sf::st_intersection(slide, grid[[14]])
-cells2 <- slide[rownames(int),]
-
-## grid 11 real
-plt <- crawdad::vizAllClusters(cells = cells2,
-                               coms = cells2$celltypes,
-                               ofInterest = c("Bergmann", "MLI1", "MLI2", "Purkinje", "Granule", "Oligodendrocytes"),
-                               title = "grid14",
-                               axisAdj = 1, s = 10, a = 0.5) +
-  # ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1)) +
-  ggplot2::theme(legend.position="none") +
-  ggplot2::labs(x = "x",
-                y = "y")
-plt
-
-# ggplot2::ggsave(filename = "2_slideseq_purk_berg_tissue_sep_zoom.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 6,
-#                 height = 6,
-#                 units = c("in"))
-
-```
-
-## Fig 2 - trends
-
-### all
-
-```{r}
-
-ignore <- c("Choroid", "Candelabrum", "Ependymal", "Globular", "Macrophages")
-
-dat <- crawdad::meltResultsList(results)
-
-dat <- dat[!dat$reference %in% c(ignore) & !dat$neighbor %in% c(ignore),]
-
-plt <- vizTrends.heatmap(dat = dat, annotation = FALSE)
-plt
-
-# ggplot2::ggsave(filename = "2_slideseq_all_trends_heatmap.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 12,
-#                 height = 10,
-#                 units = c("in"))
-
-```
-
-### Purkinje
-
-```{r}
-
-dat <- crawdad::meltResultsList(results)
-
-d1 <- dat[dat$reference == "Purkinje" & dat$neighbor == "Bergmann",]
-d2 <- dat[dat$reference == "Purkinje" & dat$neighbor == "MLI1",]
-d3 <- dat[dat$reference == "Purkinje" & dat$neighbor == "MLI2",]
-
-## combine the trends into one data.frame, and have the "id" column label the combo, plot both lines on same plot
-## turn off the facet wrap so just coloring the two trends, which are labeled using the "id" column
-
-d1$id <- "Bergmann"
-d2$id <- "MLI1"
-d3$id <- "MLI2"
-
-d <- dplyr::bind_rows(list(d1, d2, d3))
-
-plt <- vizTrends(dat = d, facet = FALSE) +
-  ggplot2::scale_x_log10() +
-  # ggplot2::theme(legend.position="none") +
-  ggplot2::ggtitle("Purkinje")
-plt 
-
-# ggplot2::ggsave(filename = "2_slideseq_purkinje_trends.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 4,
-#                 height = 4,
-#                 units = c("in"))
-
-```
-
-```{r}
-
-dat <- crawdad::meltResultsList(results)
-
-d1 <- dat[dat$reference == "Purkinje" & dat$neighbor == "Granule",]
-d2 <- dat[dat$reference == "Purkinje" & dat$neighbor == "Oligodendrocytes",]
-
-## combine the trends into one data.frame, and have the "id" column label the combo, plot both lines on same plot
-## turn off the facet wrap so just coloring the two trends, which are labeled using the "id" column
-
-d1$id <- "Granule"
-d2$id <- "Oligodendrocytes"
-
-d <- dplyr::bind_rows(list(d1, d2))
-
-plt <- vizTrends(dat = d, facet = FALSE) +
-  ggplot2::scale_x_log10() +
-  # ggplot2::theme(legend.position="none") +
-  ggplot2::ggtitle("Purkinje")
-plt 
-
-# ggplot2::ggsave(filename = "2_slideseq_purkinje_trends_sep.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 4,
-#                 height = 4,
-#                 units = c("in"))
-
-```
-
-```{r}
-
-dat <- crawdad::meltResultsList(results)
-
-d1 <- dat[dat$reference == "Purkinje",]
-plt <- vizTrends(dat = d1, facet = FALSE, id = "neighbor") +
-  ggplot2::scale_x_log10() +
-  ggplot2::ggtitle("Purkinje")
-plt
-
-# ggplot2::ggsave(filename = "S3_slideseq_purkinje_trends_all.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 6,
-#                 height = 6,
-#                 units = c("in"))
-
-```
-
-### Bergmann
-
-```{r}
-
-dat <- crawdad::meltResultsList(results)
-
-d1 <- dat[dat$reference == "Bergmann" & dat$neighbor == "Purkinje",]
-d2 <- dat[dat$reference == "Bergmann" & dat$neighbor == "MLI1",]
-d3 <- dat[dat$reference == "Bergmann" & dat$neighbor == "MLI2",]
-
-## combine the trends into one data.frame, and have the "id" column label the combo, plot both lines on same plot
-## turn off the facet wrap so just coloring the two trends, which are labeled using the "id" column
-
-d1$id <- "Purkinje"
-d2$id <- "MLI1"
-d3$id <- "MLI2"
-
-d <- dplyr::bind_rows(list(d1, d2, d3))
-
-plt <- vizTrends(dat = d, facet = FALSE) +
-  ggplot2::scale_x_log10() +
-  # ggplot2::theme(legend.position="none") +
-  ggplot2::ggtitle("Bergmann")
-plt 
-
-# ggplot2::ggsave(filename = "2_slideseq_bergmann_trends.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 4,
-#                 height = 4,
-#                 units = c("in"))
-
-```
-
-```{r}
-
-dat <- crawdad::meltResultsList(results)
-
-d1 <- dat[dat$reference == "Bergmann",]
-plt <- vizTrends(dat = d1, facet = FALSE, id = "neighbor") +
-  ggplot2::scale_x_log10() +
-  ggplot2::ggtitle("Bergmann")
-plt
-
-# ggplot2::ggsave(filename = "S3_slideseq_bergmann_trends_all.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 6,
-#                 height = 6,
-#                 units = c("in"))
-
-```
-
-### MLI1
-
-```{r}
-
-dat <- crawdad::meltResultsList(results)
-
-d1 <- dat[dat$reference == "MLI1" & dat$neighbor == "Purkinje",]
-d2 <- dat[dat$reference == "MLI1" & dat$neighbor == "Bergmann",]
-d3 <- dat[dat$reference == "MLI1" & dat$neighbor == "MLI2",]
-
-## combine the trends into one data.frame, and have the "id" column label the combo, plot both lines on same plot
-## turn off the facet wrap so just coloring the two trends, which are labeled using the "id" column
-
-d1$id <- "Purkinje"
-d2$id <- "Bergmann"
-d3$id <- "MLI2"
-
-d <- dplyr::bind_rows(list(d1, d2, d3))
-
-plt <- vizTrends(dat = d, facet = FALSE) +
-  ggplot2::scale_x_log10() +
-  # ggplot2::theme(legend.position="none") +
-  ggplot2::ggtitle("MLI1")
-plt 
-
-# ggplot2::ggsave(filename = "2_slideseq_mli1_trends.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 4,
-#                 height = 4,
-#                 units = c("in"))
-
-```
-
-```{r}
-
-dat <- crawdad::meltResultsList(results)
-
-d1 <- dat[dat$reference == "MLI1",]
-plt <- vizTrends(dat = d1, facet = FALSE, id = "neighbor") +
-  ggplot2::scale_x_log10() +
-  ggplot2::ggtitle("MLI1")
-plt
-
-# ggplot2::ggsave(filename = "S3_slideseq_mli1_trends_all.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 6,
-#                 height = 6,
-#                 units = c("in"))
-
-```
-
-### MLI2
-
-```{r}
-
-dat <- crawdad::meltResultsList(results)
-
-d1 <- dat[dat$reference == "MLI2" & dat$neighbor == "Purkinje",]
-d2 <- dat[dat$reference == "MLI2" & dat$neighbor == "Bergmann",]
-d3 <- dat[dat$reference == "MLI2" & dat$neighbor == "MLI1",]
-
-## combine the trends into one data.frame, and have the "id" column label the combo, plot both lines on same plot
-## turn off the facet wrap so just coloring the two trends, which are labeled using the "id" column
-
-d1$id <- "Purkinje"
-d2$id <- "Bergmann"
-d3$id <- "MLI1"
-
-d <- dplyr::bind_rows(list(d1, d2, d3))
-
-plt <- vizTrends(dat = d, facet = FALSE) +
-  ggplot2::scale_x_log10() +
-  # ggplot2::theme(legend.position="none") +
-  ggplot2::ggtitle("MLI2")
-plt 
-
-# ggplot2::ggsave(filename = "2_slideseq_mli2_trends.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 4,
-#                 height = 4,
-#                 units = c("in"))
-
-```
-
-```{r}
-
-dat <- crawdad::meltResultsList(results)
-
-d1 <- dat[dat$reference == "MLI2",]
-plt <- vizTrends(dat = d1, facet = FALSE, id = "neighbor") +
-  ggplot2::scale_x_log10() +
-  ggplot2::ggtitle("MLI2")
-plt
-
-# ggplot2::ggsave(filename = "S3_slideseq_mli2_trends_all.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 6,
-#                 height = 6,
-#                 units = c("in"))
-
-```
-
-## combine heatmaps
-
-```{r}
-
-dat <- crawdad::meltResultsList(results)
-d <- dat[dat$reference %in% c("Bergmann", "MLI1", "MLI2", "Purkinje") & dat$neighbor %in% c("Bergmann", "MLI1", "MLI2", "Purkinje"),]
-
-plt <- vizTrends.heatmap(dat = d)
-plt
-
-# ggplot2::ggsave(filename = "2_slideseq_purk_berg_mli_trends_heatmap.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 8,
-#                 height = 6,
-#                 units = c("in"))
-
-```
-
-```{r}
-
-dat <- crawdad::meltResultsList(results)
-d <- dat[dat$reference %in% c("Bergmann", "MLI1", "MLI2", "Purkinje"),]
-
-plt <- vizTrends.heatmap(dat = d)
-plt
-
-# ggplot2::ggsave(filename = "S1_slideseq_purk_berg_mli_trends_heatmap_all.pdf",
-#                 plot = plt,
-#                 device = "pdf",
-#                 path = figpath,
-#                 scale = 1,
-#                 width = 8,
-#                 height = 6,
-#                 units = c("in"))
+```{r purk_olig}
+
+dat_filter <- dat %>% 
+  filter(reference == 'Purkinje') %>% 
+  filter(neighbor == 'Oligodendrocytes')
+vizTrends(dat_filter, lines = T, withPerms = T, sig.thresh = zsig)
 
 ```
