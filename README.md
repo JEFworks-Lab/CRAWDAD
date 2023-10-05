@@ -1,4 +1,4 @@
-<img src="https://github.com/JEFworks/CRAWDAD/blob/devel/docs/img/CRAWDAD_logo.png?raw=true"/>
+<img src="https://github.com/JEFworks/CRAWDAD/blob/main/docs/img/CRAWDAD_logo.png?raw=true" width="200" height="200"/>
 
 `CRAWDAD` enables the characterization of cell-type relationships across different scales.
 
