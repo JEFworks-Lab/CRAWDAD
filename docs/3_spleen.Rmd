@@ -124,6 +124,8 @@ binomMat <- crawdad::binomialTestMatrix(pkhl,
                                         ncores = ncores,
                                         verbose = TRUE)
 
+## note: 55.29 minutes with 7 M2 cores
+
 ```
 
 ## Select subsets
@@ -175,8 +177,10 @@ Visualize specific subset trends.
 
 ```{r pkhl_subset_trend, warning=FALSE}
 
+## this confirms that the CD4 memory T cells near Fol B cells are colocalized 
+## with Fol B cells
 dats %>% 
-  filter(neighbor == 'Podoplanin') %>% 
+  filter(neighbor == 'Fol B cells') %>% 
   filter(reference == 'CD4 Memory T cells_near_Fol B cells') %>% 
   vizTrends(lines = T, withPerms = T, sig.thresh = zsigs)
 
@@ -188,30 +192,25 @@ Visualize cell-type proportions.
 
 ct_ngb <- 'CD4 Memory T cells' ## neighbor cell type
 ct_ref <- 'Fol B cells' ## reference cell type
-df <- pkhl
-sample <- 'pkhl'
+sample_name <- 'pkhl'
 
 ## select cells from each subset
-c_ctn_near <- subset.list[[paste(ct_ngb, 'near', ct_ref, sep = '_')]]
-c_ctn <- which(df$celltypes == ct_ngb)
-c_ctn_notnear <- c_ctn[!c_ctn %in% c_ctn_near]
-c_ctr <- which(df$celltypes == ct_ref)
+c_ct_ngb_near <- subset.list[[paste(ct_ngb, 'near', ct_ref, sep = '_')]]
+c_ct_ngb <- which(df$celltypes == ct_ngb)
+c_ct_nbg_notnear <- c_ctn[!c_ctn %in% c_ctn_near]
 
 ## create data.frame of cell counts in each cell type
-df_freq_ct <- as.data.frame(table(df$celltypes))
-colnames(df_freq_ct) <- c('celltypes', 'frequency')
-df_freq_sub <- data.frame(celltypes = c(paste(ct_ngb, 'near', ct_ref),
-                                        paste(ct_ngb, 'not near', ct_ref)),
-                          frequency = c(length(c_ctn_near),
-                                        length(c_ctn_notnear)))
-df_freq <- rbind(df_freq_ct, df_freq_sub)
+df_freq <- data.frame(celltypes = c(paste(ct_ngb, 'near', ct_ref),
+                                    paste(ct_ngb, 'not near', ct_ref)),
+                      proportion = c(length(c_ctn_near)/length(c_ct_ngb),
+                                    length(c_ctn_notnear)/length(c_ct_ngb)))
 df_freq$sample <- sample_name
 
 ## barplot
 df_freq %>% 
   filter(grepl(paste0(ct_ref, '$'), celltypes)) %>% 
-  ggplot(aes(x = sample, y = frequency, fill = celltypes)) +
-  geom_bar(stat = "identity", position = "dodge") 
+  ggplot(aes(x = sample, y = proportion, fill = celltypes)) +
+  geom_bar(stat = "identity", position = "dodge")
 
 ```
 
@@ -220,7 +219,7 @@ df_freq %>%
 
 ## Load data
 
-```{r, eval=TRUE}
+```{r, eval=TRUE, warning=FALSE}
 
 ksfb <- read.csv2(file = paste0(here::here(), "/data/spleen/KSFB.meta.csv.gz"), row.names = 1)
 ksfb <- ksfb[,c("x", "y", "celltypes_folBcombined")]
@@ -240,7 +239,7 @@ ksfb
 
 ## Load data
 
-```{r, eval=TRUE}
+```{r, eval=TRUE, warning=FALSE}
 
 xxcd <- read.csv2(file = paste0(here::here(), "/data/spleen/XXCD.meta.csv.gz"), row.names = 1)
 xxcd <- xxcd[,c("x", "y", "celltypes_folBcombined")]
@@ -259,7 +258,7 @@ xxcd
 
 ## Load data
 
-```{r, eval=TRUE}
+```{r, eval=TRUE, warning=FALSE}
 
 pbvn <- read.csv2(file = paste0(here::here(), "/data/spleen/PBVN.meta.csv.gz"), row.names = 1)
 pbvn <- pbvn[,c("x", "y", "celltypes_folBcombined")]
@@ -278,7 +277,7 @@ pbvn
 
 ## Load data
 
-```{r, eval=TRUE}
+```{r, eval=TRUE, warning=FALSE}
 
 fsld <- read.csv2(file = paste0(here::here(), "/data/spleen/FSLD.meta.csv.gz"), row.names = 1)
 fsld <- fsld[,c("x", "y", "celltypes_folBcombined")]
@@ -297,7 +296,7 @@ fsld
 
 ## Load data
 
-```{r, eval=TRUE}
+```{r, eval=TRUE, warning=FALSE}
 
 ngpl <- read.csv2(file = paste0(here::here(), "/data/spleen/NGPL.meta.csv.gz"), row.names = 1)
 ngpl <- ngpl[,c("x", "y", "celltypes_folBcombined")]
