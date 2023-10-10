@@ -4,95 +4,81 @@
 
 <!-- badges: end -->
 
-`CRAWDAD`: Cell Relationship Analysis Workflow Done Across Distances
+`CRAWDAD` enables the characterization of cell-type relationships across different scales.
 
-<img src=""/>
-
-The overall approach is now published in [link]
+<p align="center">
+  <img src="https://github.com/JEFworks/CRAWDAD/blob/main/docs/img/CRAWDAD_logo.png?raw=true" height="200"/>
+</p>
 
 ## Overview
 
-<img src=""/>
+`CRAWDAD` is a statistical framework that uses labeled spatial omics data to identify the colocalization or separation of cell types at different scales. CRAWDAD identifies regions where multiple cells colocalize, the scale of such colocalization, and also subsets the cell types based on their proximity to others. Therefore, CRAWDAD is a powerful tool for tissue characterization and comparison.
+
+<img src="https://github.com/JEFworks/CRAWDAD/blob/main/docs/img/CRAWDAD_workflow.png?raw=true"/>
+
+## Installation
+
+To install `CRAWDAD`, we recommend using `remotes`:
+
+``` r
+require(remotes)
+remotes::install_github('JEFworks-Lab/CRAWDAD')
+```
 
 ## Example
 
-```{r}
-
-data(sim)
-
-## visualize
-plt <- crawdad::vizAllClusters(cells = sim,
-                               coms = sim$type,
-                               title = "sim",
-                               axisAdj = 1, s = 6, a = 0.5) +
-  ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
-plt
-
-## convert to SP
-cells <- crawdad::toSP(pos = sim[,c("x", "y")],
-                        celltypes = sim$type)
-cells
-
-```
-
-```{r}
-
-oldw <- getOption("warn")
-options(warn = -1)
-
-## generate background
-shuffle.list <- crawdad::makeShuffledCells(cells,
-                          resolutions = c(100, 200, 500, 800, 1000),
-                          perms = 1,
-                          ncores = ncores,
-                          seed = 1,
-                          verbose = TRUE)
-
-options(warn = oldw)
-
-```
-
-```{r}
-
-oldw <- getOption("warn")
-options(warn = -1)
-
-## find trends, passing background as parameter
+``` r
+library(crawdad)
+library(tidyverse)
+## load the spleen data of the pkhl sample 
+data('pkhl')
+## convert dataframe to spatial points (SP)
+cells <- crawdad::toSP(pos = pkhl[,c("x", "y")], celltypes = pkhl$celltypes)
+## define the scales to analyze the data
+scales <- c(100, 200, 300, 400, 500, 600, 700, 800, 900, 1000)
+## shuffle cells to create null background
+shuffle.list <- crawdad:::makeShuffledCells(cells,
+                                            scales = scales,
+                                            perms = 3,
+                                            ncores = 7,
+                                            seed = 1,
+                                            verbose = TRUE)
+## calculate the zscore for the cell-type pairs at different scales
 results <- crawdad::findTrends(cells,
-                        dist = 100,
-                        shuffle.list = shuffle.list,
-                        ncores = ncores,
-                        verbose = TRUE)
-
-options(warn = oldw)
-
+                               dist = 100,
+                               shuffle.list = shuffle.list,
+                               ncores = 7,
+                               verbose = TRUE,
+                               returnMeans = FALSE)
+dat <- crawdad::meltResultsList(results, withPerms = TRUE)
+## calculate the zscore for the multiple-test correction
+ntests <- length(unique(dat$reference)) * length(unique(dat$reference))
+psig <- 0.05/ntests
+zsig <- round(qnorm(psig/2, lower.tail = F), 2)
+## summary visualization
+vizColocDotplot(dat, zsig.thresh = zsig, zscore.limit = 2*zsig) +
+  theme(axis.text.x = element_text(angle = 35, h = 0))
 ```
 
-```{r}
+<img src="https://github.com/JEFworks/CRAWDAD/blob/main/docs/img/coloc.png?raw=true" height="600"/>
 
-plt <- crawdad::vizTrends(dat = results) +
-  ggplot2::scale_x_log10()
-plt 
-
-plt <- crawdad::vizTrends.heatmap(dat = results, annotation = TRUE,
-                                  z_limit = 20, # Z score limits (default +/- 20). Winsorize values to these limits
-                                  sig.thresh = 1.96, # Z score significance threshold (default: 1.96). Non-significant values < 1.96 and > -1.96 colored white
-                                  ncols = 4 # specify number of columns in facet wrap (default: 4)
-                                  )
-plt 
-
+``` r
+## visualize trend for one cell-type pair
+dat %>% 
+  filter(reference == 'Podoplanin') %>% 
+  filter(neighbor == 'CD4 Memory T cells') %>% 
+  vizTrends(lines = TRUE, withPerms = TRUE, sig.thresh = zsig)
 ```
 
-<img src=""/>
+<img src="https://github.com/JEFworks/CRAWDAD/blob/main/docs/img/trend.png?raw=true" height="350"/>
 
 More details can be found in the tutorials.
 
 ## Tutorials
-- [Getting started with `CRAWDAD`](tutorial.md)
-- [Simulated data analysis](1_simulations.md)
-- [Slide-seq analysis](2_slideseq.md)
-- [seqFISH analysis](2_seqfish.md)
-- [Spleen analysis](3_spleen.md)
+- [`CRAWDAD` applied to simulated data](https://github.com/JEFworks/CRAWDAD/blob/main/docs/1_simulations.md)
+- [`CRAWDAD` applied to a mouse embryo seqfish data](https://github.com/JEFworks/CRAWDAD/blob/main/docs/2_seqfish.md)
+- [`CRAWDAD` applied to a mouse cerebellum slideseq data](https://github.com/JEFworks/CRAWDAD/blob/main/docs/2_slideseq.md)
+- [`CRAWDAD` applied to a human spleen codex data](https://github.com/JEFworks/CRAWDAD/blob/main/docs/3_spleen.md)
 
 ## Installation
 
