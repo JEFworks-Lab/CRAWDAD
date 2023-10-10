@@ -56,7 +56,7 @@ vizColocDotplot(dat, zsig.thresh = zsig, zscore.limit = 2*zsig) +
   theme(axis.text.x = element_text(angle = 35, h = 0))
 ```
 
-<img src="https://github.com/JEFworks/CRAWDAD/blob/main/docs/img/coloc.png?raw=true"/>
+<img src="https://github.com/JEFworks/CRAWDAD/blob/main/docs/img/coloc.png?raw=true" height="600"/>
 
 ``` r
 ## visualize trend for one cell-type pair
@@ -66,7 +66,7 @@ dat %>%
   vizTrends(lines = TRUE, withPerms = TRUE, sig.thresh = zsig)
 ```
 
-<img src="https://github.com/JEFworks/CRAWDAD/blob/main/docs/img/trend.png?raw=true" height="250"/>
+<img src="https://github.com/JEFworks/CRAWDAD/blob/main/docs/img/trend.png?raw=true" height="350"/>
 
 More details can be found in the tutorials.
 
