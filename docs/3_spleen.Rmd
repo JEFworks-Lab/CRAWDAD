@@ -16,14 +16,14 @@ vignette: >
 
 This vignette will go through analyses to reproduce the results and figures of the CODEX spleen datasets.
 
-```{r}
+```{r, eval=FALSE}
 
 library(crawdad)
 library(tidyverse)
 
 ```
 
-```{r}
+```{r, eval=FALSE}
 
 ncores = 7
 
@@ -33,7 +33,7 @@ ncores = 7
 
 ## Load data
 
-```{r, warning=FALSE}
+```{r, warning=FALSE, eval=FALSE}
 
 data(pkhl)
 
@@ -45,23 +45,24 @@ pkhl <- crawdad:::toSP(pos = pkhl[,c("x", "y")],
 
 ## Visualize celltypes
 
-```{r celltypes, warning=FALSE, message=FALSE, fig.height=24, fig.width=24}
+```{r celltypes, warning=FALSE, message=FALSE, fig.height=24, fig.width=24, eval=FALSE}
 
 crawdad::vizEachCluster(cells = pkhl,
                         coms = as.factor(pkhl$celltypes),
                         s = 2)
 
 ```
+<img src="https://github.com/JEFworks/CRAWDAD/blob/main/docs/3_spleen_files/celltypes.png?raw=true"/>
 
 ## Make shuffled background
 
-```{r}
+```{r, eval=FALSE}
 
 scales <- seq(100, 1000, by=100)
 
 ```
 
-```{r, warning=FALSE}
+```{r, warning=FALSE, eval=FALSE}
 
 ## generate background
 shuffle.list <- crawdad:::makeShuffledCells(pkhl,
@@ -75,7 +76,7 @@ shuffle.list <- crawdad:::makeShuffledCells(pkhl,
 
 ## Run pairwise analysis
 
-```{r, warning=FALSE}
+```{r, warning=FALSE, eval=FALSE}
 
 ## find trends, passing background as parameter
 results <- crawdad::findTrends(pkhl,
@@ -87,7 +88,7 @@ results <- crawdad::findTrends(pkhl,
 
 ```
 
-```{r}
+```{r, eval=FALSE}
 
 ## convert results to data.frame
 dat <- crawdad::meltResultsList(results, withPerms = T)
@@ -96,7 +97,7 @@ dat <- crawdad::meltResultsList(results, withPerms = T)
 
 ## Visualize results
 
-```{r}
+```{r, eval=FALSE}
 
 ## multiple-test correction
 ntests <- length(unique(dat$reference)) * length(unique(dat$reference))
@@ -107,17 +108,18 @@ zsig <- round(qnorm(psig/2, lower.tail = F), 2)
 
 Summary visualization of CRAWDAD’s multi-scale cell-type spatial relationship analysis.
 
-```{r colocalization, fig.height=9, fig.width=11}
+```{r colocalization, fig.height=9, fig.width=11, eval=FALSE}
 
 vizColocDotplot(dat, reorder = TRUE, zsig.thresh = zsig, zscore.limit = zsig*2) +
   theme(legend.position='right',
         axis.text.x = element_text(angle = 45, h = 0))
 
 ```
+<img src="https://github.com/JEFworks/CRAWDAD/blob/main/docs/3_spleen_files/dotplot.png?raw=true" height="400"/>
 
 ## Defining subsets
 
-```{r, warning=FALSE}
+```{r, warning=FALSE, eval=FALSE}
 
 binomMat <- crawdad::binomialTestMatrix(pkhl,
                                         neigh.dist = 100,
@@ -130,7 +132,7 @@ binomMat <- crawdad::binomialTestMatrix(pkhl,
 
 ## Select subsets
 
-```{r, warning=FALSE}
+```{r, warning=FALSE, eval=FALSE}
 
 subset.list <- crawdad::selectSubsets(binomMat,
                                       pkhl$celltypes,
@@ -143,7 +145,7 @@ subset.list <- crawdad::selectSubsets(binomMat,
 
 ## Run analysis on subsets
 
-```{r, warning=FALSE}
+```{r, warning=FALSE, eval=FALSE}
 
 results.subsets <- crawdad::findTrends(pkhl,
                                        dist = 100,
@@ -153,9 +155,12 @@ results.subsets <- crawdad::findTrends(pkhl,
                                        verbose = TRUE,
                                        returnMeans = FALSE)
 
+## this part may take tome time depending on the number of subsets
+## note: was 1213.44 mins with 7 M2 cores
+
 ```
 
-```{r}
+```{r, eval=FALSE}
 
 ## convert results to data.frame
 dats <- crawdad::meltResultsList(results.subsets, withPerms = TRUE)
@@ -164,7 +169,7 @@ dats <- crawdad::meltResultsList(results.subsets, withPerms = TRUE)
 
 ## Visualize subset results
 
-```{r}
+```{r, eval=FALSE}
 
 ## multiple-test correction for the number of subsets
 ntestss <- length(unique(dats$reference)) * length(unique(dats$neighbor))
@@ -175,7 +180,7 @@ zsigs <- round(qnorm(psigs/2, lower.tail = F), 2)
 
 Visualize specific subset trends.
 
-```{r pkhl_subset_trend, warning=FALSE}
+```{r pkhl_subset_trend, warning=FALSE, eval=FALSE}
 
 ## this confirms that the CD4 memory T cells near Fol B cells are colocalized 
 ## with Fol B cells
@@ -185,10 +190,12 @@ dats %>%
   vizTrends(lines = T, withPerms = T, sig.thresh = zsigs)
 
 ```
+<img src="https://github.com/JEFworks/CRAWDAD/blob/main/docs/3_spleen_files/subset_trend.png?raw=true" height="250"/>
+
 
 Visualize cell-type proportions.
 
-```{r}
+```{r, eval=FALSE}
 
 ct_ngb <- 'CD4 Memory T cells' ## neighbor cell type
 ct_ref <- 'Fol B cells' ## reference cell type
@@ -196,14 +203,14 @@ sample_name <- 'pkhl'
 
 ## select cells from each subset
 c_ct_ngb_near <- subset.list[[paste(ct_ngb, 'near', ct_ref, sep = '_')]]
-c_ct_ngb <- which(df$celltypes == ct_ngb)
-c_ct_nbg_notnear <- c_ctn[!c_ctn %in% c_ctn_near]
+c_ct_ngb <- which(pkhl$celltypes == ct_ngb)
+c_ct_nbg_notnear <- c_ct_ngb[!c_ct_ngb %in% c_ct_ngb_near]
 
 ## create data.frame of cell counts in each cell type
 df_freq <- data.frame(celltypes = c(paste(ct_ngb, 'near', ct_ref),
                                     paste(ct_ngb, 'not near', ct_ref)),
-                      proportion = c(length(c_ctn_near)/length(c_ct_ngb),
-                                    length(c_ctn_notnear)/length(c_ct_ngb)))
+                      proportion = c(length(c_ct_ngb_near)/length(c_ct_ngb),
+                                    length(c_ct_nbg_notnear)/length(c_ct_ngb)))
 df_freq$sample <- sample_name
 
 ## barplot
@@ -213,13 +220,13 @@ df_freq %>%
   geom_bar(stat = "identity", position = "dodge")
 
 ```
-
+<img src="https://github.com/JEFworks/CRAWDAD/blob/main/docs/3_spleen_files/counts.png?raw=true" height="250"/>
 
 # KSFB Sample
 
 ## Load data
 
-```{r, eval=TRUE, warning=FALSE}
+```{r, eval=FALSE, warning=FALSE}
 
 ksfb <- read.csv2(file = paste0(here::here(), "/data/spleen/KSFB.meta.csv.gz"), row.names = 1)
 ksfb <- ksfb[,c("x", "y", "celltypes_folBcombined")]
@@ -239,7 +246,7 @@ ksfb
 
 ## Load data
 
-```{r, eval=TRUE, warning=FALSE}
+```{r, eval=FALSE, warning=FALSE}
 
 xxcd <- read.csv2(file = paste0(here::here(), "/data/spleen/XXCD.meta.csv.gz"), row.names = 1)
 xxcd <- xxcd[,c("x", "y", "celltypes_folBcombined")]
@@ -258,7 +265,7 @@ xxcd
 
 ## Load data
 
-```{r, eval=TRUE, warning=FALSE}
+```{r, eval=FALSE, warning=FALSE}
 
 pbvn <- read.csv2(file = paste0(here::here(), "/data/spleen/PBVN.meta.csv.gz"), row.names = 1)
 pbvn <- pbvn[,c("x", "y", "celltypes_folBcombined")]
@@ -277,7 +284,7 @@ pbvn
 
 ## Load data
 
-```{r, eval=TRUE, warning=FALSE}
+```{r, eval=FALSE, warning=FALSE}
 
 fsld <- read.csv2(file = paste0(here::here(), "/data/spleen/FSLD.meta.csv.gz"), row.names = 1)
 fsld <- fsld[,c("x", "y", "celltypes_folBcombined")]
@@ -296,7 +303,7 @@ fsld
 
 ## Load data
 
-```{r, eval=TRUE, warning=FALSE}
+```{r, eval=FALSE, warning=FALSE}
 
 ngpl <- read.csv2(file = paste0(here::here(), "/data/spleen/NGPL.meta.csv.gz"), row.names = 1)
 ngpl <- ngpl[,c("x", "y", "celltypes_folBcombined")]
