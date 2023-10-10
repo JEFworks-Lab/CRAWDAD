@@ -66,12 +66,12 @@ dat %>%
   vizTrends(lines = TRUE, withPerms = TRUE, sig.thresh = zsig)
 ```
 
-<img src="https://github.com/JEFworks/CRAWDAD/blob/main/docs/img/trend.png?raw=true"/>
+<img src="https://github.com/JEFworks/CRAWDAD/blob/main/docs/img/trend.png?raw=true" height="250"/>
 
 More details can be found in the tutorials.
 
 ## Tutorials
 - [`CRAWDAD` applied to simulated data](https://github.com/JEFworks/CRAWDAD/blob/main/docs/1_simulations.md)
-- [`CRAWDAD` applied to a mouse embryo seqfish data](https://github.com/JEFworks/CRAWDAD/blob/main/docs/additional_features.md)
-- [`CRAWDAD` applied to a mouse cerebellum slideseq data](https://github.com/JEFworks/CRAWDAD/blob/main/docs/celltype_annotation.md)
-- [`CRAWDAD` applied to a human spleen codex data](https://github.com/JEFworks/CRAWDAD/blob/main/docs/visium_10x.md)
+- [`CRAWDAD` applied to a mouse embryo seqfish data](https://github.com/JEFworks/CRAWDAD/blob/main/docs/2_seqfish.md)
+- [`CRAWDAD` applied to a mouse cerebellum slideseq data](https://github.com/JEFworks/CRAWDAD/blob/main/docs/2_slideseq.md)
+- [`CRAWDAD` applied to a human spleen codex data](https://github.com/JEFworks/CRAWDAD/blob/main/docs/3_spleen.md)
