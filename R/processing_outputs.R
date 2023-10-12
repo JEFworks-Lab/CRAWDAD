@@ -129,7 +129,6 @@ meltResultsList <- function(resultsList, id = NA, withPerms = FALSE){
 #' filterCoTrends(results = results, alpha = 0.05)
 #' }
 #' 
-#' @export
 filterCoTrends <- function(results, alpha = 0.05) {
   zthresh <- qnorm(1-alpha/2)
   lapply(results, function(x) {
@@ -158,7 +157,6 @@ filterCoTrends <- function(results, alpha = 0.05) {
 #' filterSepTrends(results = results, alpha = 0.05)
 #' }
 #' 
-#' @export
 filterSepTrends <- function(results, alpha = 0.05) {
   zthresh <- qnorm(1-alpha/2)
   lapply(results, function(x) {
@@ -187,7 +185,6 @@ filterSepTrends <- function(results, alpha = 0.05) {
 #' filterChangeTrends(results = results, alpha = 0.05)
 #' }
 #' 
-#' @export
 filterChangeTrends <- function(results, alpha = 0.05) {
   zthresh <- qnorm(1-alpha/2)
   lapply(results, function(x) {
