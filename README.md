@@ -75,3 +75,8 @@ More details can be found in the tutorials.
 - [`CRAWDAD` applied to a mouse embryo seqfish data](https://github.com/JEFworks/CRAWDAD/blob/main/docs/2_seqfish.md)
 - [`CRAWDAD` applied to a mouse cerebellum slideseq data](https://github.com/JEFworks/CRAWDAD/blob/main/docs/2_slideseq.md)
 - [`CRAWDAD` applied to a human spleen codex data](https://github.com/JEFworks/CRAWDAD/blob/main/docs/3_spleen.md)
+
+## Instalation
+
+CRAWDAD was tested on R version 4.3.0 (2023-04-21) -- "Already Tomorrow".
+Installation time is 1 minute in a Mac Pro Computer.
