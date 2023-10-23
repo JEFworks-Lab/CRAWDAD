@@ -5,18 +5,18 @@
 #'       ex: rownames(cells)[which(cells$celltypes == "A")]
 #'       or can be an entry in a subset list from `selectSubsets()`
 #' 
-#' @param cells sp::SpatialPointsDataFrame object, with celltypes features and point geometries
+#' @param cells sf object, with celltypes features and point geometries
 #' @param reference.ids vector of cell ids (rownames) in `cells` to be used as the reference cell set
 #' @param dist distance to define neighbors (default = 100)
-#' @param returnSP boolean to return either an sp::SpatialPointsDataFrame object of just the neighbors
+#' @param returnSF boolean to return either an sf object of just the neighbors
 #' otherwise returns factor where non neighbor cells are NAs. (default: FALSE)
 #'
-#' @return sp::SpatialPointsDataFrame object of the neighbor cells or factor of neighbor cells
+#' @return sf object of the neighbor cells or factor of neighbor cells
 #' 
 #' @examples 
 #' \dontrun{
 #' data(sim)
-#' cells <- toSP(pos = sim[,c("x", "y")], celltypes = slide$type)
+#' cells <- toSF(pos = sim[,c("x", "y")], celltypes = sim$celltypes)
 #' shuffle.list <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
 #' binomMat <- binomialTestMatrix(cells, neigh.dist = 100, ncores = 2)
 #' subset.list <- selectSubsets(binomMat, cells$celltypes, sub.type = "near", sub.thresh = 0.05)
@@ -28,7 +28,7 @@ getNeighbors <- function(cells,
                          reference.ids,
                          removeRef = TRUE,
                          dist = 100,
-                         returnSP = FALSE){
+                         returnSF = FALSE){
   
   ## get the reference cells
   ref.cells <- cells[reference.ids,]
@@ -53,10 +53,10 @@ getNeighbors <- function(cells,
   non_neighbors <- setdiff(rownames(cells), rownames(neigh.cells))
   neigh_coms[non_neighbors] <- NA
   
-  ## if true, the output is sp::SpatialPointsDataFrame of just the neighbor cells
+  ## if true, the output is sf of just the neighbor cells
   ## otherwise, the output is a new com factor of all the cells in `cells` but
   ## non neighbors are NAs
-  if(returnSP){
+  if(returnSFE){
     return(neigh.cells)
   } else {
     return(neigh_coms)
@@ -84,7 +84,7 @@ getNeighbors <- function(cells,
 #' @examples 
 #' \dontrun{
 #' data(sim)
-#' cells <- toSP(pos = sim[,c("x", "y")], celltypes = slide$type)
+#' cells <- toSF(pos = sim[,c("x", "y")], celltypes = sim$celltypes)
 #' shuffle.list <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
 #' results <- findTrends(cells, dist = 100, shuffle.list = shuffle.list, ncores = 2)
 #' meltResultsList(results)
@@ -123,7 +123,7 @@ meltResultsList <- function(resultsList, id = NA, withPerms = FALSE){
 #' @examples 
 #' \dontrun{
 #' data(sim)
-#' cells <- toSP(pos = sim[,c("x", "y")], celltypes = slide$type)
+#' cells <- toSF(pos = sim[,c("x", "y")], celltypes = sim$celltypes)
 #' shuffle.list <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
 #' results <- findTrends(cells, dist = 100, shuffle.list = shuffle.list, ncores = 2)
 #' filterCoTrends(results = results, alpha = 0.05)
@@ -151,7 +151,7 @@ filterCoTrends <- function(results, alpha = 0.05) {
 #' @examples 
 #' \dontrun{
 #' data(sim)
-#' cells <- toSP(pos = sim[,c("x", "y")], celltypes = slide$type)
+#' cells <- toSF(pos = sim[,c("x", "y")], celltypes = sim$celltypes)
 #' shuffle.list <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
 #' results <- findTrends(cells, dist = 100, shuffle.list = shuffle.list, ncores = 2)
 #' filterSepTrends(results = results, alpha = 0.05)
@@ -179,7 +179,7 @@ filterSepTrends <- function(results, alpha = 0.05) {
 #' @examples 
 #' \dontrun{
 #' data(sim)
-#' cells <- toSP(pos = sim[,c("x", "y")], celltypes = slide$type)
+#' cells <- toSF(pos = sim[,c("x", "y")], celltypes = sim$celltypes)
 #' shuffle.list <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
 #' results <- findTrends(cells, dist = 100, shuffle.list = shuffle.list, ncores = 2)
 #' filterChangeTrends(results = results, alpha = 0.05)

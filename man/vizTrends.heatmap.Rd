@@ -38,7 +38,7 @@ The input data.frame should be the results list from \code{findTrends()} that ha
 \examples{
 \dontrun{
 data(sim)
-cells <- toSP(pos = sim[,c("x", "y")], celltypes = slide$type)
+cells <- toSF(pos = sim[,c("x", "y")], celltypes = sim$celltypes)
 shuffle.list <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
 results <- findTrends(cells, dist = 100, shuffle.list = shuffle.list, ncores = 2)
 vizTrends.heatmap(dat = results)

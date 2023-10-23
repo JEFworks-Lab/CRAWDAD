@@ -58,15 +58,15 @@ data(sim)
 
 ## visualize
 plt <- crawdad::vizAllClusters(cells = sim,
-                               coms = sim$type,
+                               coms = sim$celltypes,
                                title = "sim",
                                axisAdj = 1, s = 6, a = 0.5) +
   ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 1))
 plt
 
 ## convert to SP
-cells <- crawdad::toSP(pos = sim[,c("x", "y")],
-                        celltypes = sim$type)
+cells <- crawdad::toSF(pos = sim[,c("x", "y")],
+                       celltypes = sim$celltypes)
 cells
 
 ```

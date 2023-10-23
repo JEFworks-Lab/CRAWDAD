@@ -3,7 +3,7 @@
 #' @description for each scale, and for i number of permutations, shuffle the celltype labels.
 #' Returns a list of lists, where each list is a factor of the shuffled celltype labels.
 #' Outer list is for each scale of shuffling, and each inner list is for a given permutation with a given seed.
-#' @param cells sp::SpatialPointsDataFrame object, with celltypes features and point geometries
+#' @param cells sf object, with celltypes features and point geometries
 #' @param scales numeric vector of the different scales to shuffle at and subsequently compute significance at (default: c(50, 100, 200, 300, 400, 500))
 #' @param perms number of permutations to shuffle for each scale (default = 1)
 #' @param ncores number of cores for parallelization (default 1)
@@ -28,13 +28,13 @@ makeShuffledCells <- function(cells,
   ## a list for each scale that contains factors of shuffled cell labels for each permutation
   ## use the cell labels to reorder the labels of the `cells`
   
-  ## check if cells is an `sp::SpatialPointsDataFrame object`
+  ## check if cells is an `sf object`
   if( !any(class(cells) == "sf") ){
-    stop("`cells` needs to be an `sf` object. You can make this using `toSP()`")
+    stop("`cells` needs to be an `sf` object. You can make this using `toSF()`")
   }
   
   if( !any(grepl("celltypes", colnames(cells))) ){
-    stop("`cells` needs a column named `celltypes`. You can make this using `toSP()`")
+    stop("`cells` needs a column named `celltypes`. You can make this using `toSF()`")
   }
   
   if(verbose){
@@ -153,7 +153,7 @@ makeShuffledCells <- function(cells,
 #' If `returnMeans = FALSE`, then the result will be a list of data.frames, where each data.frame is a scale,
 #' the rows are permutations, the columns are query cell types, and each value is a Z score.
 #'
-#' @param cells sp::SpatialPointsDataFrame of all the cells
+#' @param cells sf object of all the cells
 #' @param randomcellslist list of lists of randomly shuffled cell type labels produced from `makeShuffledCells`
 #' @param trueNeighCells Simple feature collection of real cells for a given reference cell type, with geometries of a given dist (from sf::st_buffer)
 #' @param cellBuffer Simple feature collection of the neighbor cells that are within "dist" of the ref cells (from sf::intersection)
@@ -293,7 +293,7 @@ evaluateSignificance <- function(cells,
 
 #' Generate matrix of pvalues indicating if a cell is enriched in neighbors of a given cell type
 #' @description pvalues are based on a binomial test and neighbors are defined within a given distance from a cell
-#' @param cells sp::SpatialPointsDataFrame object, with celltypes features and point geometries
+#' @param cells sf object, with celltypes features and point geometries
 #' @param neigh.dist distance to define neighbors (default = 100)
 #' @param ncores number of cores for parallelization (default 1)
 #' @param verbose Boolean for verbosity (default TRUE)
@@ -303,7 +303,7 @@ evaluateSignificance <- function(cells,
 #' @examples 
 #' \dontrun{
 #' data(sim)
-#' cells <- toSP(pos = sim[,c("x", "y")], celltypes = slide$type)
+#' cells <- toSF(pos = sim[,c("x", "y")], celltypes = sim$celltypes)
 #' shuffle.list <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
 #' binomMat <- binomialTestMatrix(cells, neigh.dist = 100, ncores = 2)
 #' }
@@ -316,12 +316,12 @@ binomialTestMatrix <- function(cells,
   
   start_time <- Sys.time()
   
-  ## check to make sure cells is a sp::SpatialPointsDataFrame object
+  ## check to make sure cells is a sf object
   if( !any(class(cells) == "sf") ){
-    stop("`cells` needs to be an `sf` object. You can make this using `toSP()`")
+    stop("`cells` needs to be an `sf` object. You can make this using `toSF()`")
   }
   if( !any(grepl("celltypes", colnames(cells))) ){
-    stop("`cells` needs a column named `celltypes`. You can make this using `toSP()`")
+    stop("`cells` needs a column named `celltypes`. You can make this using `toSF()`")
   }
   
   if(verbose){
@@ -392,7 +392,7 @@ binomialTestMatrix <- function(cells,
 #' @examples 
 #' \dontrun{
 #' data(sim)
-#' cells <- toSP(pos = sim[,c("x", "y")], celltypes = slide$type)
+#' cells <- toSF(pos = sim[,c("x", "y")], celltypes = sim$celltypes)
 #' shuffle.list <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
 #' binomMat <- binomialTestMatrix(cells, neigh.dist = 100, ncores = 2)
 #' subset.list <- selectSubsets(binomMat, cells$celltypes, sub.type = "near", sub.thresh = 0.05) 
@@ -475,7 +475,7 @@ selectSubsets <- function(binomMatrix,
 #' This is done at difference scales, where a scale is whether the cell type labels are shuffled locally or globally.
 #' Trends are essentially built from significance values. The significance test basically asks if two cell types are localized or separated by assessing if the proportion of the neighboring cell type is significantly greater, or less than, random chance.
 #'
-#' @param cells sp::SpatialPointsDataFrame object, with celltypes features and point geometries
+#' @param cells sf object, with celltypes features and point geometries
 #' @param dist numeric distance to define neighbor cells with respect to each reference cell (default: 50)
 #' @param ncores number of cores for parallelization (default 1)
 #' @param shuffle.list a list of cell type labels shuffled at different scales (output from `makeShuffledCells()`)
@@ -508,11 +508,11 @@ findTrends <- function(cells,
   }
   
   if( !any(class(cells) == "sf") ){
-    stop("`cells` needs to be an `sf` object. You can make this using `toSP()`")
+    stop("`cells` needs to be an `sf` object. You can make this using `toSF()`")
   }
   
   if( !any(grepl("celltypes", colnames(cells))) ){
-    stop("`cells` needs a column named `celltypes`. You can make this using `toSP()`")
+    stop("`cells` needs a column named `celltypes`. You can make this using `toSF()`")
   }
   
   if(verbose){

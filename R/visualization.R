@@ -254,7 +254,7 @@ plotTrendsOverlay <- function(results,
 #' 
 #' @description uses the x and y position information and a chosen set of communities
 #' 
-#' @param cells either a data.frame or sp::SpatialPointsDataFrame object with cell spatial coordinates
+#' @param cells either a data.frame or sf object with cell spatial coordinates
 #' @param coms a factor of cell type labels for the cells
 #' @param ofInterest a vector of specific clusters to visualize (default; NULL)
 #' @param title title of plot (default: NULL)
@@ -283,7 +283,7 @@ vizAllClusters <- function(cells, coms, ofInterest = NULL,
     names(tempCom) <- rownames(cells)
   }
   
-  ## if cells are the sp::SpatialPointsDataFrame() object
+  ## if cells are the sf object
   if( any(class(cells) == "sf") ){
     p <- spToDF(cells)
     pos <- p[,c("x", "y")]
@@ -385,7 +385,7 @@ vizAllClusters <- function(cells, coms, ofInterest = NULL,
 #' @description Returns a gridExtra of grobs.
 #'     A single plot where each panel is a different cluster highlighted on the tissue
 #' 
-#' @param cells either a data.frame or sp::SpatialPointsDataFrame object with cell spatial coordinates
+#' @param cells either a data.frame or sf object with cell spatial coordinates
 #' @param coms a factor of cell type labels for the cells
 #' @param axisAdj how much to increase axis ranges. If tissue, 100 okay, if embedding, 1 ok (default: 100)
 #' @param size size of points (default: 0.01)
@@ -413,7 +413,7 @@ vizEachCluster <- function(cells, coms, axisAdj = 1, s = 0.5, a = 1,
     names(ctemp) <- rownames(cells)
   }
   
-  ## if cells are the sp::SpatialPointsDataFrame() object
+  ## if cells are the sf object
   if( any(class(cells) == "sf") ){
     p <- spToDF(cells)
     pos <- p[,c("x", "y")]
@@ -520,7 +520,7 @@ vizEachCluster <- function(cells, coms, axisAdj = 1, s = 0.5, a = 1,
 #' @examples 
 #' \dontrun{
 #' data(sim)
-#' cells <- toSP(pos = sim[,c("x", "y")], celltypes = slide$type)
+#' cells <- toSF(pos = sim[,c("x", "y")], celltypes = sim$celltypes)
 #' shuffle.list <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
 #' results <- findTrends(cells, dist = 100, shuffle.list = shuffle.list, ncores = 2)
 #' vizTrends(dat = results)
@@ -628,7 +628,7 @@ vizTrends <- function(dat, id = "id", yaxis = "Z",
 #' @examples 
 #' \dontrun{
 #' data(sim)
-#' cells <- toSP(pos = sim[,c("x", "y")], celltypes = slide$type)
+#' cells <- toSF(pos = sim[,c("x", "y")], celltypes = sim$celltypes)
 #' shuffle.list <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
 #' results <- findTrends(cells, dist = 100, shuffle.list = shuffle.list, ncores = 2)
 #' vizTrends.heatmap(dat = results)
@@ -716,7 +716,7 @@ vizTrends.heatmap <- function(dat,
 #' @description make a factor of selected cell type labels for visualizing specific cells with `vizAllClusters()`.
 #'      Could append new entries into the `subset_list` to select and label other custom subsets of cells 
 #'
-#' @param df dataframe or sp::SpatialPointsDataFrame object of cells
+#' @param df dataframe or sf object of cells
 #' @param com original factor or vector of cell type labels for cells in `df`
 #' @param cellIDs vector of cell type labels to include in output (default: NA)
 #' @param subset_list list of subsets from `selectSubsets()` (default; NA)
@@ -727,7 +727,7 @@ vizTrends.heatmap <- function(dat,
 #' @examples 
 #' \dontrun{
 #' data(sim)
-#' cells <- toSP(pos = sim[,c("x", "y")], celltypes = slide$type)
+#' cells <- toSF(pos = sim[,c("x", "y")], celltypes = sim$celltypes)
 #' shuffle.list <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
 #' binomMat <- binomialTestMatrix(cells, neigh.dist = 100, ncores = 2)
 #' subset.list <- selectSubsets(binomMat, cells$celltypes, sub.type = "near", sub.thresh = 0.05)
@@ -823,7 +823,7 @@ transparentCol <- function(color, percent = 50, name = NULL) {
 #' @examples 
 #' \dontrun{
 #' data(sim)
-#' cells <- toSP(pos = sim[,c("x", "y")], celltypes = slide$type)
+#' cells <- toSF(pos = sim[,c("x", "y")], celltypes = sim$celltypes)
 #' shuffle.list <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
 #' results <- findTrends(cells, dist = 100, shuffle.list = shuffle.list, ncores = 2)
 #' dat <- meltResultsList(results)

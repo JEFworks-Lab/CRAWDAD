@@ -16,7 +16,7 @@ findTrends(
 )
 }
 \arguments{
-\item{cells}{sp::SpatialPointsDataFrame object, with celltypes features and point geometries}
+\item{cells}{sf object, with celltypes features and point geometries}
 
 \item{dist}{numeric distance to define neighbor cells with respect to each reference cell (default: 50)}
 

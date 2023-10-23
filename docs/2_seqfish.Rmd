@@ -38,8 +38,8 @@ data(seq)
 ## invert coordinates
 seq$y <- -seq$y
 
-## convert to sp::SpatialPointsDataFrame
-seq <- crawdad:::toSP(pos = seq[,c("x", "y")],
+## convert to sf
+seq <- crawdad:::toSF(pos = seq[,c("x", "y")],
                         celltypes = seq$celltypes)
 
 ```

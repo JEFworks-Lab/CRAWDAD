@@ -15,7 +15,7 @@ evaluateSignificance(
 )
 }
 \arguments{
-\item{cells}{sp::SpatialPointsDataFrame of all the cells}
+\item{cells}{sf object of all the cells}
 
 \item{randomcellslist}{list of lists of randomly shuffled cell type labels produced from \code{makeShuffledCells}}
 

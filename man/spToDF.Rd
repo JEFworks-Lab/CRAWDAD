@@ -2,16 +2,16 @@
 % Please edit documentation in R/processing_inputs.R
 \name{spToDF}
 \alias{spToDF}
-\title{convert an sp::SpatialPointsDataFrame object to a dataframe with x y coords and cell type labels}
+\title{Convert an sf object to a dataframe with x and y coordinates and cell type labels}
 \usage{
 spToDF(cells)
 }
 \arguments{
-\item{cells}{sp::SpatialPointsDataFrame object, with celltypes features and point geometries}
+\item{cells}{sf object, with celltypes features and point geometries}
 }
 \value{
 datafame with columns: x, y, and celltype
 }
 \description{
-convert an sp::SpatialPointsDataFrame object to a dataframe with x y coords and cell type labels
+Convert an sf object to a dataframe with x and y coordinates and cell type labels
 }

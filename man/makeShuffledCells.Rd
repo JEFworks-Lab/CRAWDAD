@@ -14,7 +14,7 @@ makeShuffledCells(
 )
 }
 \arguments{
-\item{cells}{sp::SpatialPointsDataFrame object, with celltypes features and point geometries}
+\item{cells}{sf object, with celltypes features and point geometries}
 
 \item{scales}{numeric vector of the different scales to shuffle at and subsequently compute significance at (default: c(50, 100, 200, 300, 400, 500))}
 

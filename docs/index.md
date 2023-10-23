@@ -33,7 +33,7 @@ library(tidyverse)
 ## load the spleen data of the pkhl sample 
 data('pkhl')
 ## convert dataframe to spatial points (SP)
-cells <- crawdad::toSP(pos = pkhl[,c("x", "y")], celltypes = pkhl$celltypes)
+cells <- crawdad::toSF(pos = pkhl[,c("x", "y")], celltypes = pkhl$celltypes)
 ## define the scales to analyze the data
 scales <- c(100, 200, 300, 400, 500, 600, 700, 800, 900, 1000)
 ## shuffle cells to create null background

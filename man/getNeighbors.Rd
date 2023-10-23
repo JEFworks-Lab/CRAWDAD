@@ -9,21 +9,21 @@ getNeighbors(
   reference.ids,
   removeRef = TRUE,
   dist = 100,
-  returnSP = FALSE
+  returnSF = FALSE
 )
 }
 \arguments{
-\item{cells}{sp::SpatialPointsDataFrame object, with celltypes features and point geometries}
+\item{cells}{sf object, with celltypes features and point geometries}
 
 \item{reference.ids}{vector of cell ids (rownames) in \code{cells} to be used as the reference cell set}
 
 \item{dist}{distance to define neighbors (default = 100)}
 
-\item{returnSP}{boolean to return either an sp::SpatialPointsDataFrame object of just the neighbors
+\item{returnSF}{boolean to return either an sf object of just the neighbors
 otherwise returns factor where non neighbor cells are NAs. (default: FALSE)}
 }
 \value{
-sp::SpatialPointsDataFrame object of the neighbor cells or factor of neighbor cells
+sf object of the neighbor cells or factor of neighbor cells
 }
 \description{
 get neighbor cells defined as being a distance away from a set of reference cells.
@@ -34,7 +34,7 @@ or can be an entry in a subset list from \code{selectSubsets()}
 \examples{
 \dontrun{
 data(sim)
-cells <- toSP(pos = sim[,c("x", "y")], celltypes = slide$type)
+cells <- toSF(pos = sim[,c("x", "y")], celltypes = sim$celltypes)
 shuffle.list <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
 binomMat <- binomialTestMatrix(cells, neigh.dist = 100, ncores = 2)
 subset.list <- selectSubsets(binomMat, cells$celltypes, sub.type = "near", sub.thresh = 0.05)

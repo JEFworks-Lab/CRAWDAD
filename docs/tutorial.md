@@ -43,8 +43,8 @@ plt
 ![](tutorial_files/figure-markdown_github/unnamed-chunk-5-1.png)
 
 ``` r
-## convert to SP
-cells <- crawdad::toSP(pos = sim[,c("x", "y")],
+## convert to SF
+cells <- crawdad::toSF(pos = sim[,c("x", "y")],
                         celltypes = sim$type)
 ```
 
@@ -471,9 +471,9 @@ neighCells <- crawdad::getNeighbors(cells = cells,
                                    reference.ids = subset.list[["C_near_B"]],
                                    removeRef = TRUE, ## whether to keep the reference cells in the output or to remove them and just look at the neighbors.
                                    dist = 100,
-                                   returnSP = FALSE)
+                                   returnSF = FALSE)
 
-## setting `returnSP = FALSE` returns a factor of all the cells, but non-neighbors are now labeled as NA
+## setting `returnSF = FALSE` returns a factor of all the cells, but non-neighbors are now labeled as NA
 head(neighCells)
 ```
 

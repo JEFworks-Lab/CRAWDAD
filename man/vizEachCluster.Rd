@@ -15,7 +15,7 @@ vizEachCluster(
 )
 }
 \arguments{
-\item{cells}{either a data.frame or sp::SpatialPointsDataFrame object with cell spatial coordinates}
+\item{cells}{either a data.frame or sf object with cell spatial coordinates}
 
 \item{coms}{a factor of cell type labels for the cells}
 
