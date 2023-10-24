@@ -26,7 +26,7 @@ toSF <- function(pos, celltypes, verbose = TRUE){
     message("creating `sf` object")
   }
   
-  cells_sf <- sf::st_as_sf(df, coords = c('x','y'))
+  cells <- sf::st_as_sf(df, coords = c('x','y'))
   
   ## Change rownames assignments of cells to integers.
   ## Solution to keep rows in same order later on when
