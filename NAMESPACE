@@ -2,6 +2,7 @@
 
 export("%>%")
 export(binomialTestMatrix)
+export(correctZBonferroni)
 export(diffTrendTesting)
 export(evaluateSignificance)
 export(findTrends)

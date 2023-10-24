@@ -6,7 +6,7 @@
 \usage{
 findTrends(
   cells,
-  dist = 50,
+  dist = 100,
   ncores = 1,
   shuffle.list,
   subset.list = NULL,
@@ -18,7 +18,7 @@ findTrends(
 \arguments{
 \item{cells}{sf object, with celltypes features and point geometries}
 
-\item{dist}{numeric distance to define neighbor cells with respect to each reference cell (default: 50)}
+\item{dist}{numeric distance to define neighbor cells with respect to each reference cell (default: 100)}
 
 \item{ncores}{number of cores for parallelization (default 1)}
 
