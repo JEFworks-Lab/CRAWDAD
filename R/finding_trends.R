@@ -476,7 +476,7 @@ selectSubsets <- function(binomMatrix,
 #' Trends are essentially built from significance values. The significance test basically asks if two cell types are localized or separated by assessing if the proportion of the neighboring cell type is significantly greater, or less than, random chance.
 #'
 #' @param cells sf object, with celltypes features and point geometries
-#' @param dist numeric distance to define neighbor cells with respect to each reference cell (default: 50)
+#' @param dist numeric distance to define neighbor cells with respect to each reference cell (default: 100)
 #' @param ncores number of cores for parallelization (default 1)
 #' @param shuffle.list a list of cell type labels shuffled at different scales (output from `makeShuffledCells()`)
 #' @param subset.list a subset list (output from `selectSubsets()`). Required if computing trends for subsets (default NULL)
@@ -495,7 +495,7 @@ selectSubsets <- function(binomMatrix,
 #' 
 #' @export
 findTrends <- function(cells,
-                       dist = 50,
+                       dist = 100,
                        ncores = 1,
                        shuffle.list,
                        subset.list = NULL,
