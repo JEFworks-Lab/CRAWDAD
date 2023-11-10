@@ -17,8 +17,8 @@ ncores = 7
 ``` r
 data(pkhl)
 
-## convert to sp::SpatialPointsDataFrame
-pkhl <- crawdad:::toSP(pos = pkhl[,c("x", "y")],
+## convert to sf
+pkhl <- crawdad:::toSF(pos = pkhl[,c("x", "y")],
                        celltypes = pkhl$celltypes)
 ```
 
@@ -188,8 +188,8 @@ ksfb <- ksfb[,c("x", "y", "celltypes_folBcombined")]
 ksfb <- ksfb %>%
   dplyr::mutate_at(vars(x, y), as.numeric)
 
-## convert to SP
-ksfb <- crawdad::toSP(pos = ksfb[,c("x", "y")],
+## convert to SF
+ksfb <- crawdad::toSF(pos = ksfb[,c("x", "y")],
                         celltypes = ksfb$celltypes_folBcombined)
 ksfb
 ```
@@ -205,8 +205,8 @@ xxcd <- xxcd[,c("x", "y", "celltypes_folBcombined")]
 xxcd <- xxcd %>%
   dplyr::mutate_at(vars(x, y), as.numeric)
 
-## convert to SP
-xxcd <- crawdad::toSP(pos = xxcd[,c("x", "y")],
+## convert to SF
+xxcd <- crawdad::toSF(pos = xxcd[,c("x", "y")],
                         celltypes = xxcd$celltypes_folBcombined)
 xxcd
 ```
@@ -222,8 +222,8 @@ pbvn <- pbvn[,c("x", "y", "celltypes_folBcombined")]
 pbvn <- pbvn %>%
   dplyr::mutate_at(vars(x, y), as.numeric)
 
-## convert to SP
-pbvn <- crawdad::toSP(pos = pbvn[,c("x", "y")],
+## convert to SF
+pbvn <- crawdad::toSF(pos = pbvn[,c("x", "y")],
                         celltypes = pbvn$celltypes_folBcombined)
 pbvn
 ```
@@ -239,8 +239,8 @@ fsld <- fsld[,c("x", "y", "celltypes_folBcombined")]
 fsld <- fsld %>%
   dplyr::mutate_at(vars(x, y), as.numeric)
 
-## convert to SP
-fsld <- crawdad::toSP(pos = fsld[,c("x", "y")],
+## convert to SF
+fsld <- crawdad::toSF(pos = fsld[,c("x", "y")],
                         celltypes = fsld$celltypes_folBcombined)
 fsld
 ```
@@ -256,8 +256,8 @@ ngpl <- ngpl[,c("x", "y", "celltypes_folBcombined")]
 ngpl <- ngpl %>%
   dplyr::mutate_at(vars(x, y), as.numeric)
 
-## convert to SP
-ngpl <- crawdad::toSP(pos = ngpl[,c("x", "y")],
+## convert to SF
+ngpl <- crawdad::toSF(pos = ngpl[,c("x", "y")],
                         celltypes = ngpl$celltypes_folBcombined)
 ngpl
 ```

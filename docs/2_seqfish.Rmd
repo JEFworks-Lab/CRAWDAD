@@ -40,7 +40,7 @@ seq$y <- -seq$y
 
 ## convert to sf
 seq <- crawdad:::toSF(pos = seq[,c("x", "y")],
-                        celltypes = seq$celltypes)
+                      celltypes = seq$celltypes)
 
 ```
 
@@ -104,10 +104,8 @@ dat <- crawdad::meltResultsList(results, withPerms = T)
 
 ```{r}
 
-## multiple-test correction
-ntests <- length(unique(dat$reference)) * length(unique(dat$reference))
-psig <- 0.05/ntests
-zsig <- round(qnorm(psig/2, lower.tail = F), 2)
+## calculate the zscore for the multiple-test correction
+zsig <- correctZBonferroni(dat)
 
 ```
 

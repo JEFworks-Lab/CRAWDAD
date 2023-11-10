@@ -48,9 +48,7 @@ results <- crawdad::findTrends(cells,
                                returnMeans = FALSE)
 dat <- crawdad::meltResultsList(results, withPerms = TRUE)
 ## calculate the zscore for the multiple-test correction
-ntests <- length(unique(dat$reference)) * length(unique(dat$reference))
-psig <- 0.05/ntests
-zsig <- round(qnorm(psig/2, lower.tail = F), 2)
+zsig <- correctZBonferroni(dat)
 ## summary visualization
 vizColocDotplot(dat, zsig.thresh = zsig, zscore.limit = 2*zsig) +
   theme(axis.text.x = element_text(angle = 35, h = 0))

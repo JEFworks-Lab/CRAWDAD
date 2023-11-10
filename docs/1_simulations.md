@@ -20,15 +20,13 @@ ncores = 7
 
 # Load data
 
-Load data.frame of cell positions and labels and convert it to an
-`sp::SpatialPointsDataFrame` object. This is because CRAWDAD builds upon
-the `sf` library in R.
+Load data.frame of cell positions and labels and convert it to an `sf` object. This is because CRAWDAD builds upon the `sf` library in R.
 
 ``` r
 data(sim)
 
 ## convert to sp::SpatialPointsDataFrame
-cells <- crawdad:::toSP(pos = sim[,c("x", "y")],
+cells <- crawdad:::toSF(pos = sim[,c("x", "y")],
                         celltypes = sim$celltypes)
 ```
 

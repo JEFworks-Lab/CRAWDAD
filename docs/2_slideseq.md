@@ -26,8 +26,8 @@ ncores = 7
 ``` r
 data(slide)
 
-## convert to sp::SpatialPointsDataFrame
-slide <- crawdad:::toSP(pos = slide[,c("x", "y")],
+## convert to sf
+slide <- crawdad:::toSF(pos = slide[,c("x", "y")],
                         celltypes = slide$celltypes)
 ```
 

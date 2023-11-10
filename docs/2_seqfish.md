@@ -29,9 +29,9 @@ data(seq)
 ## invert coordinates
 seq$y <- -seq$y
 
-## convert to sp::SpatialPointsDataFrame
-seq <- crawdad:::toSP(pos = seq[,c("x", "y")],
-                        celltypes = seq$celltypes)
+## convert to sf
+seq <- crawdad:::toSF(pos = seq[,c("x", "y")],
+                      celltypes = seq$celltypes)
 ```
 
     ## Warning: 'celltypes' does not have levels. Creating levels from values
