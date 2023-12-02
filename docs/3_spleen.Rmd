@@ -126,7 +126,7 @@ binomMat <- crawdad::binomialTestMatrix(pkhl,
                                         ncores = ncores,
                                         verbose = TRUE)
 
-## note: 55.29 minutes with 7 M2 cores
+## note: 47.39 minutes with 7 M2 cores
 
 ```
 
@@ -156,7 +156,7 @@ results.subsets <- crawdad::findTrends(pkhl,
                                        returnMeans = FALSE)
 
 ## this part may take tome time depending on the number of subsets
-## note: was 1213.44 mins with 7 M2 cores
+## note: was 35.81 mins with 7 M2 cores
 
 ```
 
@@ -220,7 +220,7 @@ df_freq %>%
   geom_bar(stat = "identity", position = "dodge")
 
 ```
-<img src="https://github.com/JEFworks/CRAWDAD/blob/main/docs/3_spleen_files/counts.png?raw=true" height="250"/>
+<img src="https://github.com/JEFworks/CRAWDAD/blob/main/docs/3_spleen_files/proportions.png?raw=true" height="250"/>
 
 # KSFB Sample
 

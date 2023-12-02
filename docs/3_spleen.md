@@ -189,7 +189,7 @@ ksfb <- ksfb %>%
 
 ## convert to SF
 ksfb <- crawdad::toSF(pos = ksfb[,c("x", "y")],
-                        celltypes = ksfb$celltypes)
+                      celltypes = ksfb$celltypes)
 ksfb
 ```
 
@@ -205,7 +205,7 @@ xxcd <- xxcd %>%
 
 ## convert to SF
 xxcd <- crawdad::toSF(pos = xxcd[,c("x", "y")],
-                        celltypes = xxcd$celltypes)
+                      celltypes = xxcd$celltypes)
 xxcd
 ```
 
@@ -221,7 +221,7 @@ pbvn <- pbvn %>%
 
 ## convert to SF
 pbvn <- crawdad::toSF(pos = pbvn[,c("x", "y")],
-                        celltypes = pbvn$celltypes)
+                      celltypes = pbvn$celltypes)
 pbvn
 ```
 
@@ -237,7 +237,7 @@ fsld <- fsld %>%
 
 ## convert to SF
 fsld <- crawdad::toSF(pos = fsld[,c("x", "y")],
-                        celltypes = fsld$celltypes)
+                      celltypes = fsld$celltypes)
 fsld
 ```
 
@@ -253,6 +253,6 @@ ngpl <- ngpl %>%
 
 ## convert to SF
 ngpl <- crawdad::toSF(pos = ngpl[,c("x", "y")],
-                        celltypes = ngpl$celltypes)
+                      celltypes = ngpl$celltypes)
 ngpl
 ```
