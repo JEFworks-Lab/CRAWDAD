@@ -183,14 +183,13 @@ df_freq %>%
 
 ``` r
 ksfb <- read.csv2(file = paste0(here::here(), "/data/spleen/KSFB.meta.csv.gz"), row.names = 1)
-ksfb <- ksfb[,c("x", "y", "celltypes_folBcombined")]
 ## make sure the coordinates are numeric
 ksfb <- ksfb %>%
   dplyr::mutate_at(vars(x, y), as.numeric)
 
 ## convert to SF
 ksfb <- crawdad::toSF(pos = ksfb[,c("x", "y")],
-                        celltypes = ksfb$celltypes_folBcombined)
+                        celltypes = ksfb$celltypes)
 ksfb
 ```
 
@@ -200,14 +199,13 @@ ksfb
 
 ``` r
 xxcd <- read.csv2(file = paste0(here::here(), "/data/spleen/XXCD.meta.csv.gz"), row.names = 1)
-xxcd <- xxcd[,c("x", "y", "celltypes_folBcombined")]
 ## make sure the coordinates are numeric
 xxcd <- xxcd %>%
   dplyr::mutate_at(vars(x, y), as.numeric)
 
 ## convert to SF
 xxcd <- crawdad::toSF(pos = xxcd[,c("x", "y")],
-                        celltypes = xxcd$celltypes_folBcombined)
+                        celltypes = xxcd$celltypes)
 xxcd
 ```
 
@@ -217,14 +215,13 @@ xxcd
 
 ``` r
 pbvn <- read.csv2(file = paste0(here::here(), "/data/spleen/PBVN.meta.csv.gz"), row.names = 1)
-pbvn <- pbvn[,c("x", "y", "celltypes_folBcombined")]
 ## make sure the coordinates are numeric
 pbvn <- pbvn %>%
   dplyr::mutate_at(vars(x, y), as.numeric)
 
 ## convert to SF
 pbvn <- crawdad::toSF(pos = pbvn[,c("x", "y")],
-                        celltypes = pbvn$celltypes_folBcombined)
+                        celltypes = pbvn$celltypes)
 pbvn
 ```
 
@@ -234,14 +231,13 @@ pbvn
 
 ``` r
 fsld <- read.csv2(file = paste0(here::here(), "/data/spleen/FSLD.meta.csv.gz"), row.names = 1)
-fsld <- fsld[,c("x", "y", "celltypes_folBcombined")]
 ## make sure the coordinates are numeric
 fsld <- fsld %>%
   dplyr::mutate_at(vars(x, y), as.numeric)
 
 ## convert to SF
 fsld <- crawdad::toSF(pos = fsld[,c("x", "y")],
-                        celltypes = fsld$celltypes_folBcombined)
+                        celltypes = fsld$celltypes)
 fsld
 ```
 
@@ -251,13 +247,12 @@ fsld
 
 ``` r
 ngpl <- read.csv2(file = paste0(here::here(), "/data/spleen/NGPL.meta.csv.gz"), row.names = 1)
-ngpl <- ngpl[,c("x", "y", "celltypes_folBcombined")]
 ## make sure the coordinates are numeric
 ngpl <- ngpl %>%
   dplyr::mutate_at(vars(x, y), as.numeric)
 
 ## convert to SF
 ngpl <- crawdad::toSF(pos = ngpl[,c("x", "y")],
-                        celltypes = ngpl$celltypes_folBcombined)
+                        celltypes = ngpl$celltypes)
 ngpl
 ```
