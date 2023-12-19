@@ -193,15 +193,15 @@ evaluateSignificance <- function(cells,
         randomcells$celltypes <- as.factor(randomcellslabels)
         sf::st_agr(randomcells) <- "constant"
         
-        bufferrandomcells <- sf::st_intersection(randomcells, cellBuffer) #$geometry)
+        bufferrandomcells <- sf::st_intersection(randomcells, cellBuffer$geometry)
         
         ## remove duplicate neighbor cells to prevent them from being counted multiple times
         ## and inflate the Z scores
-        # if(removeDups){
-        #   # message("number of permuted neighbor cells before: ", nrow(bufferrandomcells))
-        #   bufferrandomcells <- bufferrandomcells[intersect(rownames(bufferrandomcells), rownames(randomcells)),]
-        #   # message("number of permuted neighbor cells after removing dups: ", nrow(bufferrandomcells))
-        # }
+        if(removeDups){
+          # message("number of permuted neighbor cells before: ", nrow(bufferrandomcells))
+          bufferrandomcells <- bufferrandomcells[intersect(rownames(bufferrandomcells), rownames(randomcells)),]
+          # message("number of permuted neighbor cells after removing dups: ", nrow(bufferrandomcells))
+        }
         
         ## evaluate significance https://online.stat.psu.edu/stat415/lesson/9/9.4
         y1 <- table(trueNeighCells$celltypes)
@@ -244,15 +244,15 @@ evaluateSignificance <- function(cells,
         randomcells$celltypes <- as.factor(randomcellslabels)
         sf::st_agr(randomcells) <- "constant"
         
-        bufferrandomcells <- sf::st_intersection(randomcells, cellBuffer) #$geometry)
+        bufferrandomcells <- sf::st_intersection(randomcells, cellBuffer$geometry)
         
         ## remove duplicate neighbor cells to prevent them from being counted multiple times
         ## and inflate the Z scores
-        # if(removeDups){
-        #   # message("number of permuted neighbor cells before: ", nrow(bufferrandomcells))
-        #   bufferrandomcells <- bufferrandomcells[intersect(rownames(bufferrandomcells), rownames(randomcells)),]
-        #   # message("number of permuted neighbor cells after removing dups: ", nrow(bufferrandomcells))
-        # }
+        if(removeDups){
+          # message("number of permuted neighbor cells before: ", nrow(bufferrandomcells))
+          bufferrandomcells <- bufferrandomcells[intersect(rownames(bufferrandomcells), rownames(randomcells)),]
+          # message("number of permuted neighbor cells after removing dups: ", nrow(bufferrandomcells))
+        }
         
         ## evaluate significance https://online.stat.psu.edu/stat415/lesson/9/9.4
         y1 <- table(trueNeighCells$celltypes)
@@ -545,18 +545,18 @@ findTrends <- function(cells,
       # get polygon geometries of reference cells of "celltype" up to defined distance "dist"
       # use this to assess neighbors within "d" um of each cell
       ref.buffer <- sf::st_buffer(cells[cells$celltypes == ct,], d) 
-      ## union polygons to avoid memory overflow
-      ref.buffer_union <- sf::st_union(ref.buffer)
+      ## union polygons to avoid memory overflow, too slow
+      # ref.buffer_union <- sf::st_union(ref.buffer)
       # get the different types of neighbor cells that are within "d" of the ref cells
-      neigh.cells <- sf::st_intersection(cells, ref.buffer_union)
+      neigh.cells <- sf::st_intersection(cells, neigh.cells$geometry)
       
       ## remove duplicate neighbor cells to prevent them from being counted multiple times
       ## and inflate the Z scores
-      # if(removeDups){
-      #   # message("number of neighbor cells before: ", nrow(neigh.cells))
-      #   neigh.cells <- neigh.cells[intersect(rownames(neigh.cells), rownames(cells)),]
-      #   # message("number of neighbor cells after removing dups: ", nrow(neigh.cells))
-      # }
+      if(removeDups){
+        # message("number of neighbor cells before: ", nrow(neigh.cells))
+        neigh.cells <- neigh.cells[intersect(rownames(neigh.cells), rownames(cells)),]
+        # message("number of neighbor cells after removing dups: ", nrow(neigh.cells))
+      }
       
       ## evaluate significance https://online.stat.psu.edu/stat415/lesson/9/9.4
       ## chose to shuffle the scales in parallel, but in each scale, the perms done linearly
@@ -567,7 +567,7 @@ findTrends <- function(cells,
       results <- evaluateSignificance(cells = cells,
                                       randomcellslist = shuffle.list,
                                       trueNeighCells = neigh.cells,
-                                      cellBuffer = ref.buffer_union,
+                                      cellBuffer = ref.buffer,
                                       ncores = ncores,
                                       removeDups = removeDups,
                                       returnMeans = returnMeans)
@@ -605,18 +605,18 @@ findTrends <- function(cells,
       
       ## get area around the subset cells to identify neighbors
       ref.buffer <- sf::st_buffer(cells[subset.list[[i]], ], d)
-      ## union polygons to avoid memory overflow
-      ref.buffer_union <- sf::st_union(ref.buffer)
+      ## union polygons to avoid memory overflow, too slow
+      # ref.buffer_union <- sf::st_union(ref.buffer)
       # get the different types of neighbor cells that are within "d" of the ref cells
-      neigh.cells <- sf::st_intersection(cells, ref.buffer_union)
+      neigh.cells <- sf::st_intersection(cells, ref.buffer$geometry)
       
       ## remove duplicate neighbor cells to prevent them from being counted multiple times
       ## and inflate the Z scores
-      # if(removeDups){
-      #   # message("number of neighbor cells before: ", nrow(neigh.cells))
-      #   neigh.cells <- neigh.cells[intersect(rownames(neigh.cells), rownames(cells)),]
-      #   # message("number of neighbor cells after removing dups: ", nrow(neigh.cells))
-      # }
+      if(removeDups){
+        # message("number of neighbor cells before: ", nrow(neigh.cells))
+        neigh.cells <- neigh.cells[intersect(rownames(neigh.cells), rownames(cells)),]
+        # message("number of neighbor cells after removing dups: ", nrow(neigh.cells))
+      }
       
       ## evaluate significance https://online.stat.psu.edu/stat415/lesson/9/9.4
       ## chose to shuffle the scales in parallel, but in each scale, the perms done linearly
@@ -627,7 +627,7 @@ findTrends <- function(cells,
       results <- evaluateSignificance(cells = cells,
                                       randomcellslist = shuffle.list,
                                       trueNeighCells = neigh.cells,
-                                      cellBuffer = ref.buffer_union,
+                                      cellBuffer = ref.buffer,
                                       ncores = ncores,
                                       removeDups = removeDups,
                                       returnMeans = returnMeans)
