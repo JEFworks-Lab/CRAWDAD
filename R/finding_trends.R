@@ -548,7 +548,7 @@ findTrends <- function(cells,
       ## union polygons to avoid memory overflow, too slow
       # ref.buffer_union <- sf::st_union(ref.buffer)
       # get the different types of neighbor cells that are within "d" of the ref cells
-      neigh.cells <- sf::st_intersection(cells, neigh.cells$geometry)
+      neigh.cells <- sf::st_intersection(cells, ref.buffer$geometry)
       
       ## remove duplicate neighbor cells to prevent them from being counted multiple times
       ## and inflate the Z scores
