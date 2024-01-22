@@ -21,7 +21,7 @@
 #' \dontrun{
 #' data(slide)
 #' cells <- crawdad::toSF(pos = slide[,c("x", "y")], celltypes = slide$celltypes)
-#' vizAllClusters(cells)
+#' vizClusters(cells)
 #' }
 #' 
 #' @export
