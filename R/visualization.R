@@ -1,305 +1,58 @@
 
-# Not exported ------------------------------------------------------------
-
-#' Plot trends
-#'
-#' @description Plot panel of Z-score trends for each reference and neighbor cell-type pairs.
-#'
-#' @param results list or data.frame; the information about the scale, Z-score, reference and the neighbor cell. It can be the result directly obtained by the findTrends function or the melted version created by the `meltResultsList()` function.
-#' @param idcol character; if results are a data.frame, this is the column that contains the additional feature to plot multiple trend lines with
-#' @param legend boolean to produce legend, if results are a melted data.frame with "idcol" column (default: FALSE)
-#' @param ... additional plotting parameters for base R plotting. Fed into "lines()" in script
-#'
-#' @return nothing
-#'
-#' @noRd
-plotTrends <- function(results,
-                       idcol = "id",
-                       legend = FALSE,
-                       ...){
-  
-  
-  ## setup to check if original list output from `findTrends`, and plot one way
-  ## or if a melted dataframe with ids from merging multiple trend analyses, check if dataframe and plot that way
-  
-  ## if in original list format from `findTrends`:
-  if(inherits(results, "list")){
-    message("results detected to be a list")
-    
-    par(mfrow=c(length(names(results)), length(names(results))),
-        mar=rep(4,4))
-    
-    ## for each reference cell type, ie a dataframe in the list..
-    invisible(sapply(names(results), function(ct1) {
-      # print(ct1)
-      results.norm <- results[[ct1]]
-      results.norm[is.nan(results.norm)] <- NA
-      results.norm[is.infinite(results.norm)] <- NA
-      
-      ## for each neighbor cell type...
-      sapply(colnames(results.norm), function(ct2) {
-        rg <- max(abs(results.norm[, ct2]), na.rm = TRUE)
-        scales <- rownames(results.norm)
-        
-        if(is.infinite(rg)){
-          rg <- 2.0
-        }
-        
-        ## instantiate a plot and plot trend
-        plot(scales, results.norm[,ct2],
-             type="l", lwd = 2,
-             main=paste0(ct1,' ref \n', ct2, " neighbors"),
-             ylim=c(-rg, rg),
-             xlab="scale", ylab="Z", ...)
-        
-        ## threshold lines
-        abline(h = -2, col='red')
-        abline(h = 2, col='red')
-      })
-    }))
-    
-    ## if a melted dataframe,
-    ## will have an additional column that can serve to plot
-    ## several trend lines on the same plot instance
-    ## for example, ref vs neigh at different distances
-  } else if(inherits(results, "data.frame")){
-    message("results detected to be a data.frame")
-    
-    refs <- unique(results[,"reference"])
-    neighs <- unique(results[,"neighbor"])
-    ids <- unique(results[,idcol])
-    
-    cl <- rainbow(length(ids))
-
-    par(mfrow=c(length(neighs), length(refs)),
-        mar=c(4,4,4,6)) ## bot, top, left, right
-    
-    ## for each reference cell type...(rows)
-    invisible(sapply(refs, function(ct1) {
-      # print(ct1)
-      results.norm <- results[results[,"reference"] == ct1,]
-      results.norm[is.nan(results.norm[,"Z"]), "Z"] <- NA
-      results.norm[is.infinite(results.norm[,"Z"]), "Z"] <- NA
-      
-      ## for each neighbor cell type...(columns)
-      sapply(neighs, function(ct2) {
-        results.norm.neigh <- results.norm[results.norm[,"neighbor"] == ct2,]
-        
-        yl <- max(abs(results.norm.neigh[, "Z"]), na.rm = TRUE)
-        xl <- max(as.numeric(results.norm.neigh[,"scale"]))
-        
-        if(is.infinite(yl)){
-          yl <- 2.0
-        }
-        
-        ## instantiate a plot
-        plot(0, 0, type = "n",
-             main=paste0(ct1,' ref \n', ct2, " neighbors"),
-             cex.main=1,
-             ylim=c(-yl, yl),
-             xlim=c(0, xl),
-             xlab="scale", ylab="Z")
-        
-        ## for each id param, draw a line on plot instance
-        for(i in 1:length(ids)){
-          id <- ids[i]
-          
-          results.norm.neigh.id <- results.norm.neigh[results.norm.neigh[,idcol] == id,]
-          
-          lines(as.numeric(results.norm.neigh.id[,"scale"]), results.norm.neigh.id[,"Z"],
-                type="l", lwd=2, col=cl[i], ...)
-        }
-        
-        ## threshold lines
-        abline(h = -2, col='red')
-        abline(h = 2, col='red')
-        
-        if(legend){
-          legend("topright", inset=c(-0.4,0), xpd=TRUE, legend = id, col=cl, pch=20, cex=0.5, title = idcol)
-        }
-        
-      })
-    }))
-    
-  } else {
-    stop("`results` are neither a list from `findTrends()` or a melted data.frame from `meltResultsList()`")
-  }
-  
-}
-
-
-#' This one overlays each neighbor trend wrt the same reference cell type on the plot
-#' 
-#' @param results data.frame; the information about the scale, Z-score, reference and the neighbor cell. It can be the result directly obtained by the melted `findTrends` output created by the `meltResultsList()` function.
-#' @param ... additional plotting parameters for base R plotting. Fed into "lines()" in script
-#' 
-#' @return nothing
-#' 
-#' @noRd
-plotTrendsOverlay <- function(results,
-                              ...){
-  
-  
-  ## setup to check if original list output from `findTrends`, and plot one way
-  ## or if a melted dataframe with ids from merging multiple trend analyses, check if dataframe and plot that way
-  
-  ## if in original list format from `findTrends`:
-  if(inherits(results, "list")){
-    message("results detected to be a list")
-    
-    par(mfrow=c(length(names(results)), length(names(results))),
-        mar=rep(4,4))
-    
-    ## for each reference cell type, ie a dataframe in the list..
-    sapply(names(results), function(ct1) {
-      # print(ct1)
-      results.norm <- results[[ct1]]
-      results.norm[is.nan(results.norm)] <- NA
-      results.norm[is.infinite(results.norm)] <- NA
-      
-      ## for each neighbor cell type...
-      sapply(colnames(results.norm), function(ct2) {
-        rg <- max(abs(results.norm[, ct2]), na.rm = TRUE)
-        scales <- rownames(results.norm)
-        
-        ## instantiate a plot and plot trend
-        plot(scales, results.norm[,ct2],
-             type="l", lwd = 2,
-             main=paste0(ct1,' ref \n', ct2, " neighbors"),
-             ylim=c(-rg, rg),
-             xlab="scale", ylab="Z", ...)
-        
-        ## threshold lines
-        abline(h = -2, col='red')
-        abline(h = 2, col='red')
-      })
-    })
-    
-    ## if a melted dataframe,
-    ## will have an additional column that can serve to plot
-    ## several trend lines on the same plot instance
-    ## for example, ref vs neigh at different distances
-  } else if(inherits(results, "data.frame")){
-    message("results detected to be a data.frame")
-    
-    results <- results[,c("scale", "neighbor", "reference", "Z")]
-    
-    refs <- unique(results[,"reference"])
-    neighs <- unique(results[,"neighbor"])
-    cl <- rainbow(length(neighs))
-    
-    par(mfrow=c(length(refs),1),
-        mar=c(4,4,4,8)) ## bot, top, left, right
-    
-    ## for each reference cell type...(rows)
-    sapply(refs, function(ct1) {
-      # print(ct1)
-      results.norm <- results[results[,"reference"] == ct1,]
-      results.norm[is.nan(results.norm[,"Z"]), "Z"] <- NA
-      results.norm[is.infinite(results.norm[,"Z"]), "Z"] <- NA
-      
-      ## set limits based on trends with other cell types, not self
-      results.norm.limits <- results.norm[results.norm[,"neighbor"] != ct1,]
-      yl_max <- max(results.norm.limits[, "Z"], na.rm = TRUE)
-      yl_min <- min(results.norm.limits[, "Z"], na.rm = TRUE)
-      xl <- max(as.numeric(results.norm.limits[,"scale"]))
-      if(is.infinite(yl_max)){
-        yl_max <- 2.0
-      }
-      if(is.infinite(yl_min)){
-        yl_min <- -2.0
-      }
-      
-      ## instantiate a plot
-      plot(0, 0, type = "n",
-           main=paste0(ct1," ref"),
-           cex.main=1,
-           ylim=c(yl_min,yl_max),
-           xlim=c(0, xl),
-           xlab="scale", ylab="Z")
-      
-      ## for each neighbor cell type draw a line on plot instance
-      for(i in 1:length(neighs)){
-        ct2 <- neighs[i]
-        # ignore showing trends with self because typically very large and
-        # masks relationships with other cell types
-        if(ct1 != ct2){
-          results.norm.neigh.id <-  results.norm[results.norm[,"neighbor"] == ct2,]
-          lines(as.numeric(results.norm.neigh.id[,"scale"]), results.norm.neigh.id[,"Z"],
-                type="l", lwd=0.8, col=cl[i], ...)
-        }
-      }
-      
-      ## threshold lines
-      abline(h = -1, col='black')
-      abline(h = 1, col='black')
-
-      legend("topright", inset=c(-0.4,0), xpd=TRUE, legend = neighs, col=cl, pch=20, cex=0.5, title = "neighbors")
-
-    })
-    
-  } else {
-    stop("`results` are neither a list from `findTrends` or a melted data.frame from `meltResultsList`")
-  }
-  
-}
-
 
 
 # Exported ----------------------------------------------------------------
 
 
 
-#' Visualize all clusters on the tissue
+#' Visualize clusters in the same plot
 #' 
-#' @description uses the x and y position information and a chosen set of communities
+#' @description Uses the cells sf object to visualize the clusters together in 
+#' the same plot.
 #' 
-#' @param cells either a data.frame or sf object with cell spatial coordinates
-#' @param coms a factor of cell type labels for the cells
-#' @param ofInterest a vector of specific clusters to visualize (default; NULL)
-#' @param title title of plot (default: NULL)
-#' @param axisAdj how much to increase axis ranges. If tissue, 100 okay, if embedding, 1 ok (default: 100)
-#' @param size size of points (default: 0.01)
-#' @param a alpha of points (default: 1; no transparency)
-#' @param nacol color of the NA values for cells of "other" cluster (default: (transparentCol(color = "gray", percent = 50)))
+#' @param cells sf object; spatial (x and y) coordinates and celltypes
+#' @param ofInterest character vector; a vector of specific clusters to visualize
+#' @param pointSize numeric; size of points
+#' @param alpha numeric; transparency of points
 #' 
 #' @return plot
 #' 
 #' @examples
 #' \dontrun{
 #' data(slide)
-#' vizAllClusters(slide, coms = slide$celltypes)
+#' cells <- crawdad::toSF(pos = slide[,c("x", "y")], celltypes = slide$celltypes)
+#' vizAllClusters(cells)
 #' }
 #' 
 #' @export
-vizAllClusters <- function(cells, coms, ofInterest = NULL,
-                           axisAdj = 1, s = 0.5, a = 1, title = NULL,
-                           nacol = transparentCol(color = "gray", percent = 50)){
+vizClusters <- function(cells, ofInterest = NULL,
+                        pointSize = 1, alpha = 0.5){
   
   ## if cells are a data.frame with "x" and "y" cell coordinate columns
   if( class(cells)[1] %in% c("data.frame", "matrix") ){
-    pos <- cells[,c("x", "y")]
-    tempCom <- factor(coms)
-    names(tempCom) <- rownames(cells)
+    stop('Use an sf object created by the crawdad::toSF function.')
   }
   
   ## if cells are the sf object
   if( any(class(cells) == "sf") ){
-    p <- spToDF(cells)
-    pos <- p[,c("x", "y")]
-    tempCom <- factor(coms)
-    names(tempCom) <- rownames(cells)
+    df_cells <- sfToDF(cells)
+    pos <- df_cells[,c("x", "y")]
+    celltypes <- df_cells$celltypes
+    tempCts <- factor(celltypes)
+    names(tempCts) <- rownames(cells)
   }
+  
+  
   
   if(!is.null(ofInterest)){
     ## goal:
     ## setup so the clusters of interest are plotted on top of everything else
     
-    tempCom[which(!tempCom %in% ofInterest)] <- NA
-    tempCom <- droplevels(tempCom)
+    tempCts[which(!tempCts %in% ofInterest)] <- NA
+    tempCts <- droplevels(tempCts)
     
-    cluster_cell_id <- which(tempCom %in% ofInterest)
-    other_cells_id <- as.vector(which(is.na(tempCom)))
+    cluster_cell_id <- which(tempCts %in% ofInterest)
+    other_cells_id <- as.vector(which(is.na(tempCts)))
     
     cluster_cols <- rainbow(n = length(ofInterest))
     names(cluster_cols) <- ofInterest
@@ -311,73 +64,56 @@ vizAllClusters <- function(cells, coms, ofInterest = NULL,
     ## for the "other cells" make this NA
     dat_cluster <- data.frame("x" = pos[cluster_cell_id,"x"],
                               "y" = pos[cluster_cell_id,"y"],
-                              "Clusters" = as.vector(tempCom[cluster_cell_id]))
+                              "clusters" = as.vector(tempCts[cluster_cell_id]))
     
     dat_other <- data.frame("x" = pos[other_cells_id,"x"],
                             "y" = pos[other_cells_id,"y"],
-                            "Clusters" = NA)
+                            "clusters" = NA)
     
     plt <- ggplot2::ggplot() +
-      
+      ## create scattermore to rasterize plots
       ## plot other cells
-      scattermore::geom_scattermore(data = dat_other, ggplot2::aes(x = x, y = y,
-                                                                   color = Clusters), pointsize = s, alpha = a,
-                                    pixels=c(1000,1000)) +
+      ggplot2::geom_point(data = dat_other, 
+                          ggplot2::aes(x = x, y = y, color = clusters), 
+                          size = pointSize, alpha = alpha) +
       ## cluster cells on top
-      scattermore::geom_scattermore(data = dat_cluster, ggplot2::aes(x = x, y = y,
-                                                                     color = Clusters), pointsize = s, alpha = a,
-                                    pixels=c(1000,1000)) +
-      
-      ggplot2::scale_color_manual(values = cluster_cols, na.value = nacol)
+      ggplot2::geom_point(data = dat_cluster, 
+                          ggplot2::aes(x = x, y = y, color = clusters), 
+                          size = pointSize, alpha = alpha) +
+      ## NA to gray
+      ggplot2::scale_color_manual(values = cluster_cols, na.value = "#BEBEBE7F")
     
   } else {
     
-    tempCom <- droplevels(tempCom)
+    tempCts <- droplevels(tempCts)
     dat <- data.frame("x" = pos[,"x"],
                       "y" = pos[,"y"],
-                      "Clusters" = tempCom)
+                      "clusters" = tempCts)
     
     plt <- ggplot2::ggplot(data = dat) +
-
-      scattermore::geom_scattermore(ggplot2::aes(x = x, y = y,
-                                                 color = Clusters), pointsize = s, alpha = a,
-                                    pixels=c(1000,1000)) +
-      
-      ggplot2::scale_color_manual(values = rainbow(n = length(levels(tempCom))), na.value = nacol)
+      ## create scattermore to rasterize plots
+      ggplot2::geom_point(ggplot2::aes(x = x, y = y, color = clusters), 
+                          size = pointSize, alpha = alpha) +
+      ## change colors
+      ggplot2::scale_color_manual(values = rainbow(n = length(levels(tempCts))), 
+                                  na.value = "#BEBEBE7F")
   }
-  
-  plt <- plt + ggplot2::scale_y_continuous(expand = c(0, 0), limits = c( min(dat$y)-axisAdj, max(dat$y)+axisAdj)) +
-    ggplot2::scale_x_continuous(expand = c(0, 0), limits = c( min(dat$x)-axisAdj, max(dat$x)+axisAdj) ) +
-    
-    ggplot2::labs(title = title,
-                  x = "x",
+  ## add to plot
+  plt <- plt + 
+    ## labels
+    ggplot2::labs(x = "x",
                   y = "y") +
-    
-    ggplot2::theme_classic() +
-    ggplot2::theme(axis.text.x = ggplot2::element_text(size=15, color = "black"),
-                   axis.text.y = ggplot2::element_text(size=15, color = "black"),
-                   axis.title.y = ggplot2::element_text(size=15),
-                   axis.title.x = ggplot2::element_text(size=15),
-                   axis.ticks.x = ggplot2::element_blank(),
-                   plot.title = ggplot2::element_text(size=15),
-                   legend.text = ggplot2::element_text(size = 12, colour = "black"),
-                   legend.title = ggplot2::element_text(size = 15, colour = "black", angle = 0, hjust = 0.5),
-                   panel.background = ggplot2::element_blank(),
-                   plot.background = ggplot2::element_blank(),
-                   legend.background = ggplot2::element_blank(),
-                   panel.grid.major.y = ggplot2::element_blank(),
-                   axis.line = ggplot2::element_line(linewidth = 1, colour = "black")
-                   # legend.position="none"
-    ) +
-    
-    ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 2)
-    ) +
-    
+    ## theme
+    ggplot2::theme_minimal() +
+    ## override legend
+    ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 2)) +
+    ## make coordniates equal
     ggplot2::coord_equal()
   
   plt
   
 }
+
 
 
 #' Visualize each cluster separately
@@ -415,7 +151,7 @@ vizEachCluster <- function(cells, coms, axisAdj = 1, s = 0.5, a = 1,
   
   ## if cells are the sf object
   if( any(class(cells) == "sf") ){
-    p <- spToDF(cells)
+    p <- sfToDF(cells)
     pos <- p[,c("x", "y")]
     ctemp <- factor(coms)
     names(ctemp) <- rownames(cells)
@@ -919,3 +655,412 @@ vizColocDotplot <- function(dat, zsig.thresh = 1.96, psig.tresh = NULL,
   }
 }
 
+
+
+
+
+# Deprecated --------------------------------------------------------------
+
+#' Visualize all clusters on the tissue
+#' 
+#' @description uses the x and y position information and a chosen set of communities
+#' 
+#' @param cells either a data.frame or sf object with cell spatial coordinates
+#' @param coms a factor of cell type labels for the cells
+#' @param ofInterest a vector of specific clusters to visualize (default; NULL)
+#' @param title title of plot (default: NULL)
+#' @param axisAdj how much to increase axis ranges. If tissue, 100 okay, if embedding, 1 ok (default: 100)
+#' @param size size of points (default: 0.01)
+#' @param a alpha of points (default: 1; no transparency)
+#' @param nacol color of the NA values for cells of "other" cluster (default: (transparentCol(color = "gray", percent = 50)))
+#' 
+#' @return plot
+#' 
+#' @examples
+#' \dontrun{
+#' data(slide)
+#' vizAllClusters(slide, coms = slide$celltypes)
+#' }
+#' 
+#' @export
+vizAllClusters <- function(cells, coms, ofInterest = NULL,
+                           axisAdj = 1, s = 0.5, a = 1, title = NULL,
+                           nacol = transparentCol(color = "gray", percent = 50)){
+  
+  .Deprecated("vizClusters")
+  
+  ## if cells are a data.frame with "x" and "y" cell coordinate columns
+  if( class(cells)[1] %in% c("data.frame", "matrix") ){
+    pos <- cells[,c("x", "y")]
+    tempCom <- factor(coms)
+    names(tempCom) <- rownames(cells)
+  }
+  
+  ## if cells are the sf object
+  if( any(class(cells) == "sf") ){
+    p <- spToDF(cells)
+    pos <- p[,c("x", "y")]
+    tempCom <- factor(coms)
+    names(tempCom) <- rownames(cells)
+  }
+  
+  if(!is.null(ofInterest)){
+    ## goal:
+    ## setup so the clusters of interest are plotted on top of everything else
+    
+    tempCom[which(!tempCom %in% ofInterest)] <- NA
+    tempCom <- droplevels(tempCom)
+    
+    cluster_cell_id <- which(tempCom %in% ofInterest)
+    other_cells_id <- as.vector(which(is.na(tempCom)))
+    
+    cluster_cols <- rainbow(n = length(ofInterest))
+    names(cluster_cols) <- ofInterest
+    
+    dat <- data.frame("x" = pos[,"x"],
+                      "y" = pos[,"y"])
+    
+    ## note: "Clusters" will be a variable id used to assign colors.
+    ## for the "other cells" make this NA
+    dat_cluster <- data.frame("x" = pos[cluster_cell_id,"x"],
+                              "y" = pos[cluster_cell_id,"y"],
+                              "Clusters" = as.vector(tempCom[cluster_cell_id]))
+    
+    dat_other <- data.frame("x" = pos[other_cells_id,"x"],
+                            "y" = pos[other_cells_id,"y"],
+                            "Clusters" = NA)
+    
+    plt <- ggplot2::ggplot() +
+      
+      ## plot other cells
+      scattermore::geom_scattermore(data = dat_other, ggplot2::aes(x = x, y = y,
+                                                                   color = Clusters), pointsize = s, alpha = a,
+                                    pixels=c(1000,1000)) +
+      ## cluster cells on top
+      scattermore::geom_scattermore(data = dat_cluster, ggplot2::aes(x = x, y = y,
+                                                                     color = Clusters), pointsize = s, alpha = a,
+                                    pixels=c(1000,1000)) +
+      
+      ggplot2::scale_color_manual(values = cluster_cols, na.value = nacol)
+    
+  } else {
+    
+    tempCom <- droplevels(tempCom)
+    dat <- data.frame("x" = pos[,"x"],
+                      "y" = pos[,"y"],
+                      "Clusters" = tempCom)
+    
+    plt <- ggplot2::ggplot(data = dat) +
+      
+      scattermore::geom_scattermore(ggplot2::aes(x = x, y = y,
+                                                 color = Clusters), pointsize = s, alpha = a,
+                                    pixels=c(1000,1000)) +
+      
+      ggplot2::scale_color_manual(values = rainbow(n = length(levels(tempCom))), na.value = nacol)
+  }
+  
+  plt <- plt + ggplot2::scale_y_continuous(expand = c(0, 0), limits = c( min(dat$y)-axisAdj, max(dat$y)+axisAdj)) +
+    ggplot2::scale_x_continuous(expand = c(0, 0), limits = c( min(dat$x)-axisAdj, max(dat$x)+axisAdj) ) +
+    
+    ggplot2::labs(title = title,
+                  x = "x",
+                  y = "y") +
+    
+    ggplot2::theme_classic() +
+    ggplot2::theme(axis.text.x = ggplot2::element_text(size=15, color = "black"),
+                   axis.text.y = ggplot2::element_text(size=15, color = "black"),
+                   axis.title.y = ggplot2::element_text(size=15),
+                   axis.title.x = ggplot2::element_text(size=15),
+                   axis.ticks.x = ggplot2::element_blank(),
+                   plot.title = ggplot2::element_text(size=15),
+                   legend.text = ggplot2::element_text(size = 12, colour = "black"),
+                   legend.title = ggplot2::element_text(size = 15, colour = "black", angle = 0, hjust = 0.5),
+                   panel.background = ggplot2::element_blank(),
+                   plot.background = ggplot2::element_blank(),
+                   legend.background = ggplot2::element_blank(),
+                   panel.grid.major.y = ggplot2::element_blank(),
+                   axis.line = ggplot2::element_line(linewidth = 1, colour = "black")
+                   # legend.position="none"
+    ) +
+    
+    ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 2)
+    ) +
+    
+    ggplot2::coord_equal()
+  
+  plt
+  
+}
+
+
+
+# Not exported ------------------------------------------------------------
+
+#' Plot trends
+#'
+#' @description Plot panel of Z-score trends for each reference and neighbor cell-type pairs.
+#'
+#' @param results list or data.frame; the information about the scale, Z-score, reference and the neighbor cell. It can be the result directly obtained by the findTrends function or the melted version created by the `meltResultsList()` function.
+#' @param idcol character; if results are a data.frame, this is the column that contains the additional feature to plot multiple trend lines with
+#' @param legend boolean to produce legend, if results are a melted data.frame with "idcol" column (default: FALSE)
+#' @param ... additional plotting parameters for base R plotting. Fed into "lines()" in script
+#'
+#' @return nothing
+#'
+#' @noRd
+plotTrends <- function(results,
+                       idcol = "id",
+                       legend = FALSE,
+                       ...){
+  
+  
+  ## setup to check if original list output from `findTrends`, and plot one way
+  ## or if a melted dataframe with ids from merging multiple trend analyses, check if dataframe and plot that way
+  
+  ## if in original list format from `findTrends`:
+  if(inherits(results, "list")){
+    message("results detected to be a list")
+    
+    par(mfrow=c(length(names(results)), length(names(results))),
+        mar=rep(4,4))
+    
+    ## for each reference cell type, ie a dataframe in the list..
+    invisible(sapply(names(results), function(ct1) {
+      # print(ct1)
+      results.norm <- results[[ct1]]
+      results.norm[is.nan(results.norm)] <- NA
+      results.norm[is.infinite(results.norm)] <- NA
+      
+      ## for each neighbor cell type...
+      sapply(colnames(results.norm), function(ct2) {
+        rg <- max(abs(results.norm[, ct2]), na.rm = TRUE)
+        scales <- rownames(results.norm)
+        
+        if(is.infinite(rg)){
+          rg <- 2.0
+        }
+        
+        ## instantiate a plot and plot trend
+        plot(scales, results.norm[,ct2],
+             type="l", lwd = 2,
+             main=paste0(ct1,' ref \n', ct2, " neighbors"),
+             ylim=c(-rg, rg),
+             xlab="scale", ylab="Z", ...)
+        
+        ## threshold lines
+        abline(h = -2, col='red')
+        abline(h = 2, col='red')
+      })
+    }))
+    
+    ## if a melted dataframe,
+    ## will have an additional column that can serve to plot
+    ## several trend lines on the same plot instance
+    ## for example, ref vs neigh at different distances
+  } else if(inherits(results, "data.frame")){
+    message("results detected to be a data.frame")
+    
+    refs <- unique(results[,"reference"])
+    neighs <- unique(results[,"neighbor"])
+    ids <- unique(results[,idcol])
+    
+    cl <- rainbow(length(ids))
+    
+    par(mfrow=c(length(neighs), length(refs)),
+        mar=c(4,4,4,6)) ## bot, top, left, right
+    
+    ## for each reference cell type...(rows)
+    invisible(sapply(refs, function(ct1) {
+      # print(ct1)
+      results.norm <- results[results[,"reference"] == ct1,]
+      results.norm[is.nan(results.norm[,"Z"]), "Z"] <- NA
+      results.norm[is.infinite(results.norm[,"Z"]), "Z"] <- NA
+      
+      ## for each neighbor cell type...(columns)
+      sapply(neighs, function(ct2) {
+        results.norm.neigh <- results.norm[results.norm[,"neighbor"] == ct2,]
+        
+        yl <- max(abs(results.norm.neigh[, "Z"]), na.rm = TRUE)
+        xl <- max(as.numeric(results.norm.neigh[,"scale"]))
+        
+        if(is.infinite(yl)){
+          yl <- 2.0
+        }
+        
+        ## instantiate a plot
+        plot(0, 0, type = "n",
+             main=paste0(ct1,' ref \n', ct2, " neighbors"),
+             cex.main=1,
+             ylim=c(-yl, yl),
+             xlim=c(0, xl),
+             xlab="scale", ylab="Z")
+        
+        ## for each id param, draw a line on plot instance
+        for(i in 1:length(ids)){
+          id <- ids[i]
+          
+          results.norm.neigh.id <- results.norm.neigh[results.norm.neigh[,idcol] == id,]
+          
+          lines(as.numeric(results.norm.neigh.id[,"scale"]), results.norm.neigh.id[,"Z"],
+                type="l", lwd=2, col=cl[i], ...)
+        }
+        
+        ## threshold lines
+        abline(h = -2, col='red')
+        abline(h = 2, col='red')
+        
+        if(legend){
+          legend("topright", inset=c(-0.4,0), xpd=TRUE, legend = id, col=cl, pch=20, cex=0.5, title = idcol)
+        }
+        
+      })
+    }))
+    
+  } else {
+    stop("`results` are neither a list from `findTrends()` or a melted data.frame from `meltResultsList()`")
+  }
+  
+}
+
+
+#' This one overlays each neighbor trend wrt the same reference cell type on the plot
+#' 
+#' @param results data.frame; the information about the scale, Z-score, reference and the neighbor cell. It can be the result directly obtained by the melted `findTrends` output created by the `meltResultsList()` function.
+#' @param ... additional plotting parameters for base R plotting. Fed into "lines()" in script
+#' 
+#' @return nothing
+#' 
+#' @noRd
+plotTrendsOverlay <- function(results,
+                              ...){
+  
+  
+  ## setup to check if original list output from `findTrends`, and plot one way
+  ## or if a melted dataframe with ids from merging multiple trend analyses, check if dataframe and plot that way
+  
+  ## if in original list format from `findTrends`:
+  if(inherits(results, "list")){
+    message("results detected to be a list")
+    
+    par(mfrow=c(length(names(results)), length(names(results))),
+        mar=rep(4,4))
+    
+    ## for each reference cell type, ie a dataframe in the list..
+    sapply(names(results), function(ct1) {
+      # print(ct1)
+      results.norm <- results[[ct1]]
+      results.norm[is.nan(results.norm)] <- NA
+      results.norm[is.infinite(results.norm)] <- NA
+      
+      ## for each neighbor cell type...
+      sapply(colnames(results.norm), function(ct2) {
+        rg <- max(abs(results.norm[, ct2]), na.rm = TRUE)
+        scales <- rownames(results.norm)
+        
+        ## instantiate a plot and plot trend
+        plot(scales, results.norm[,ct2],
+             type="l", lwd = 2,
+             main=paste0(ct1,' ref \n', ct2, " neighbors"),
+             ylim=c(-rg, rg),
+             xlab="scale", ylab="Z", ...)
+        
+        ## threshold lines
+        abline(h = -2, col='red')
+        abline(h = 2, col='red')
+      })
+    })
+    
+    ## if a melted dataframe,
+    ## will have an additional column that can serve to plot
+    ## several trend lines on the same plot instance
+    ## for example, ref vs neigh at different distances
+  } else if(inherits(results, "data.frame")){
+    message("results detected to be a data.frame")
+    
+    results <- results[,c("scale", "neighbor", "reference", "Z")]
+    
+    refs <- unique(results[,"reference"])
+    neighs <- unique(results[,"neighbor"])
+    cl <- rainbow(length(neighs))
+    
+    par(mfrow=c(length(refs),1),
+        mar=c(4,4,4,8)) ## bot, top, left, right
+    
+    ## for each reference cell type...(rows)
+    sapply(refs, function(ct1) {
+      # print(ct1)
+      results.norm <- results[results[,"reference"] == ct1,]
+      results.norm[is.nan(results.norm[,"Z"]), "Z"] <- NA
+      results.norm[is.infinite(results.norm[,"Z"]), "Z"] <- NA
+      
+      ## set limits based on trends with other cell types, not self
+      results.norm.limits <- results.norm[results.norm[,"neighbor"] != ct1,]
+      yl_max <- max(results.norm.limits[, "Z"], na.rm = TRUE)
+      yl_min <- min(results.norm.limits[, "Z"], na.rm = TRUE)
+      xl <- max(as.numeric(results.norm.limits[,"scale"]))
+      if(is.infinite(yl_max)){
+        yl_max <- 2.0
+      }
+      if(is.infinite(yl_min)){
+        yl_min <- -2.0
+      }
+      
+      ## instantiate a plot
+      plot(0, 0, type = "n",
+           main=paste0(ct1," ref"),
+           cex.main=1,
+           ylim=c(yl_min,yl_max),
+           xlim=c(0, xl),
+           xlab="scale", ylab="Z")
+      
+      ## for each neighbor cell type draw a line on plot instance
+      for(i in 1:length(neighs)){
+        ct2 <- neighs[i]
+        # ignore showing trends with self because typically very large and
+        # masks relationships with other cell types
+        if(ct1 != ct2){
+          results.norm.neigh.id <-  results.norm[results.norm[,"neighbor"] == ct2,]
+          lines(as.numeric(results.norm.neigh.id[,"scale"]), results.norm.neigh.id[,"Z"],
+                type="l", lwd=0.8, col=cl[i], ...)
+        }
+      }
+      
+      ## threshold lines
+      abline(h = -1, col='black')
+      abline(h = 1, col='black')
+      
+      legend("topright", inset=c(-0.4,0), xpd=TRUE, legend = neighs, col=cl, pch=20, cex=0.5, title = "neighbors")
+      
+    })
+    
+  } else {
+    stop("`results` are neither a list from `findTrends` or a melted data.frame from `meltResultsList`")
+  }
+  
+}
+
+
+#' Create color for the "other" cell type
+#'
+#' @description Given a color and a transparency in percentage, create a color.
+#'
+#' @param color character; color
+#' @param percent numeric (0 to 100); transparency
+#' @param name character; name of the color
+#' 
+#' @return color
+#'
+#' @noRd
+transparentCol <- function(color, percent = 50, name = NULL) {
+  ## Get RGB values for named color
+  rgb.val <- grDevices::col2rgb(color)
+  
+  ## Make new color using input color as base and alpha set by transparency
+  t.col <- grDevices::rgb(rgb.val[1], rgb.val[2], rgb.val[3],
+                          maxColorValue = 255,
+                          alpha = (100 - percent) * 255 / 100,
+                          names = name)
+  
+  ## Save the color
+  invisible(t.col)
+}
