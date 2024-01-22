@@ -41,7 +41,7 @@ makeShuffledCells <- function(cells,
     start_time <- Sys.time()
   }
   
-  cells_df <- crawdad::spToDF(cells)
+  cells_df <- crawdad::sfToDF(cells)
   
   randomcellslist <- lapply(scales, function(r) {
     
