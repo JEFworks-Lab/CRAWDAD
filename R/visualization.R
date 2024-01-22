@@ -10,7 +10,7 @@
 #' @description Uses the cells sf object to visualize the clusters together in 
 #' the same plot.
 #' 
-#' @param cells sf object; spatial (x and y) coordinates and celltypes column.
+#' @param cells sf object; spatial (x and y) coordinates and celltypes column
 #' @param ofInterest character vector; a vector of specific clusters to visualize
 #' @param pointSize numeric; size of points
 #' @param alpha numeric; transparency of points
