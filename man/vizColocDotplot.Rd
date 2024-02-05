@@ -8,17 +8,19 @@ vizColocDotplot(
   dat,
   zsig.thresh = 1.96,
   psig.tresh = NULL,
-  zscore.limit = 3,
+  zscore.limit = NULL,
   reorder = FALSE,
   only.significant = FALSE,
   colors = c("blue", "white", "red"),
+  dot.sizes = c(6, 31),
   title = NULL
 )
 }
 \arguments{
 \item{dat}{\code{findTrends()} data.frame; the information about the scale,
 Z-score, reference and the neighbor cell. The input data.frame should be the
-results list from \code{findTrends()} that has been melted into a data.frame using \code{meltResultsList()}.}
+results list from \code{findTrends()} that has been melted into a data.frame
+using \code{meltResultsList()}.}
 
 \item{zsig.thresh}{numeric; the Z score significance threshold (default: 1.96).}
 
@@ -28,12 +30,14 @@ the zsig.thresh will be used.}
 
 \item{zscore.limit}{numeric; limit the Z-score to look better in the graph
 scale gradient. Z-score values above zscore.limit will be represented as
-zscore.limit, scores below -zscore.limit will be represented as -zscore.limit (default: 3).}
+zscore.limit, scores below -zscore.limit will be represented as -zscore.limit
+(default: NULL).}
 
 \item{reorder}{boolean; if TRUE, reorder the cell types by clustering on the
 z-score. If false, orders in alphabetical order (default: FALSE).}
 
-\item{only.significant}{boolean; plot only cell types with significant relationships (default: TRUE).}
+\item{only.significant}{boolean; plot only cell types with significant
+relationships (default: TRUE).}
 
 \item{colors}{character vector; colors for the gradient heatmap (low, mid, high).}
 

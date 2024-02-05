@@ -7,7 +7,7 @@
 vizClusters(cells, ofInterest = NULL, pointSize = 1, alpha = 0.5)
 }
 \arguments{
-\item{cells}{sf object; spatial (x and y) coordinates and celltypes}
+\item{cells}{sf object; spatial (x and y) coordinates and celltypes column}
 
 \item{ofInterest}{character vector; a vector of specific clusters to visualize}
 
@@ -26,7 +26,7 @@ the same plot.
 \dontrun{
 data(slide)
 cells <- crawdad::toSF(pos = slide[,c("x", "y")], celltypes = slide$celltypes)
-vizAllClusters(cells)
+vizClusters(cells)
 }
 
 }
