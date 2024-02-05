@@ -542,17 +542,20 @@ transparentCol <- function(color, percent = 50, name = NULL) {
 #' 
 #' @param dat `findTrends()` data.frame; the information about the scale, 
 #' Z-score, reference and the neighbor cell. The input data.frame should be the 
-#' results list from `findTrends()` that has been melted into a data.frame using `meltResultsList()`.
+#' results list from `findTrends()` that has been melted into a data.frame 
+#' using `meltResultsList()`.
 #' @param zsig.thresh numeric; the Z score significance threshold (default: 1.96).
 #' @param psig.tresh numeric; the two-sided P value significance threshold. It 
 #' can be used in place of the zsig.thresh parameter. If no value is provided, 
 #' the zsig.thresh will be used.
 #' @param zscore.limit numeric; limit the Z-score to look better in the graph 
 #' scale gradient. Z-score values above zscore.limit will be represented as 
-#' zscore.limit, scores below -zscore.limit will be represented as -zscore.limit (default: 3).
+#' zscore.limit, scores below -zscore.limit will be represented as -zscore.limit
+#' (default: NULL).
 #' @param reorder boolean; if TRUE, reorder the cell types by clustering on the 
 #' z-score. If false, orders in alphabetical order (default: FALSE).
-#' @param only.significant boolean; plot only cell types with significant relationships (default: TRUE).
+#' @param only.significant boolean; plot only cell types with significant 
+#' relationships (default: TRUE).
 #' @param colors character vector; colors for the gradient heatmap (low, mid, high).
 #' @param title character; plot title (default: NULL).
 #' 
@@ -568,9 +571,10 @@ transparentCol <- function(color, percent = 50, name = NULL) {
 #' 
 #' @export
 vizColocDotplot <- function(dat, zsig.thresh = 1.96, psig.tresh = NULL,
-                            zscore.limit = 3,  reorder = FALSE,
+                            zscore.limit = NULL,  reorder = FALSE,
                             only.significant = FALSE,
                             colors = c("blue", "white", "red"),
+                            dot.sizes = c(6,31),
                             title = NULL){
   if (!is.null(psig.tresh)) {
     zsig.thresh = round(qnorm(psig.tresh/2, lower.tail = F), 2)
@@ -634,11 +638,11 @@ vizColocDotplot <- function(dat, zsig.thresh = 1.96, psig.tresh = NULL,
       low = colors[1],
       mid = colors[2],
       high = colors[3],
-      na.value = "#eeeeee"
+      na.value = "lightgray"
     ) + 
     ggplot2::scale_radius(trans = 'reverse',
                           breaks = legend_sizes,
-                          range = c(1, 11)) + 
+                          range = dot.sizes) + 
     ggplot2::scale_x_discrete(position = "top")  + 
     ggplot2::theme_bw()
   
@@ -653,6 +657,8 @@ vizColocDotplot <- function(dat, zsig.thresh = 1.96, psig.tresh = NULL,
       scale_x_discrete(limits = all_cts, position = 'top') +
       scale_y_discrete(limits = all_cts) 
   }
+  
+  return(p)
 }
 
 
