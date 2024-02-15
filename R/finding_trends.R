@@ -8,6 +8,7 @@
 #' @param perms number of permutations to shuffle for each scale (default = 1)
 #' @param ncores number of cores for parallelization (default 1)
 #' @param seed set seed for shuffling (if more than 1 permutation, each shuffling permutation has a seed equal to the permutation number)
+#' @param square if false, make hexagonal grid (default TRUE)
 #' @param verbose Boolean for verbosity (default TRUE)
 #' 
 #' @examples  
@@ -22,6 +23,7 @@ makeShuffledCells <- function(cells,
                               perms = 1,
                               ncores = 1,
                               seed = 0,
+                              square = TRUE,
                               verbose = TRUE){
   
   ## effectively will make a list of lists of randomly shuffled cell labels.
@@ -63,7 +65,8 @@ makeShuffledCells <- function(cells,
       
       ## create grid after going into permutations
       grid <- sf::st_make_grid(cells, cellsize = r, 
-                               offset = c(min(cells_df$x) + offsets[i], min(cells_df$y) + offsets[i]))
+                               offset = c(min(cells_df$x) + offsets[i], min(cells_df$y) + offsets[i]),
+                               square = square)
       
       if(verbose){
         message(r, " unit scale")
