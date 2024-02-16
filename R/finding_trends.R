@@ -43,7 +43,7 @@ makeShuffledCells <- function(cells,
     start_time <- Sys.time()
   }
   
-  cells_df <- crawdad::sfToDF(cells)
+  cells_df <- sfToDF(cells)
   
   randomcellslist <- lapply(scales, function(r) {
     
@@ -556,8 +556,14 @@ findTrends <- function(cells,
       ## remove duplicate neighbor cells to prevent them from being counted multiple times
       ## and inflate the Z scores
       if(removeDups){
+        ## need to remove self cells else have trivial enrichment when d~0
+        self.cells <- cells[cells$celltypes == ct,]
+        neigh.cells <- neigh.cells[setdiff(rownames(neigh.cells), rownames(self.cells)),]
+        
         # message("number of neighbor cells before: ", nrow(neigh.cells))
-        neigh.cells <- neigh.cells[intersect(rownames(neigh.cells), rownames(cells)),]
+        #neigh.cells <- neigh.cells[intersect(rownames(neigh.cells), rownames(cells)),]
+        ## hack to accommodate self cells that are neighbors of another self cell
+        neigh.cells <- neigh.cells[intersect(rownames(neigh.cells), c(rownames(cells), paste0(rownames(self.cells), '.1'))),]
         # message("number of neighbor cells after removing dups: ", nrow(neigh.cells))
       }
       
@@ -616,8 +622,14 @@ findTrends <- function(cells,
       ## remove duplicate neighbor cells to prevent them from being counted multiple times
       ## and inflate the Z scores
       if(removeDups){
+        ## need to remove self cells else have trivial enrichment when d~0
+        self.cells <- cells[cells$celltypes == ct,]
+        neigh.cells <- neigh.cells[setdiff(rownames(neigh.cells), rownames(self.cells)),]
+        
         # message("number of neighbor cells before: ", nrow(neigh.cells))
-        neigh.cells <- neigh.cells[intersect(rownames(neigh.cells), rownames(cells)),]
+        #neigh.cells <- neigh.cells[intersect(rownames(neigh.cells), rownames(cells)),]
+        ## hack to accommodate self cells that are neighbors of another self cell
+        neigh.cells <- neigh.cells[intersect(rownames(neigh.cells), c(rownames(cells), paste0(rownames(self.cells), '.1'))),]
         # message("number of neighbor cells after removing dups: ", nrow(neigh.cells))
       }
       
