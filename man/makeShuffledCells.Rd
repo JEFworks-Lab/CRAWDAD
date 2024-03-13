@@ -10,6 +10,7 @@ makeShuffledCells(
   perms = 1,
   ncores = 1,
   seed = 0,
+  square = TRUE,
   verbose = TRUE
 )
 }
@@ -23,6 +24,8 @@ makeShuffledCells(
 \item{ncores}{number of cores for parallelization (default 1)}
 
 \item{seed}{set seed for shuffling (if more than 1 permutation, each shuffling permutation has a seed equal to the permutation number)}
+
+\item{square}{if false, make hexagonal grid (default TRUE)}
 
 \item{verbose}{Boolean for verbosity (default TRUE)}
 }

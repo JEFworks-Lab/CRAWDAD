@@ -544,19 +544,24 @@ transparentCol <- function(color, percent = 50, name = NULL) {
 #' Z-score, reference and the neighbor cell. The input data.frame should be the 
 #' results list from `findTrends()` that has been melted into a data.frame 
 #' using `meltResultsList()`.
-#' @param zsig.thresh numeric; the Z score significance threshold (default: 1.96).
-#' @param psig.tresh numeric; the two-sided P value significance threshold. It 
-#' can be used in place of the zsig.thresh parameter. If no value is provided, 
-#' the zsig.thresh will be used.
-#' @param zscore.limit numeric; limit the Z-score to look better in the graph 
-#' scale gradient. Z-score values above zscore.limit will be represented as 
-#' zscore.limit, scores below -zscore.limit will be represented as -zscore.limit
+#' @param zsigThresh numeric; the Z score significance threshold (default: 1.96).
+#' @param psigThresh numeric; the two-sided P value significance threshold. It 
+#' can be used in place of the zsigThresh parameter. If no value is provided, 
+#' the zsigThresh will be used.
+#' @param zscoreLimit numeric; limit the Z-score to look better in the graph 
+#' scale gradient. Z-score values above zscoreLimit will be represented as 
+#' zscoreLimit, scores below -zscoreLimit will be represented as -zscoreLimit
 #' (default: NULL).
 #' @param reorder boolean; if TRUE, reorder the cell types by clustering on the 
 #' z-score. If false, orders in alphabetical order (default: FALSE).
-#' @param only.significant boolean; plot only cell types with significant 
+#' @param mutual boolean; highligh relationships that are mutual between cell 
+#' type pairs (default: TRUE).
+#' @param onlySignificant boolean; plot only cell types with significant 
 #' relationships (default: TRUE).
-#' @param colors character vector; colors for the gradient heatmap (low, mid, high).
+#' @param colors character vector; colors for the gradient heatmap (low, mid, high) 
+#' (default: c("blue", "white", "red")).
+#' @param dotSizes numeric vector; minimum and maximum size of the dot 
+#' (default: c(6,31)). 
 #' @param title character; plot title (default: NULL).
 #' 
 #' @examples 
@@ -570,14 +575,14 @@ transparentCol <- function(color, percent = 50, name = NULL) {
 #' }
 #' 
 #' @export
-vizColocDotplot <- function(dat, zsig.thresh = 1.96, psig.tresh = NULL,
-                            zscore.limit = NULL,  reorder = FALSE,
-                            only.significant = FALSE,
+vizColocDotplot <- function(dat, zsigThresh = 1.96, psigThresh = NULL,
+                            zscoreLimit = NULL,  reorder = FALSE,
+                            mutual = FALSE, onlySignificant = FALSE,
                             colors = c("blue", "white", "red"),
-                            dot.sizes = c(6,31),
+                            dotSizes = c(6,31),
                             title = NULL){
-  if (!is.null(psig.tresh)) {
-    zsig.thresh = round(qnorm(psig.tresh/2, lower.tail = F), 2)
+  if (!is.null(psigThresh)) {
+    zsigThresh = round(qnorm(psigThresh/2, lower.tail = F), 2)
   }
   
   ## create data.frame with the Z-scores and scales at the first scale
@@ -591,13 +596,15 @@ vizColocDotplot <- function(dat, zsig.thresh = 1.96, psig.tresh = NULL,
   u_cts <- unique(dat$reference)
   ## calculate sig z scores
   sig_dat <- mean_dat %>%
-    dplyr::filter(abs(Z) >= zsig.thresh) %>% 
+    dplyr::filter(abs(Z) >= zsigThresh) %>% 
     dplyr::group_by(neighbor, reference) %>% 
     dplyr::filter(scale == min(scale, na.rm = TRUE))
   
   ## limit the z-score for the gradient in the figure to look better
-  sig_dat$Z[sig_dat$Z > zscore.limit] <- zscore.limit
-  sig_dat$Z[sig_dat$Z < -zscore.limit] <- -zscore.limit
+  if (!is.null(zscoreLimit)) {
+    sig_dat$Z[sig_dat$Z > zscoreLimit] <- zscoreLimit
+    sig_dat$Z[sig_dat$Z < -zscoreLimit] <- -zscoreLimit
+  }
   
   ## scale sizes
   lsizes <- sort(unique(sig_dat$scale))
@@ -626,6 +633,17 @@ vizColocDotplot <- function(dat, zsig.thresh = 1.96, psig.tresh = NULL,
                                 levels=colnames(sig_mat)[hc$order])
   }
   
+  ## highligh mutual
+  if (mutual) {
+    ref_cts <- as.character(sig_dat$reference)
+    ngb_cts <- as.character(sig_dat$neighbor)
+    ct_pairs <- lapply(1:length(ref_cts), function(i) {
+      sort(c(ref_cts[i], ngb_cts[i]))
+    })
+    mutual_ct_pairs <- duplicated(ct_pairs) | duplicated(ct_pairs, fromLast = TRUE)
+    sig_dat$mutual <- mutual_ct_pairs
+  }
+  
   ## plot figure
   p <- sig_dat %>% 
     ggplot2::ggplot(ggplot2::aes(x=reference, y=neighbor, 
@@ -634,6 +652,9 @@ vizColocDotplot <- function(dat, zsig.thresh = 1.96, psig.tresh = NULL,
     ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, 
                                                        vjust = 0.5, 
                                                        hjust=1)) +
+    {if(mutual)ggplot2::geom_point(data = ~dplyr::filter(.x, mutual == T),
+                                   ggplot2::aes(x=reference, y=neighbor),
+                                   shape = 8, color = 'gold', size = 2*dotSizes[1]/3)} + 
     ggplot2::scale_colour_gradient2(
       low = colors[1],
       mid = colors[2],
@@ -642,11 +663,11 @@ vizColocDotplot <- function(dat, zsig.thresh = 1.96, psig.tresh = NULL,
     ) + 
     ggplot2::scale_radius(trans = 'reverse',
                           breaks = legend_sizes,
-                          range = dot.sizes) + 
-    ggplot2::scale_x_discrete(position = "top")  + 
+                          range = dotSizes) + 
+    ggplot2::scale_x_discrete(position = "top") + 
     ggplot2::theme_bw()
   
-  if (!only.significant) {
+  if (!onlySignificant) {
     all_cts <- sort(unique(dat$reference))
     alpha_cts <- sort(unique(dat$reference))
     if (reorder) {

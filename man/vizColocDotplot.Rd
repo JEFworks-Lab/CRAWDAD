@@ -6,13 +6,14 @@
 \usage{
 vizColocDotplot(
   dat,
-  zsig.thresh = 1.96,
-  psig.tresh = NULL,
-  zscore.limit = NULL,
+  zsigThresh = 1.96,
+  psigThresh = NULL,
+  zscoreLimit = NULL,
   reorder = FALSE,
-  only.significant = FALSE,
+  mutual = FALSE,
+  onlySignificant = FALSE,
   colors = c("blue", "white", "red"),
-  dot.sizes = c(6, 31),
+  dotSizes = c(6, 31),
   title = NULL
 )
 }
@@ -22,24 +23,31 @@ Z-score, reference and the neighbor cell. The input data.frame should be the
 results list from \code{findTrends()} that has been melted into a data.frame
 using \code{meltResultsList()}.}
 
-\item{zsig.thresh}{numeric; the Z score significance threshold (default: 1.96).}
+\item{zsigThresh}{numeric; the Z score significance threshold (default: 1.96).}
 
-\item{psig.tresh}{numeric; the two-sided P value significance threshold. It
-can be used in place of the zsig.thresh parameter. If no value is provided,
-the zsig.thresh will be used.}
+\item{psigThresh}{numeric; the two-sided P value significance threshold. It
+can be used in place of the zsigThresh parameter. If no value is provided,
+the zsigThresh will be used.}
 
-\item{zscore.limit}{numeric; limit the Z-score to look better in the graph
-scale gradient. Z-score values above zscore.limit will be represented as
-zscore.limit, scores below -zscore.limit will be represented as -zscore.limit
+\item{zscoreLimit}{numeric; limit the Z-score to look better in the graph
+scale gradient. Z-score values above zscoreLimit will be represented as
+zscoreLimit, scores below -zscoreLimit will be represented as -zscoreLimit
 (default: NULL).}
 
 \item{reorder}{boolean; if TRUE, reorder the cell types by clustering on the
 z-score. If false, orders in alphabetical order (default: FALSE).}
 
-\item{only.significant}{boolean; plot only cell types with significant
+\item{mutual}{boolean; highligh relationships that are mutual between cell
+type pairs (default: TRUE).}
+
+\item{onlySignificant}{boolean; plot only cell types with significant
 relationships (default: TRUE).}
 
-\item{colors}{character vector; colors for the gradient heatmap (low, mid, high).}
+\item{colors}{character vector; colors for the gradient heatmap (low, mid, high)
+(default: c("blue", "white", "red")).}
+
+\item{dotSizes}{numeric vector; minimum and maximum size of the dot
+(default: c(6,31)).}
 
 \item{title}{character; plot title (default: NULL).}
 }
