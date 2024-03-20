@@ -635,13 +635,31 @@ vizColocDotplot <- function(dat, zsigThresh = 1.96, psigThresh = NULL,
   
   ## highligh mutual
   if (mutual) {
-    ref_cts <- as.character(sig_dat$reference)
-    ngb_cts <- as.character(sig_dat$neighbor)
-    ct_pairs <- lapply(1:length(ref_cts), function(i) {
-      sort(c(ref_cts[i], ngb_cts[i]))
-    })
-    mutual_ct_pairs <- duplicated(ct_pairs) | duplicated(ct_pairs, fromLast = TRUE)
-    sig_dat$mutual <- mutual_ct_pairs
+    # ## collect all pairs
+    # ref_cts <- as.character(sig_dat$reference)
+    # ngb_cts <- as.character(sig_dat$neighbor)
+    # ## get Z scores and derive type of relationship to compare if it is the same
+    # zscores <- sig_dat$Z
+    df_pairs <- sig_dat %>% 
+      select(reference, neighbor, Z) %>% 
+      ## calculate the type of relationship
+      mutate(type = case_when(Z > 0 ~ 'enrichment',
+                              Z < 0 ~ 'depletion',
+                              T ~ NA)) %>% 
+      mutate(pair = paste(sort(c(gsub(" ", "", reference), 
+                                 gsub(" ", "", neighbor))), collapse = '_'))
+    df_same_type <- df_pairs %>% 
+      group_by(pair) %>% 
+      ## check if the type is not different for each ref of the pair and
+      ## check if there are two relationships by checking distinct references
+      summarise(same_type = (n_distinct(type) != 2) & 
+                  (n_distinct(reference) == 2))
+    ## merge to reorder
+    df_pairs <- df_pairs %>% 
+      left_join(df_same_type, by = 'pair')
+    ## check if pairs are duplicate
+    mutual_same_relationships <- df_pairs$same_type
+    sig_dat$mutual <- mutual_same_relationships
   }
   
   ## plot figure
