@@ -2,12 +2,15 @@
 #'
 #' @description for each scale, and for i number of permutations, shuffle the celltype labels.
 #' Returns a list of lists, where each list is a factor of the shuffled celltype labels.
-#' Outer list is for each scale of shuffling, and each inner list is for a given permutation with a given seed.
+#' Outer list is for each scale of shuffling, and each inner list is for a given 
+#' permutation with a given seed.
 #' @param cells sf object, with celltypes features and point geometries
-#' @param scales numeric vector of the different scales to shuffle at and subsequently compute significance at (default: c(50, 100, 200, 300, 400, 500))
+#' @param scales numeric vector of the different scales to shuffle at and 
+#' subsequently compute significance at (default: c(50, 100, 200, 300, 400, 500))
 #' @param perms number of permutations to shuffle for each scale (default = 1)
 #' @param ncores number of cores for parallelization (default 1)
-#' @param seed set seed for shuffling (if more than 1 permutation, each shuffling permutation has a seed equal to the permutation number)
+#' @param seed set seed for shuffling (if more than 1 permutation, each 
+#' shuffling permutation has a seed equal to the permutation number)
 #' @param square if false, make hexagonal grid (default TRUE)
 #' @param verbose Boolean for verbosity (default TRUE)
 #' 
@@ -149,7 +152,7 @@ makeShuffledCells <- function(cells,
 }
 
 
-#' compute significant different between real and randomly shuffled cell neighbor proportions
+#' Compute significant different between real and randomly shuffled cell neighbor proportions
 #' 
 #' @description for a given reference cell type, computes the Z scores for being colocalized or separated from each query cell type. 
 #' If `returnMeans = TRUE`, then the result will be a data.frame where each row is a scale, each column is a query cell type, and each value is the Z score.
@@ -623,7 +626,7 @@ findTrends <- function(cells,
       ## and inflate the Z scores
       if(removeDups){
         ## need to remove self cells else have trivial enrichment when d~0
-        self.cells <- cells[cells$celltypes == ct,]
+        self.cells <- cells[cells$celltypes == i,]
         neigh.cells <- neigh.cells[setdiff(rownames(neigh.cells), rownames(self.cells)),]
         
         # message("number of neighbor cells before: ", nrow(neigh.cells))
