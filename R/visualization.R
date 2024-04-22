@@ -642,9 +642,9 @@ vizColocDotplot <- function(dat, zSigThresh = 1.96, pSigThresh = NULL,
     df_pairs <- sig_dat %>% 
       select(reference, neighbor, Z) %>% 
       ## calculate the type of relationship
-      mutate(type = case_when(Z > 0 ~ 'enrichment',
-                              Z < 0 ~ 'depletion',
-                              T ~ NA)) %>% 
+      mutate(type = dplyr::case_when(Z > 0 ~ 'enrichment',
+                                     Z < 0 ~ 'depletion',
+                                     T ~ NA)) %>% 
       mutate(pair = paste(sort(c(gsub(" ", "", reference), 
                                  gsub(" ", "", neighbor))), collapse = '_'))
     df_same_type <- df_pairs %>% 
