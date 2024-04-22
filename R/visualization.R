@@ -557,7 +557,7 @@ transparentCol <- function(color, percent = 50, name = NULL) {
 #' @param mutual boolean; highligh relationships that are mutual between cell 
 #' type pairs (default: TRUE).
 #' @param onlySignificant boolean; plot only cell types with significant 
-#' relationships (default: TRUE).
+#' relationships (default: FALSE).
 #' @param colors character vector; colors for the gradient heatmap (low, mid, high) 
 #' (default: c("blue", "white", "red")).
 #' @param dotSizes numeric vector; minimum and maximum size of the dot 
