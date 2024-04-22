@@ -664,8 +664,8 @@ vizColocDotplot <- function(dat, zSigThresh = 1.96, pSigThresh = NULL,
       dplyr::group_by(pair) %>% 
       ## check if the type is not different for each ref of the pair and
       ## check if there are two relationships by checking distinct references
-      dplyr::summarise(same_type = (n_distinct(type) != 2) & 
-                         (n_distinct(reference) == 2))
+      dplyr::summarise(same_type = (dplyr::n_distinct(type) != 2) & 
+                         (dplyr::n_distinct(reference) == 2))
     ## merge to reorder
     df_pairs <- df_pairs %>% 
       dplyr::left_join(df_same_type, by = 'pair')
