@@ -544,10 +544,10 @@ transparentCol <- function(color, percent = 50, name = NULL) {
 #' Z-score, reference and the neighbor cell. The input data.frame should be the 
 #' results list from `findTrends()` that has been melted into a data.frame 
 #' using `meltResultsList()`.
-#' @param zsigThresh numeric; the Z score significance threshold (default: 1.96).
-#' @param psigThresh numeric; the two-sided P value significance threshold. It 
-#' can be used in place of the zsigThresh parameter. If no value is provided, 
-#' the zsigThresh will be used.
+#' @param zSigThresh numeric; the Z score significance threshold (default: 1.96).
+#' @param pSigThresh numeric; the two-sided P value significance threshold. It 
+#' can be used in place of the zSigThresh parameter. If no value is provided, 
+#' the zSigThresh will be used.
 #' @param zscoreLimit numeric; limit the Z-score to look better in the graph 
 #' scale gradient. Z-score values above zscoreLimit will be represented as 
 #' zscoreLimit, scores below -zscoreLimit will be represented as -zscoreLimit
@@ -575,14 +575,14 @@ transparentCol <- function(color, percent = 50, name = NULL) {
 #' }
 #' 
 #' @export
-vizColocDotplot <- function(dat, zsigThresh = 1.96, psigThresh = NULL,
+vizColocDotplot <- function(dat, zSigThresh = 1.96, pSigThresh = NULL,
                             zscoreLimit = NULL,  reorder = FALSE,
                             mutual = FALSE, onlySignificant = FALSE,
                             colors = c("blue", "white", "red"),
                             dotSizes = c(6,31),
                             title = NULL){
-  if (!is.null(psigThresh)) {
-    zsigThresh = round(qnorm(psigThresh/2, lower.tail = F), 2)
+  if (!is.null(pSigThresh)) {
+    zSigThresh = round(qnorm(pSigThresh/2, lower.tail = F), 2)
   }
   
   ## create data.frame with the Z-scores and scales at the first scale
@@ -596,7 +596,7 @@ vizColocDotplot <- function(dat, zsigThresh = 1.96, psigThresh = NULL,
   u_cts <- unique(dat$reference)
   ## calculate sig z scores
   sig_dat <- mean_dat %>%
-    dplyr::filter(abs(Z) >= zsigThresh) %>% 
+    dplyr::filter(abs(Z) >= zSigThresh) %>% 
     dplyr::group_by(neighbor, reference) %>% 
     dplyr::filter(scale == min(scale, na.rm = TRUE))
   
