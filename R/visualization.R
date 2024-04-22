@@ -593,7 +593,7 @@ vizColocDotplot <- function(dat, zSigThresh = 1.96, pSigThresh = NULL,
                             dotSizes = c(6,31)){
   
   if (!is.null(pSigThresh)) {
-    zSigThresh = round(qnorm(pSigThresh/2, lower.tail = F), 2)
+    zSigThresh <- round(qnorm(pSigThresh/2, lower.tail = F), 2)
   }
   
   ## create data.frame with the Z-scores and scales at the first scale
@@ -705,8 +705,8 @@ vizColocDotplot <- function(dat, zSigThresh = 1.96, pSigThresh = NULL,
       all_cts <- c(ct_order, setdiff(alpha_cts, ct_order))
     }
     p <- p +
-      scale_x_discrete(limits = all_cts, position = 'top') +
-      scale_y_discrete(limits = all_cts) 
+      ggplot2::scale_x_discrete(limits = all_cts, position = 'top') +
+      ggplot2::scale_y_discrete(limits = all_cts) 
   }
   
   return(p)
