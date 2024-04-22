@@ -282,36 +282,44 @@ vizTrends <- function(dat, id = "id", yaxis = "Z",
   ## adds ref and neigh labels
   if (facet) {
     dat <- dat %>% 
-      mutate(reference = paste('reference:', reference),
+      dplyr::mutate(reference = paste('reference:', reference),
              neighbor = paste('neighbor:', neighbor))
   }
   
   ## creates error bar
   if (withPerms) {
     dat <- dat %>% 
-      group_by(neighbor, scale, reference, id) %>% 
-      summarise(mean = mean(Z), 
+      dplyr::group_by(neighbor, scale, reference, id) %>% 
+      dplyr::summarise(mean = mean(Z), 
                 sd = sd(Z)) %>% 
-      mutate(Z = mean)
+      dplyr::mutate(Z = mean)
   }
   
   plt <- ggplot2::ggplot(data = dat)
   if(points){
-    plt <- plt + ggplot2::geom_point(ggplot2::aes(x = scale, y = .data[[yaxis]], color = .data[[id]]), size = 1.5)
+    plt <- plt + ggplot2::geom_point(ggplot2::aes(x = scale, y = .data[[yaxis]], 
+                                                  color = .data[[id]]), 
+                                     size = 1.5)
   }
   if(lines){
-    plt <- plt + ggplot2::geom_path(ggplot2::aes(x = scale, y = .data[[yaxis]], color = .data[[id]]), size = 1)
+    plt <- plt + ggplot2::geom_path(ggplot2::aes(x = scale, y = .data[[yaxis]], 
+                                                 color = .data[[id]]), 
+                                    size = 1)
   }
   plt <- plt + ggplot2::scale_color_manual(values = colors, na.value = "black") +
     ggplot2::geom_hline(yintercept = 0, color = "black", size = 1) +
-    ggplot2::geom_hline(yintercept = sig.thresh, color = "black", size = 0.6, linetype = "dotted") +
-    ggplot2::geom_hline(yintercept = -sig.thresh, color = "black", size = 0.6, linetype = "dotted") +
+    ggplot2::geom_hline(yintercept = sig.thresh, color = "black", size = 0.6, 
+                        linetype = "dotted") +
+    ggplot2::geom_hline(yintercept = -sig.thresh, color = "black", size = 0.6, 
+                        linetype = "dotted") +
     # ggplot2::facet_grid(neighbor ~ reference) +
     ggplot2::labs(title = title) +
     # ggplot2::scale_x_log10() +
     # ggplot2::scale_y_continuous(trans = ggallin::pseudolog10_trans) +
     ggplot2::theme_classic() +
-    ggplot2::theme(axis.text.x = ggplot2::element_text(size=12, color = "black", angle = -90, vjust = 0.5, hjust = 0),
+    ggplot2::theme(axis.text.x = ggplot2::element_text(size=12, color = "black", 
+                                                       angle = -90, vjust = 0.5, 
+                                                       hjust = 0),
                    axis.text.y = ggplot2::element_text(size=12, color = "black"),
                    axis.title.y = ggplot2::element_text(size=15),
                    axis.title.x = ggplot2::element_text(size=15),
@@ -320,9 +328,12 @@ vizTrends <- function(dat, id = "id", yaxis = "Z",
                    plot.background = ggplot2::element_blank(),
                    legend.background = ggplot2::element_blank(),
                    panel.background = ggplot2::element_blank(),
-                   panel.grid.major =  ggplot2::element_line(linewidth = 0.1, colour = "black"),
-                   panel.border = ggplot2::element_rect(colour = "black", fill=NA, linewidth=1),
-                   axis.line = ggplot2::element_line(linewidth = 0, colour = "black"),
+                   panel.grid.major =  ggplot2::element_line(linewidth = 0.1, 
+                                                             colour = "black"),
+                   panel.border = ggplot2::element_rect(colour = "black", fill=NA, 
+                                                        linewidth=1),
+                   axis.line = ggplot2::element_line(linewidth = 0, 
+                                                     colour = "black"),
                    panel.spacing = ggplot2::unit(0.1, "lines"),
                    strip.text = ggplot2::element_text(size = 12),
                    legend.title = ggplot2::element_blank(),
@@ -339,8 +350,9 @@ vizTrends <- function(dat, id = "id", yaxis = "Z",
     #                                   ggplot2::aes(x = scale, y = Z),
     #                                   se = TRUE) 
     pd <- position_dodge(0.1) # move them .05 to the left and right
-    plt <- plt + geom_errorbar(aes(x=scale, ymin=mean-sd, ymax=mean+sd), 
-                               width=.1, position=pd, color="red")
+    plt <- plt + ggplot2::geom_errorbar(ggplot2::aes(x=scale, 
+                                                     ymin=mean-sd, ymax=mean+sd), 
+                                        width=.1, position=pd, color="red")
   }
   
   plt
@@ -640,22 +652,23 @@ vizColocDotplot <- function(dat, zSigThresh = 1.96, pSigThresh = NULL,
     # ## get Z scores and derive type of relationship to compare if it is the same
     # zscores <- sig_dat$Z
     df_pairs <- sig_dat %>% 
-      select(reference, neighbor, Z) %>% 
+      dplyr::select(reference, neighbor, Z) %>% 
       ## calculate the type of relationship
-      mutate(type = dplyr::case_when(Z > 0 ~ 'enrichment',
-                                     Z < 0 ~ 'depletion',
-                                     T ~ NA)) %>% 
-      mutate(pair = paste(sort(c(gsub(" ", "", reference), 
-                                 gsub(" ", "", neighbor))), collapse = '_'))
+      dplyr::mutate(type = dplyr::case_when(Z > 0 ~ 'enrichment',
+                                            Z < 0 ~ 'depletion',
+                                            T ~ NA)) %>% 
+      dplyr::mutate(pair = paste(sort(c(gsub(" ", "", reference), 
+                                        gsub(" ", "", neighbor))), 
+                                 collapse = '_'))
     df_same_type <- df_pairs %>% 
-      group_by(pair) %>% 
+      dplyr::group_by(pair) %>% 
       ## check if the type is not different for each ref of the pair and
       ## check if there are two relationships by checking distinct references
-      summarise(same_type = (n_distinct(type) != 2) & 
-                  (n_distinct(reference) == 2))
+      dplyr::summarise(same_type = (n_distinct(type) != 2) & 
+                         (n_distinct(reference) == 2))
     ## merge to reorder
     df_pairs <- df_pairs %>% 
-      left_join(df_same_type, by = 'pair')
+      dplyr::left_join(df_same_type, by = 'pair')
     ## check if pairs are duplicate
     mutual_same_relationships <- df_pairs$same_type
     sig_dat$mutual <- mutual_same_relationships
