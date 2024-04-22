@@ -300,7 +300,7 @@ evaluateSignificance <- function(cells,
 #' Generate matrix of pvalues indicating if a cell is enriched in neighbors of a given cell type
 #' @description pvalues are based on a binomial test and neighbors are defined within a given distance from a cell
 #' @param cells sf object, with celltypes features and point geometries
-#' @param neigh.dist distance to define neighbors (default = 100)
+#' @param neigh.dist distance to define neighbors (default = 50)
 #' @param ncores number of cores for parallelization (default 1)
 #' @param verbose Boolean for verbosity (default TRUE)
 #' 
@@ -311,12 +311,12 @@ evaluateSignificance <- function(cells,
 #' data(sim)
 #' cells <- toSF(pos = sim[,c("x", "y")], celltypes = sim$celltypes)
 #' shuffle.list <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
-#' binomMat <- binomialTestMatrix(cells, neigh.dist = 100, ncores = 2)
+#' binomMat <- binomialTestMatrix(cells, neigh.dist = 50, ncores = 2)
 #' }
 #' 
 #' @export
 binomialTestMatrix <- function(cells,
-                               neigh.dist = 100,
+                               neigh.dist = 50,
                                ncores = 1,
                                verbose = TRUE) {
   
@@ -482,7 +482,7 @@ selectSubsets <- function(binomMatrix,
 #' Trends are essentially built from significance values. The significance test basically asks if two cell types are localized or separated by assessing if the proportion of the neighboring cell type is significantly greater, or less than, random chance.
 #'
 #' @param cells sf object, with celltypes features and point geometries
-#' @param dist numeric distance to define neighbor cells with respect to each reference cell (default: 100)
+#' @param dist numeric distance to define neighbor cells with respect to each reference cell (default: 50)
 #' @param ncores number of cores for parallelization (default 1)
 #' @param shuffle.list a list of cell type labels shuffled at different scales (output from `makeShuffledCells()`)
 #' @param subset.list a subset list (output from `selectSubsets()`). Required if computing trends for subsets (default NULL)
@@ -496,12 +496,12 @@ selectSubsets <- function(binomMatrix,
 #' \dontrun{
 #' data(sim)
 #' shuffle.list <- makeShuffledCells(sim, scales = c(50, 100, 200, 300, 400, 500))
-#' findTrends(sim, dist = 100, shuffle.list = shuffle.list, ncores = 2)
+#' findTrends(sim, dist = 50, shuffle.list = shuffle.list, ncores = 2)
 #' }
 #' 
 #' @export
 findTrends <- function(cells,
-                       dist = 100,
+                       dist = 50,
                        ncores = 1,
                        shuffle.list,
                        subset.list = NULL,
