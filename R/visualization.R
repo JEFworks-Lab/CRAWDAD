@@ -566,7 +566,7 @@ transparentCol <- function(color, percent = 50, name = NULL) {
 #' (default: NULL).
 #' @param reorder boolean; if TRUE, reorder the cell types by clustering on the 
 #' z-score. If false, orders in alphabetical order (default: FALSE).
-#' @param mutual boolean; highligh relationships that are mutual between cell 
+#' @param symmetrical boolean; highligh relationships that are symmetrical between cell 
 #' type pairs (default: TRUE).
 #' @param onlySignificant boolean; plot only cell types with significant 
 #' relationships (default: FALSE).
@@ -588,7 +588,7 @@ transparentCol <- function(color, percent = 50, name = NULL) {
 #' @export
 vizColocDotplot <- function(dat, zSigThresh = 1.96, pSigThresh = NULL,
                             zscoreLimit = NULL,  reorder = FALSE,
-                            mutual = FALSE, onlySignificant = FALSE,
+                            symmetrical = FALSE, onlySignificant = FALSE,
                             colors = c("blue", "white", "red"),
                             dotSizes = c(6,31)){
   
@@ -644,8 +644,8 @@ vizColocDotplot <- function(dat, zSigThresh = 1.96, pSigThresh = NULL,
                                 levels=colnames(sig_mat)[hc$order])
   }
   
-  ## highligh mutual
-  if (mutual) {
+  ## highlight symmetrical
+  if (symmetrical) {
     # ## collect all pairs
     # ref_cts <- as.character(sig_dat$reference)
     # ngb_cts <- as.character(sig_dat$neighbor)
@@ -670,8 +670,8 @@ vizColocDotplot <- function(dat, zSigThresh = 1.96, pSigThresh = NULL,
     df_pairs <- df_pairs %>% 
       dplyr::left_join(df_same_type, by = 'pair')
     ## check if pairs are duplicate
-    mutual_same_relationships <- df_pairs$same_type
-    sig_dat$mutual <- mutual_same_relationships
+    symmetrical_same_relationships <- df_pairs$same_type
+    sig_dat$symmetrical <- symmetrical_same_relationships
   }
   
   ## plot figure
@@ -682,7 +682,7 @@ vizColocDotplot <- function(dat, zSigThresh = 1.96, pSigThresh = NULL,
     ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, 
                                                        vjust = 0.5, 
                                                        hjust=1)) +
-    {if(mutual)ggplot2::geom_point(data = ~dplyr::filter(.x, mutual == T),
+    {if(symmetrical)ggplot2::geom_point(data = ~dplyr::filter(.x, symmetrical == T),
                                    ggplot2::aes(x=reference, y=neighbor),
                                    shape = 8, color = 'gold', size = 2*dotSizes[1]/3)} + 
     ggplot2::scale_colour_gradient2(
