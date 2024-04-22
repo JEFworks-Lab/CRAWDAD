@@ -561,8 +561,7 @@ transparentCol <- function(color, percent = 50, name = NULL) {
 #' @param colors character vector; colors for the gradient heatmap (low, mid, high) 
 #' (default: c("blue", "white", "red")).
 #' @param dotSizes numeric vector; minimum and maximum size of the dot 
-#' (default: c(6,31)). 
-#' @param title character; plot title (default: NULL).
+#' (default: c(6,31)).
 #' 
 #' @examples 
 #' \dontrun{
@@ -579,8 +578,8 @@ vizColocDotplot <- function(dat, zSigThresh = 1.96, pSigThresh = NULL,
                             zscoreLimit = NULL,  reorder = FALSE,
                             mutual = FALSE, onlySignificant = FALSE,
                             colors = c("blue", "white", "red"),
-                            dotSizes = c(6,31),
-                            title = NULL){
+                            dotSizes = c(6,31)){
+  
   if (!is.null(pSigThresh)) {
     zSigThresh = round(qnorm(pSigThresh/2, lower.tail = F), 2)
   }
