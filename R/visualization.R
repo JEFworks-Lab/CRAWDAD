@@ -682,9 +682,9 @@ vizColocDotplot <- function(dat, zSigThresh = 1.96, pSigThresh = NULL,
     ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, 
                                                        vjust = 0.5, 
                                                        hjust=1)) +
-    {if(symmetrical)ggplot2::geom_point(data = ~dplyr::filter(.x, symmetrical == T),
+    {if (symmetrical) ggplot2::geom_point(data = ~dplyr::filter(.x, symmetrical == T),
                                    ggplot2::aes(x=reference, y=neighbor),
-                                   shape = 8, color = 'gold', size = 2*dotSizes[1]/3)} + 
+                                   shape = 18, color = 'gold', size = 2*dotSizes[1]/3)} + 
     ggplot2::scale_colour_gradient2(
       low = colors[1],
       mid = colors[2],
