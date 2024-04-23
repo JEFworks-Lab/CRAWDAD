@@ -560,9 +560,9 @@ transparentCol <- function(color, percent = 50, name = NULL) {
 #' @param pSigThresh numeric; the two-sided P value significance threshold. It 
 #' can be used in place of the zSigThresh parameter. If no value is provided, 
 #' the zSigThresh will be used.
-#' @param zscoreLimit numeric; limit the Z-score to look better in the graph 
-#' scale gradient. Z-score values above zscoreLimit will be represented as 
-#' zscoreLimit, scores below -zscoreLimit will be represented as -zscoreLimit
+#' @param zScoreLimit numeric; limit the Z-score to look better in the graph 
+#' scale gradient. Z-score values above zScoreLimit will be represented as 
+#' zScoreLimit, scores below -zScoreLimit will be represented as -zScoreLimit
 #' (default: NULL).
 #' @param reorder boolean; if TRUE, reorder the cell types by clustering on the 
 #' z-score. If false, orders in alphabetical order (default: FALSE).
@@ -587,7 +587,7 @@ transparentCol <- function(color, percent = 50, name = NULL) {
 #' 
 #' @export
 vizColocDotplot <- function(dat, zSigThresh = 1.96, pSigThresh = NULL,
-                            zscoreLimit = NULL,  reorder = FALSE,
+                            zScoreLimit = NULL,  reorder = FALSE,
                             symmetrical = FALSE, onlySignificant = FALSE,
                             colors = c("blue", "white", "red"),
                             dotSizes = c(6,31)){
@@ -612,9 +612,9 @@ vizColocDotplot <- function(dat, zSigThresh = 1.96, pSigThresh = NULL,
     dplyr::filter(scale == min(scale, na.rm = TRUE))
   
   ## limit the z-score for the gradient in the figure to look better
-  if (!is.null(zscoreLimit)) {
-    sig_dat$Z[sig_dat$Z > zscoreLimit] <- zscoreLimit
-    sig_dat$Z[sig_dat$Z < -zscoreLimit] <- -zscoreLimit
+  if (!is.null(zScoreLimit)) {
+    sig_dat$Z[sig_dat$Z > zScoreLimit] <- zScoreLimit
+    sig_dat$Z[sig_dat$Z < -zScoreLimit] <- -zScoreLimit
   }
   
   ## scale sizes
