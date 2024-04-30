@@ -14,6 +14,10 @@
 #' @param ofInterest character vector; a vector of specific clusters to visualize
 #' @param pointSize numeric; size of points
 #' @param alpha numeric; transparency of points
+#' @param ref character; reference cell type to draw the neighborhood 
+#' around. If NULL, it will not create the neighborhood (default: NULL) 
+#' @param dist numeric; distance to define neighbor cells with respect to each 
+#' reference cell. If NULL, it will not create the neighborhood (default: NULL)
 #' 
 #' @return plot
 #' 
@@ -26,93 +30,69 @@
 #' 
 #' @export
 vizClusters <- function(cells, ofInterest = NULL,
-                        pointSize = 1, alpha = 0.5){
+                        pointSize = 1, alpha = 0.5,
+                        ref = NULL, dist = NULL){
   
   ## if cells are a data.frame with "x" and "y" cell coordinate columns
   if( class(cells)[1] %in% c("data.frame", "matrix") ){
     stop('Use an sf object created by the crawdad::toSF function.')
   }
   
-  ## if cells are the sf object
-  if( any(class(cells) == "sf") ){
-    df_cells <- sfToDF(cells)
-    pos <- df_cells[,c("x", "y")]
-    celltypes <- df_cells$celltypes
-    tempCts <- factor(celltypes)
-    names(tempCts) <- rownames(cells)
-  }
+  ## define colors
+  cluster_cols <- rainbow(n = length(unique(cells$celltypes)))
+  names(cluster_cols) <- unique(cells$celltypes)
+  cluster_cols['other'] <- '#E6E6E6'
   
-  
-  
+  ## separate cells of interest to plot on top of others
   if(!is.null(ofInterest)){
-    ## goal:
-    ## setup so the clusters of interest are plotted on top of everything else
-    
-    tempCts[which(!tempCts %in% ofInterest)] <- NA
-    tempCts <- droplevels(tempCts)
-    
-    cluster_cell_id <- which(tempCts %in% ofInterest)
-    other_cells_id <- as.vector(which(is.na(tempCts)))
-    
-    cluster_cols <- rainbow(n = length(ofInterest))
-    names(cluster_cols) <- ofInterest
-    
-    dat <- data.frame("x" = pos[,"x"],
-                      "y" = pos[,"y"])
-    
-    ## note: "Clusters" will be a variable id used to assign colors.
-    ## for the "other cells" make this NA
-    dat_cluster <- data.frame("x" = pos[cluster_cell_id,"x"],
-                              "y" = pos[cluster_cell_id,"y"],
-                              "clusters" = as.vector(tempCts[cluster_cell_id]))
-    
-    dat_other <- data.frame("x" = pos[other_cells_id,"x"],
-                            "y" = pos[other_cells_id,"y"],
-                            "clusters" = NA)
-    
-    plt <- ggplot2::ggplot() +
-      ## create scattermore to rasterize plots
-      ## plot other cells
-      ggplot2::geom_point(data = dat_other, 
-                          ggplot2::aes(x = x, y = y, color = clusters), 
-                          size = pointSize, alpha = alpha) +
-      ## cluster cells on top
-      ggplot2::geom_point(data = dat_cluster, 
-                          ggplot2::aes(x = x, y = y, color = clusters), 
-                          size = pointSize, alpha = alpha) +
-      ## NA to gray
-      ggplot2::scale_color_manual(values = cluster_cols, na.value = "#BEBEBE7F")
-    
-  } else {
-    
-    tempCts <- droplevels(tempCts)
-    dat <- data.frame("x" = pos[,"x"],
-                      "y" = pos[,"y"],
-                      "clusters" = tempCts)
-    
-    plt <- ggplot2::ggplot(data = dat) +
-      ## create scattermore to rasterize plots
-      ggplot2::geom_point(ggplot2::aes(x = x, y = y, color = clusters), 
-                          size = pointSize, alpha = alpha) +
-      ## change colors
-      ggplot2::scale_color_manual(values = rainbow(n = length(levels(tempCts))), 
-                                  na.value = "#BEBEBE7F")
+    cells <- cells %>% 
+      mutate(celltypes = 
+               case_when((!cells$celltypes %in% ofInterest) ~ 'other',
+                         T ~ celltypes))
+    # cells$celltypes <- droplevels(cells$celltypes)
   }
-  ## add to plot
-  plt <- plt + 
-    ## labels
-    ggplot2::labs(x = "x",
-                  y = "y") +
-    ## theme
-    ggplot2::theme_minimal() +
-    ## override legend
-    ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), ncol = 2)) +
-    ## make coordniates equal
-    ggplot2::coord_equal()
   
+  ## order cell types based on abundance
+  ordered_cts <- c(names(sort(table(cells$celltypes), decreasing = T)))
+  ordered_cts <- c('other', ordered_cts[ordered_cts != 'other'])
+  cells <- cells %>% 
+    arrange(match(celltypes, ordered_cts))
+  
+  ## plot
+  plt <- ggplot2::ggplot() +
+    ## plot other cells
+    ggplot2::geom_sf(data = cells, 
+                     ggplot2::aes(color = celltypes), 
+                     size = pointSize, alpha = alpha) +
+    ## NA to gray
+    ggplot2::scale_color_manual(values = cluster_cols, na.value = "#E6E6E6")
   plt
   
+  if( (!is.null(ref)) & (!is.null(dist)) ) {
+    ## create a circle around each reference cell 
+    buffer <- sf::st_buffer(cells[cells$celltypes == ref,], dist) 
+    ## merge the circles into a neighborhood (can take some time to compute)
+    neighborhood <- sf::st_union(buffer)
+    ## add to plot
+    plt <- plt +
+      ggplot2::geom_sf(data = neighborhood, fill = NA, 
+                       color = 'black', linewidth = .5)
+  }
+  
+  ## add labels
+  plt <- plt + 
+    ggplot2::labs(x = "x",
+                  y = "y") +
+    ggplot2::theme_minimal() +
+    ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size=2), 
+                                                   ncol = 2))
+  # ggplot2::coord_equal() ## geom_sf seems to be equal already
+  
+  return(plt)
+  
 }
+
+
 
 
 
