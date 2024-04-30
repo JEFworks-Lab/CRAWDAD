@@ -4,12 +4,12 @@
 \alias{binomialTestMatrix}
 \title{Generate matrix of pvalues indicating if a cell is enriched in neighbors of a given cell type}
 \usage{
-binomialTestMatrix(cells, neigh.dist = 100, ncores = 1, verbose = TRUE)
+binomialTestMatrix(cells, neigh.dist = 50, ncores = 1, verbose = TRUE)
 }
 \arguments{
 \item{cells}{sf object, with celltypes features and point geometries}
 
-\item{neigh.dist}{distance to define neighbors (default = 100)}
+\item{neigh.dist}{distance to define neighbors (default = 50)}
 
 \item{ncores}{number of cores for parallelization (default 1)}
 
@@ -26,7 +26,7 @@ pvalues are based on a binomial test and neighbors are defined within a given di
 data(sim)
 cells <- toSF(pos = sim[,c("x", "y")], celltypes = sim$celltypes)
 shuffle.list <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
-binomMat <- binomialTestMatrix(cells, neigh.dist = 100, ncores = 2)
+binomMat <- binomialTestMatrix(cells, neigh.dist = 50, ncores = 2)
 }
 
 }

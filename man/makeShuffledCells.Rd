@@ -17,13 +17,15 @@ makeShuffledCells(
 \arguments{
 \item{cells}{sf object, with celltypes features and point geometries}
 
-\item{scales}{numeric vector of the different scales to shuffle at and subsequently compute significance at (default: c(50, 100, 200, 300, 400, 500))}
+\item{scales}{numeric vector of the different scales to shuffle at and
+subsequently compute significance at (default: c(50, 100, 200, 300, 400, 500))}
 
 \item{perms}{number of permutations to shuffle for each scale (default = 1)}
 
 \item{ncores}{number of cores for parallelization (default 1)}
 
-\item{seed}{set seed for shuffling (if more than 1 permutation, each shuffling permutation has a seed equal to the permutation number)}
+\item{seed}{set seed for shuffling (if more than 1 permutation, each
+shuffling permutation has a seed equal to the permutation number)}
 
 \item{square}{if false, make hexagonal grid (default TRUE)}
 
@@ -32,7 +34,8 @@ makeShuffledCells(
 \description{
 for each scale, and for i number of permutations, shuffle the celltype labels.
 Returns a list of lists, where each list is a factor of the shuffled celltype labels.
-Outer list is for each scale of shuffling, and each inner list is for a given permutation with a given seed.
+Outer list is for each scale of shuffling, and each inner list is for a given
+permutation with a given seed.
 }
 \examples{
  

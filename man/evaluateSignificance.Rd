@@ -2,7 +2,7 @@
 % Please edit documentation in R/finding_trends.R
 \name{evaluateSignificance}
 \alias{evaluateSignificance}
-\title{compute significant different between real and randomly shuffled cell neighbor proportions}
+\title{Compute significant different between real and randomly shuffled cell neighbor proportions}
 \usage{
 evaluateSignificance(
   cells,

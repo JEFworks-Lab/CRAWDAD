@@ -6,15 +6,14 @@
 \usage{
 vizColocDotplot(
   dat,
-  zsigThresh = 1.96,
-  psigThresh = NULL,
-  zscoreLimit = NULL,
+  zSigThresh = 1.96,
+  pSigThresh = NULL,
+  zScoreLimit = NULL,
   reorder = FALSE,
-  mutual = FALSE,
+  symmetrical = FALSE,
   onlySignificant = FALSE,
   colors = c("blue", "white", "red"),
-  dotSizes = c(6, 31),
-  title = NULL
+  dotSizes = c(6, 31)
 )
 }
 \arguments{
@@ -23,33 +22,31 @@ Z-score, reference and the neighbor cell. The input data.frame should be the
 results list from \code{findTrends()} that has been melted into a data.frame
 using \code{meltResultsList()}.}
 
-\item{zsigThresh}{numeric; the Z score significance threshold (default: 1.96).}
+\item{zSigThresh}{numeric; the Z score significance threshold (default: 1.96).}
 
-\item{psigThresh}{numeric; the two-sided P value significance threshold. It
-can be used in place of the zsigThresh parameter. If no value is provided,
-the zsigThresh will be used.}
+\item{pSigThresh}{numeric; the two-sided P value significance threshold. It
+can be used in place of the zSigThresh parameter. If no value is provided,
+the zSigThresh will be used.}
 
-\item{zscoreLimit}{numeric; limit the Z-score to look better in the graph
-scale gradient. Z-score values above zscoreLimit will be represented as
-zscoreLimit, scores below -zscoreLimit will be represented as -zscoreLimit
+\item{zScoreLimit}{numeric; limit the Z-score to look better in the graph
+scale gradient. Z-score values above zScoreLimit will be represented as
+zScoreLimit, scores below -zScoreLimit will be represented as -zScoreLimit
 (default: NULL).}
 
 \item{reorder}{boolean; if TRUE, reorder the cell types by clustering on the
 z-score. If false, orders in alphabetical order (default: FALSE).}
 
-\item{mutual}{boolean; highligh relationships that are mutual between cell
+\item{symmetrical}{boolean; highligh relationships that are symmetrical between cell
 type pairs (default: TRUE).}
 
 \item{onlySignificant}{boolean; plot only cell types with significant
-relationships (default: TRUE).}
+relationships (default: FALSE).}
 
 \item{colors}{character vector; colors for the gradient heatmap (low, mid, high)
 (default: c("blue", "white", "red")).}
 
 \item{dotSizes}{numeric vector; minimum and maximum size of the dot
 (default: c(6,31)).}
-
-\item{title}{character; plot title (default: NULL).}
 }
 \description{
 This function takes the \code{findTrends()} melted data frame and

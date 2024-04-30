@@ -6,7 +6,7 @@
 \usage{
 findTrends(
   cells,
-  dist = 100,
+  dist = 50,
   ncores = 1,
   shuffle.list,
   subset.list = NULL,
@@ -18,7 +18,7 @@ findTrends(
 \arguments{
 \item{cells}{sf object, with celltypes features and point geometries}
 
-\item{dist}{numeric distance to define neighbor cells with respect to each reference cell (default: 100)}
+\item{dist}{numeric distance to define neighbor cells with respect to each reference cell (default: 50)}
 
 \item{ncores}{number of cores for parallelization (default 1)}
 
@@ -45,7 +45,7 @@ Trends are essentially built from significance values. The significance test bas
 \dontrun{
 data(sim)
 shuffle.list <- makeShuffledCells(sim, scales = c(50, 100, 200, 300, 400, 500))
-findTrends(sim, dist = 100, shuffle.list = shuffle.list, ncores = 2)
+findTrends(sim, dist = 50, shuffle.list = shuffle.list, ncores = 2)
 }
 
 }

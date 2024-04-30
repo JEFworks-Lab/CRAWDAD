@@ -4,7 +4,14 @@
 \alias{vizClusters}
 \title{Visualize clusters in the same plot}
 \usage{
-vizClusters(cells, ofInterest = NULL, pointSize = 1, alpha = 0.5)
+vizClusters(
+  cells,
+  ofInterest = NULL,
+  pointSize = 1,
+  alpha = 0.5,
+  ref = NULL,
+  dist = NULL
+)
 }
 \arguments{
 \item{cells}{sf object; spatial (x and y) coordinates and celltypes column}
@@ -14,6 +21,12 @@ vizClusters(cells, ofInterest = NULL, pointSize = 1, alpha = 0.5)
 \item{pointSize}{numeric; size of points}
 
 \item{alpha}{numeric; transparency of points}
+
+\item{ref}{character; reference cell type to draw the neighborhood
+around. If NULL, it will not create the neighborhood (default: NULL)}
+
+\item{dist}{numeric; distance to define neighbor cells with respect to each
+reference cell. If NULL, it will not create the neighborhood (default: NULL)}
 }
 \value{
 plot
