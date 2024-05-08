@@ -7,7 +7,7 @@
 makeShuffledCells(
   cells,
   scales = c(50, 100, 200, 300, 400, 500),
-  perms = 1,
+  perms = 5,
   ncores = 1,
   seed = 0,
   square = TRUE,
@@ -20,7 +20,7 @@ makeShuffledCells(
 \item{scales}{numeric vector of the different scales to shuffle at and
 subsequently compute significance at (default: c(50, 100, 200, 300, 400, 500))}
 
-\item{perms}{number of permutations to shuffle for each scale (default = 1)}
+\item{perms}{number of permutations to shuffle for each scale (default 5)}
 
 \item{ncores}{number of cores for parallelization (default 1)}
 
