@@ -7,7 +7,7 @@
 #' @param cells sf object, with celltypes features and point geometries
 #' @param scales numeric vector of the different scales to shuffle at and 
 #' subsequently compute significance at (default: c(50, 100, 200, 300, 400, 500))
-#' @param perms number of permutations to shuffle for each scale (default = 1)
+#' @param perms number of permutations to shuffle for each scale (default 5)
 #' @param ncores number of cores for parallelization (default 1)
 #' @param seed set seed for shuffling (if more than 1 permutation, each 
 #' shuffling permutation has a seed equal to the permutation number)
@@ -23,7 +23,7 @@
 #' @export
 makeShuffledCells <- function(cells,
                               scales = c(50, 100, 200, 300, 400, 500),
-                              perms = 1,
+                              perms = 5,
                               ncores = 1,
                               seed = 0,
                               square = TRUE,
