@@ -8,7 +8,7 @@ vizTrends(
   dat,
   id = "id",
   yaxis = "Z",
-  sig.thresh = 1.96,
+  zSigThresh = 1.96,
   nc = length(unique(dat[[id]])),
   colors = rainbow(nc),
   title = NULL,
@@ -25,8 +25,6 @@ vizTrends(
 
 \item{yaxis}{column that has significance value across scales (default: "Z")}
 
-\item{sig.thresh}{threshold for significance, ie Z score significance threshold (default: 1.96).}
-
 \item{nc}{number of colors to use for labeling features in id column}
 
 \item{colors}{color assignment for each of the features in id column}
@@ -40,6 +38,8 @@ vizTrends(
 \item{points}{boolean to plot points (default: TRUE)}
 
 \item{withPerms}{if the results list is a list of lists using \code{returnMeans = FALSE} in \code{findTrends()}, then column order is different and this flag is needed (default: FALSE)}
+
+\item{sig.thresh}{threshold for significance, ie Z score significance threshold (default: 1.96).}
 }
 \description{
 The input data.frame should be the results list from \code{findTrends()} that has been melted into a data.frame using \code{meltResultsList()}.

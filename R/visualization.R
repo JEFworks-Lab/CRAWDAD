@@ -244,7 +244,7 @@ vizEachCluster <- function(cells, coms, axisAdj = 1, s = 0.5, a = 1,
 #' 
 #' @export
 vizTrends <- function(dat, id = "id", yaxis = "Z",
-                      sig.thresh = 1.96, # -log10(0.05/nrow(dat)), ## sig thresh for num tests
+                      zSigThresh = 1.96, # -log10(0.05/nrow(dat)), ## sig thresh for num tests
                       nc = length(unique(dat[[id]])),
                       colors = rainbow(nc),
                       title = NULL,
