@@ -41,7 +41,7 @@ shuffle.list <- crawdad:::makeShuffledCells(cells,
                                             verbose = TRUE)
 ## calculate the zscore for the cell-type pairs at different scales
 results <- crawdad::findTrends(cells,
-                               dist = 100,
+                               dist = 50,
                                shuffle.list = shuffle.list,
                                ncores = 7,
                                verbose = TRUE,
@@ -50,7 +50,7 @@ dat <- crawdad::meltResultsList(results, withPerms = TRUE)
 ## calculate the zscore for the multiple-test correction
 zsig <- correctZBonferroni(dat)
 ## summary visualization
-vizColocDotplot(dat, zsig.thresh = zsig, zscore.limit = 2*zsig) +
+vizColocDotplot(dat, zSigThresh = zsig, zScoreLimit = 2*zsig) +
   theme(axis.text.x = element_text(angle = 35, h = 0))
 ```
 
@@ -61,7 +61,7 @@ vizColocDotplot(dat, zsig.thresh = zsig, zscore.limit = 2*zsig) +
 dat %>% 
   filter(reference == 'Podoplanin') %>% 
   filter(neighbor == 'CD4 Memory T cells') %>% 
-  vizTrends(lines = TRUE, withPerms = TRUE, sig.thresh = zsig)
+  vizTrends(lines = TRUE, withPerms = TRUE, zSigThresh = zsig)
 ```
 
 <img src="https://github.com/JEFworks/CRAWDAD/blob/main/docs/img/trend.png?raw=true" height="350"/>
