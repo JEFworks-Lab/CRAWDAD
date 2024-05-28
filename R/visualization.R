@@ -289,9 +289,9 @@ vizTrends <- function(dat, id = "id", yaxis = "Z",
   }
   plt <- plt + ggplot2::scale_color_manual(values = colors, na.value = "black") +
     ggplot2::geom_hline(yintercept = 0, color = "black", size = 1) +
-    ggplot2::geom_hline(yintercept = sig.thresh, color = "black", size = 0.6, 
+    ggplot2::geom_hline(yintercept = zSigThresh, color = "black", size = 0.6, 
                         linetype = "dotted") +
-    ggplot2::geom_hline(yintercept = -sig.thresh, color = "black", size = 0.6, 
+    ggplot2::geom_hline(yintercept = -zSigThresh, color = "black", size = 0.6, 
                         linetype = "dotted") +
     # ggplot2::facet_grid(neighbor ~ reference) +
     ggplot2::labs(title = title) +
