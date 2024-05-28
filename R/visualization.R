@@ -18,6 +18,7 @@
 #' around. If NULL, it will not create the neighborhood (default: NULL) 
 #' @param dist numeric; distance to define neighbor cells with respect to each 
 #' reference cell. If NULL, it will not create the neighborhood (default: NULL)
+#' @param lineWidth numeric; width of neighborhood line
 #' 
 #' @return plot
 #' 
@@ -31,7 +32,7 @@
 #' @export
 vizClusters <- function(cells, ofInterest = NULL,
                         pointSize = 1, alpha = 0.5,
-                        ref = NULL, dist = NULL){
+                        ref = NULL, dist = NULL, lineWidth = 0.1){
   
   ## if cells are a data.frame with "x" and "y" cell coordinate columns
   if( class(cells)[1] %in% c("data.frame", "matrix") ){
@@ -76,7 +77,7 @@ vizClusters <- function(cells, ofInterest = NULL,
     ## add to plot
     plt <- plt +
       ggplot2::geom_sf(data = neighborhood, fill = NA, 
-                       color = 'black', linewidth = .5)
+                       color = 'black', linewidth = lineWidth)
   }
   
   ## add labels
