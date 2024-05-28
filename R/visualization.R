@@ -47,9 +47,9 @@ vizClusters <- function(cells, ofInterest = NULL,
   ## separate cells of interest to plot on top of others
   if(!is.null(ofInterest)){
     cells <- cells %>% 
-      mutate(celltypes = 
-               case_when((!cells$celltypes %in% ofInterest) ~ 'other',
-                         T ~ celltypes))
+      dplyr::mutate(celltypes = 
+                      dplyr::case_when((!cells$celltypes %in% ofInterest) ~ 'other',
+                                       T ~ celltypes))
     # cells$celltypes <- droplevels(cells$celltypes)
   }
   
@@ -57,7 +57,7 @@ vizClusters <- function(cells, ofInterest = NULL,
   ordered_cts <- c(names(sort(table(cells$celltypes), decreasing = T)))
   ordered_cts <- c('other', ordered_cts[ordered_cts != 'other'])
   cells <- cells %>% 
-    arrange(match(celltypes, ordered_cts))
+    dplyr::arrange(match(celltypes, ordered_cts))
   
   ## plot
   plt <- ggplot2::ggplot() +
