@@ -222,10 +222,13 @@ vizEachCluster <- function(cells, coms, axisAdj = 1, s = 0.5, a = 1,
 #' Visualize grids and clusters
 #' 
 #' @description Uses the cells sf object and size of grid to visualize the grids 
-#' used to cheate the null background.
+#' used to create the null background.
 #' 
 #' @param cells sf object; spatial (x and y) coordinates and celltypes column
-#' @param gridSize numeric; size of the grid to plot
+#' @param scale numeric; size of the scale to plot
+#' @param permutation numeric; the number of the permutation of interest.
+#' @param totalPermutations numeric; the total number of permutations used to 
+#' shuffle the data.
 #' @param square boolean; if true, create a squared grid, if false, make 
 #' hexagonal grid (default TRUE)
 #' @param ofInterest character vector; a vector of specific clusters to visualize
