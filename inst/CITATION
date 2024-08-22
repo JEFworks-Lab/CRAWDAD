@@ -2,13 +2,13 @@ citHeader("To cite CRAWDAD in publications use:")
 
 citEntry(
   entry    = "Article",
-  title    = "CRAWDAD: Cell Relationship Analysis Workflow Done Across Distances",
-  author   = c("Brendan F. Miller", "Rafael dos Santos Peixoto", Manjari Anant", "Lyla Atta", "Jean Fan"),
+  title    = "Characterizing cell-type spatial relationships across length scales in spatially resolved omics data",
+  author   = c("Rafael dos Santos Peixoto", "Brendan F. Miller", "Maigan A. Brusko", "Gohta Aihara", "Lyla Atta", "Manjari Anant", "Mark A. Atkinson", "Todd M. Brusko", "Clive H. Wasserfall", "Jean Fan"),
   journal  = "",
   year     = ,
   volume   = ,
   number   = ,
-  url      = "",
+  url      = "https://doi.org/10.1101/2023.10.05.560733",
   textVersion = paste(
 
   )
