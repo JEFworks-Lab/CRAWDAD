@@ -393,7 +393,7 @@ vizCelltypeProportions <- function(cells, dist) {
 #' \dontrun{
 #' data(sim)
 #' cells <- toSF(pos = sim[,c("x", "y")], celltypes = sim$celltypes)
-#' shuffle.list <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
+#' shuffle.list <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000), ncores = 2)
 #' results <- findTrends(cells, dist = 100, shuffle.list = shuffle.list, ncores = 2)
 #' vizTrends(dat = results)
 #' }
@@ -513,7 +513,7 @@ vizTrends <- function(dat, id = "id", yaxis = "Z",
 #' \dontrun{
 #' data(sim)
 #' cells <- toSF(pos = sim[,c("x", "y")], celltypes = sim$celltypes)
-#' shuffle.list <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
+#' shuffle.list <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000), ncores = 2)
 #' results <- findTrends(cells, dist = 100, shuffle.list = shuffle.list, ncores = 2)
 #' vizTrends.heatmap(dat = results)
 #' }
@@ -612,7 +612,7 @@ vizTrends.heatmap <- function(dat,
 #' \dontrun{
 #' data(sim)
 #' cells <- toSF(pos = sim[,c("x", "y")], celltypes = sim$celltypes)
-#' shuffle.list <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
+#' shuffle.list <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000), ncores = 2)
 #' binomMat <- binomialTestMatrix(cells, neigh.dist = 100, ncores = 2)
 #' subset.list <- selectSubsets(binomMat, cells$celltypes, sub.type = "near", sub.thresh = 0.05)
 #' annots_temp <- selectLabels(df = cells, com = cells$celltypes, subset_list = subset.list, cellIDs = c("A", "B", "C", "D"), subsetIDs = c("C_near_B"))
@@ -715,7 +715,7 @@ transparentCol <- function(color, percent = 50, name = NULL) {
 #' \dontrun{
 #' data(sim)
 #' cells <- toSF(pos = sim[,c("x", "y")], celltypes = sim$celltypes)
-#' shuffle.list <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
+#' shuffle.list <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000), ncores = 2)
 #' results <- findTrends(cells, dist = 100, shuffle.list = shuffle.list, ncores = 2)
 #' dat <- meltResultsList(results)
 #' vizRelationships(dat)
@@ -973,7 +973,7 @@ vizVarianceSamples <- function(aucSamples) {
 #' \dontrun{
 #' data(sim)
 #' cells <- toSF(pos = sim[,c("x", "y")], celltypes = sim$celltypes)
-#' shuffle.list <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000, 1500, 2000), ncores = 2)
+#' shuffle.list <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000), ncores = 2)
 #' results <- findTrends(cells, dist = 100, shuffle.list = shuffle.list, ncores = 2)
 #' dat <- meltResultsList(results)
 #' vizColocDotplot(dat)
