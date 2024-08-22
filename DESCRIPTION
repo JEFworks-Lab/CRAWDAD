@@ -30,9 +30,7 @@ LazyData: FALSE
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
 Imports: 
-    assertthat,
     BiocParallel,
-    parallel,
     ggplot2,
     scattermore,
     grDevices,
@@ -42,7 +40,12 @@ Imports:
     stats,
     sf,
     dplyr,
-    magrittr
+    magrittr,
+    tidyr,
+    stringr,
+    reshape,
+    pracma,
+    gridExtra
 Depends:
     R (>= 4.0)
 Suggests:
