@@ -2,7 +2,7 @@
 #' get neighbor cells defined as being a distance away from a set of reference cells
 #' @description get neighbor cells defined as being a distance away from a set of reference cells.
 #'      `reference.ids` can be selected by subsetting rownames from `cells`:
-#'       ex: rownames(cells)[which(cells$celltypes == "A")]
+#'       ex: `rownames(cells)[which(cells$celltypes == "A")]`
 #'       or can be an entry in a subset list from `selectSubsets()`
 #' 
 #' @param cells sf object, with celltypes features and point geometries

@@ -28,7 +28,7 @@ sf object of the neighbor cells or factor of neighbor cells
 \description{
 get neighbor cells defined as being a distance away from a set of reference cells.
 \code{reference.ids} can be selected by subsetting rownames from \code{cells}:
-ex: rownames(cells)\link{which(cells$celltypes == "A")}
+ex: \code{rownames(cells)[which(cells$celltypes == "A")]}
 or can be an entry in a subset list from \code{selectSubsets()}
 }
 \examples{
