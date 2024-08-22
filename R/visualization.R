@@ -357,7 +357,7 @@ vizShuffledGrids <- function(cells, shuffledList, scale,
 #' @return ggplot2 plot; the a histogram of the proportions
 #' 
 #' @export
-plotCelltypeProportions <- function(cells, dist) {
+vizCelltypeProportions <- function(cells, dist) {
   
   ## for each cell type
   celltypes <- unique(cells$celltypes)
