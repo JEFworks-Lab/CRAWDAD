@@ -850,6 +850,88 @@ vizRelationships <- function(dat, zSigThresh = 1.96, pSigThresh = NULL,
 
 
 
+#' Visualize the samples using their AUC and PCA
+#' 
+#' @description
+#' Uses the AUC values calculated from each cell-type pair in each sample to 
+#' represent the samples in the PCA reduced dimension space.
+#' 
+#' @param aucSamples data.frame; the AUC values for each cell-type pair in each
+#' sample as calculated by `calculateAUC()`
+#' 
+#' @return gglot2 plot; the PCA visualization of the samples
+#' 
+#' @export
+#' 
+vizPCASamples <- function(aucSamples) {
+  sample_ids <- unique(aucSamples$id)
+  
+  ## create matrix
+  auc_mtx <- aucSamples %>% 
+    dplyr::select(c(pair, id, auc)) %>% 
+    tidyr::pivot_wider(names_from = id, values_from = auc) %>% 
+    dplyr::select(!pair) %>% 
+    tidyr::drop_na() %>% ## drop nas
+    as.matrix() %>% 
+    t()
+  
+  ## normalize
+  auc_mtx <- scale(auc_mtx)
+  apply(auc_mtx, 2, mean)
+  
+  ## calculate pca
+  pca <- prcomp(auc_mtx)
+  pcs <- pca$x[, 1:2] %>% 
+    as.data.frame() %>% 
+    dplyr::mutate(id = rownames(pca$x)) %>% 
+    dplyr::mutate(patient = 
+                    sapply(rownames(pca$x), 
+                           FUN = function(x) stringr::str_split(x, '_')[[1]][2]))
+  
+  ## plot
+  pcs %>% 
+    ggplot2::ggplot() + 
+    ggplot2::geom_point(ggplot2::aes(x = PC1, y = PC2, color = id)) + 
+    ggplot2::scale_color_manual(values = rainbow(length(sample_ids))) +
+    ggplot2::theme_bw() +
+    ggplot2::coord_equal()
+}
+
+
+
+#' Visualize the variance of each cell-type relationship in the samples
+#' 
+#' @description
+#' Visualize the variance of the AUC values for each cell-type pair in all 
+#' samples.
+#' 
+#' @param aucSamples data.frame; the AUC values for each cell-type pair in each
+#' sample as calculated by `calculateAUC()`
+#' 
+#' @return gglot2 plot; the dot plot visualization of the variance in the 
+#' samples
+#' 
+#' @export
+#' 
+vizVarianceSamples <- function(aucSamples) {
+  
+  ## all samples
+  aucSamples %>% 
+    dplyr::group_by(reference, neighbor) %>%
+    dplyr::filter(reference != 'indistinct',
+                  neighbor != 'indistinct') %>% 
+    dplyr::summarize(variance = (var(auc))) %>%
+    ggplot2::ggplot() +
+    ggplot2::geom_point(ggplot2::aes(x = reference, y = neighbor, 
+                                     size = variance), color = '#006437') +
+    ggplot2::scale_radius(range = c(1, 10)) +
+    ggplot2::theme_bw() +
+    ggplot2::scale_x_discrete(position = 'top') +
+    ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, 
+                                                       vjust = 0.5, 
+                                                       hjust=0)) +
+    ggplot2::coord_equal()
+}
 
 
 
