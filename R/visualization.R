@@ -343,6 +343,36 @@ vizShuffledGrids <- function(cells, shuffledList, scale,
 
 
 
+#' Plot Cell-type Proportions
+#' 
+#' For a chosen a neighborhood distance, plot a histogram of 
+#' the proportion of each neighbor cell type inside the neighborhood of the 
+#' reference cell type for all reference cell types.
+#' 
+#' @param cells sf data.frame; as produced by crawdad::toSF function: cells with 
+#' cell types annotated in the celltypes column and point positions in the 
+#' geometry column
+#' @param dist numeric; distance used to define the neighborhood
+#' 
+#' @return ggplot2 plot; the a histogram of the proportions
+#' 
+#' @export
+plotCelltypeProportions <- function(cells, dist) {
+  
+  ## for each cell type
+  celltypes <- unique(cells$celltypes)
+  props <- lapply(celltypes, calculateCelltypeProportions, 
+                  cells = cells, dist = dist)
+  df <- data.frame(proportions = unlist(props))
+  
+  df %>% ggplot2::ggplot(ggplot2::aes(x = proportions)) + 
+    ggplot2::geom_histogram(color='#006437', fill='white', bins = 100) +
+    ggplot2::theme_bw()
+  
+}
+
+
+
 #' Plot trends with ggplot2
 #' 
 #' @description The input data.frame should be the results list from `findTrends()` that has been melted into a data.frame using `meltResultsList()`.
