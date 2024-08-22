@@ -206,7 +206,7 @@ filterChangeTrends <- function(results, alpha = 0.05) {
 #' Calculate the AUC values for each cell type pair from the dat variable of a
 #' sample.
 #' 
-#' @param dat `findTrends()` list of data.frames; the information about the 
+#' @param datList list of `findTrends()` data.frames; the information about the 
 #' scale, Z-score, reference and the neighbor cell. The input data.frame should 
 #' be the results list from `findTrends()` that has been melted into a 
 #' data.frame using `meltResultsList()`.

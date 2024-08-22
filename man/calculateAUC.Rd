@@ -7,13 +7,13 @@
 calculateAUC(datList, sharedPairs = TRUE)
 }
 \arguments{
-\item{sharedPairs}{boolean; if true, will remove the AUC values from the
-cell-type pairs that are not available in all samples (default: TRUE).}
-
-\item{dat}{\code{findTrends()} list of data.frames; the information about the
+\item{datList}{list of \code{findTrends()} data.frames; the information about the
 scale, Z-score, reference and the neighbor cell. The input data.frame should
 be the results list from \code{findTrends()} that has been melted into a
 data.frame using \code{meltResultsList()}.}
+
+\item{sharedPairs}{boolean; if true, will remove the AUC values from the
+cell-type pairs that are not available in all samples (default: TRUE).}
 }
 \value{
 data.frame; the AUC values for the cell-type pairs in the samples
