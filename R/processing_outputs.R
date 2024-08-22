@@ -200,30 +200,6 @@ filterChangeTrends <- function(results, alpha = 0.05) {
 
 
 
-#' Perform Bonferroni Multiple-test Correction
-#' 
-#' @description
-#' Calculate the number of tests performed by multiplying the number of cell
-#' types used in the analysis. Then, divide the 0.05 pvalue by the number of 
-#' tests. Finally, convert the new pvalue to a zscore.
-#' 
-#' @param dat data.frame; the melted findTrends result.
-#' @param pval numeric; the pvalue to be converted. Defaults to 0.05.
-#' 
-#' @return numeric; the Bonferroni corrected zscore.
-#' 
-#' @export
-#' 
-correctZBonferroni <- function(dat, pval = 0.05) {
-  ntests <- length(unique(dat$reference)) * length(unique(dat$reference))
-  psig <- pval/ntests
-  zsig <- round(qnorm(psig/2, lower.tail = F), 2)
-  
-  return(zsig)
-}
-
-
-
 #' Calculate AUC for each cell type pair from a dat file
 #' 
 #' @description
