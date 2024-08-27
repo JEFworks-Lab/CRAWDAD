@@ -1,7 +1,7 @@
 #' Convert positions and cell type annotations to sf object
 #' 
 #' @param pos data frame; x and y coordinates of each cell
-#' @param celltypes character vector; the cell type of each cell provided in pos
+#' @param cellTypes character vector; the cell type of each cell provided in pos
 #' @param verbose Boolean; verbosity (default TRUE)
 #' 
 #' @examples 
@@ -11,16 +11,16 @@
 #' }
 #' 
 #' @export
-toSF <- function(pos, celltypes, verbose = TRUE){
+toSF <- function(pos, cellTypes, verbose = TRUE){
   
-  if(length(levels(celltypes)) == 0){
+  if(length(levels(cellTypes)) == 0){
     message("Warning: 'celltypes' does not have levels. Creating levels from values")
-    celltypes <- factor(celltypes)
-    names(celltypes) <- rownames(pos)
+    cellTypes <- factor(cellTypes)
+    names(cellTypes) <- rownames(pos)
   }
   
   df <- pos
-  df$celltypes <- celltypes
+  df$celltypes <- cellTypes
   
   if(verbose){
     message("creating `sf` object")

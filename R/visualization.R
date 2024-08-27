@@ -380,7 +380,7 @@ vizCelltypeProportions <- function(cells, dist) {
 #' @param dat `findTrends()` results list, or data.frame; the information about the scale, Z-score, reference and the neighbor cell.
 #' @param id column name that contains an additional feature to color trend lines (default: "id")
 #' @param yaxis column that has significance value across scales (default: "Z")
-#' @param sig.thresh threshold for significance, ie Z score significance threshold (default: 1.96).
+#' @param zSigThresh threshold for significance, ie Z score significance threshold (default: 1.96).
 #' @param nc number of colors to use for labeling features in id column
 #' @param colors color assignment for each of the features in id column
 #' @param title plot title (default: NULL)
@@ -393,8 +393,8 @@ vizCelltypeProportions <- function(cells, dist) {
 #' \dontrun{
 #' data(sim)
 #' cells <- toSF(pos = sim[,c("x", "y")], celltypes = sim$celltypes)
-#' shuffle.list <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000), ncores = 2)
-#' results <- findTrends(cells, dist = 100, shuffle.list = shuffle.list, ncores = 2)
+#' shuffleList <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000), ncores = 2)
+#' results <- findTrends(cells, dist = 100, shuffleList = shuffleList, ncores = 2)
 #' vizTrends(dat = results)
 #' }
 #' 
@@ -501,8 +501,8 @@ vizTrends <- function(dat, id = "id", yaxis = "Z",
 #' @description The input data.frame should be the results list from `findTrends()` that has been melted into a data.frame using `meltResultsList()`.
 #' 
 #' @param dat `findTrends()` results list, or data.frame; the information about the scale, Z-score, reference and the neighbor cell.
-#' @param sig.thresh threshold for significance, ie Z score significance threshold (default: 1.96).
-#' @param z_limit Z score limits (default +/- 20)
+#' @param zSigThresh threshold for significance, ie Z score significance threshold (default: 1.96).
+#' @param zScoreLimit Z score limits (default +/- 20)
 #' @param palette_ color gradient for heatmap (default: grDevices::colorRampPalette(c("blue", "white", "red"))(n = 209))
 #' @param title plot title (default: NULL)
 #' @param withPerms if the results list is a list of lists using `returnMeans = FALSE` in `findTrends()`, then column order is different and this flag is needed (default: FALSE)
@@ -513,15 +513,15 @@ vizTrends <- function(dat, id = "id", yaxis = "Z",
 #' \dontrun{
 #' data(sim)
 #' cells <- toSF(pos = sim[,c("x", "y")], celltypes = sim$celltypes)
-#' shuffle.list <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000), ncores = 2)
-#' results <- findTrends(cells, dist = 100, shuffle.list = shuffle.list, ncores = 2)
+#' shuffleList <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000), ncores = 2)
+#' results <- findTrends(cells, dist = 100, shuffleList = shuffleList, ncores = 2)
 #' vizTrends.heatmap(dat = results)
 #' }
 #' 
 #' @export
 vizTrends.heatmap <- function(dat,
-                      sig.thresh = 1.96, # -log10(0.05/nrow(dat)), ## sig thresh for num tests
-                      z_limit = 20,
+                      zSigThresh = 1.96, # -log10(0.05/nrow(dat)), ## sig thresh for num tests
+                      zScoreLimit = 20,
                       palette_ = grDevices::colorRampPalette(c("blue", "white", "red"))(n = 209),
                       title = NULL,
                       withPerms = FALSE,
@@ -541,15 +541,15 @@ vizTrends.heatmap <- function(dat,
   
   d <- dat
   ## winsorize high Z scores
-  d$Z <- DescTools::Winsorize(d$Z, minval = -z_limit, maxval = z_limit)
+  d$Z <- DescTools::Winsorize(d$Z, minval = -zScoreLimit, maxval = zScoreLimit)
   ## all non-significant scores to 0 so they are white on heat map
-  d$Z[with(d, Z < sig.thresh & Z > -sig.thresh)] <- 0
+  d$Z[with(d, Z < zSigThresh & Z > -zSigThresh)] <- 0
   
   plt <- ggplot2::ggplot(data = d) +
     ggplot2::geom_tile(ggplot2::aes(x = scale, y = neighbor, fill=Z)) +
     ggplot2::facet_wrap(~reference, ncol = ncols) +
     ggplot2::scale_fill_gradientn(
-      limits = c(-z_limit, z_limit),
+      limits = c(-zScoreLimit, zScoreLimit),
       # values = breaks_,
       colors = palette_
     ) +
@@ -598,13 +598,13 @@ vizTrends.heatmap <- function(dat,
 
 #' Update cell type labels to only include specific cell types or subtypes
 #' @description make a factor of selected cell type labels for visualizing specific cells with `vizAllClusters()`.
-#'      Could append new entries into the `subset_list` to select and label other custom subsets of cells 
+#'      Could append new entries into the `subsetList` to select and label other custom subsets of cells 
 #'
 #' @param df dataframe or sf object of cells
 #' @param com original factor or vector of cell type labels for cells in `df`
 #' @param cellIDs vector of cell type labels to include in output (default: NA)
-#' @param subset_list list of subsets from `selectSubsets()` (default; NA)
-#' @param subsetIDs vector of susbet cell type labels to include in output (names of vectors in `subset_list`) (default: NA)
+#' @param subsetList list of subsets from `selectSubsets()` (default; NA)
+#' @param subsetIDs vector of susbet cell type labels to include in output (names of vectors in `subsetList`) (default: NA)
 #'
 #' @return factor of specific cell type labels for visualizing with `vizAllClusters()` in the parameter: `clusters`
 #' 
@@ -612,17 +612,17 @@ vizTrends.heatmap <- function(dat,
 #' \dontrun{
 #' data(sim)
 #' cells <- toSF(pos = sim[,c("x", "y")], celltypes = sim$celltypes)
-#' shuffle.list <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000), ncores = 2)
-#' binomMat <- binomialTestMatrix(cells, neigh.dist = 100, ncores = 2)
-#' subset.list <- selectSubsets(binomMat, cells$celltypes, sub.type = "near", sub.thresh = 0.05)
-#' annots_temp <- selectLabels(df = cells, com = cells$celltypes, subset_list = subset.list, cellIDs = c("A", "B", "C", "D"), subsetIDs = c("C_near_B"))
+#' shuffleList <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000), ncores = 2)
+#' binomMat <- binomialTestMatrix(cells, neighDist = 100, ncores = 2)
+#' subsetList <- selectSubsets(binomMat, cells$celltypes, subType = "near", subThresh = 0.05)
+#' annots_temp <- selectLabels(df = cells, com = cells$celltypes, subsetList = subsetList, cellIDs = c("A", "B", "C", "D"), subsetIDs = c("C_near_B"))
 #' }
 #' 
 #' @export
 selectLabels <- function(df,
                          com,
                          cellIDs = NA,
-                         subset_list = NA,
+                         subsetList = NA,
                          subsetIDs = NA
 ){
   
@@ -645,14 +645,14 @@ selectLabels <- function(df,
   # then color the ones that are a subset
   ## note that the order will be important
   ## because labels are overwritten in this way
-  if( !is.na(subsetIDs[1]) & !is.na(subset_list[1]) ){
+  if( !is.na(subsetIDs[1]) & !is.na(subsetList[1]) ){
     for(subsetID in subsetIDs){
-      cells_temp <- as.numeric(subset_list[[subsetID]])
+      cells_temp <- as.numeric(subsetList[[subsetID]])
       ## append the subset label
       annots_temp[cells_temp] <- subsetID
     }
   } else {
-    message("`subsetIDs` and `subset_list` set to NA")
+    message("`subsetIDs` and `subsetList` set to NA")
   }
   
   annots_temp <- as.factor(annots_temp)
@@ -715,8 +715,8 @@ transparentCol <- function(color, percent = 50, name = NULL) {
 #' \dontrun{
 #' data(sim)
 #' cells <- toSF(pos = sim[,c("x", "y")], celltypes = sim$celltypes)
-#' shuffle.list <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000), ncores = 2)
-#' results <- findTrends(cells, dist = 100, shuffle.list = shuffle.list, ncores = 2)
+#' shuffleList <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000), ncores = 2)
+#' results <- findTrends(cells, dist = 100, shuffleList = shuffleList, ncores = 2)
 #' dat <- meltResultsList(results)
 #' vizRelationships(dat)
 #' }
@@ -973,8 +973,8 @@ vizVarianceSamples <- function(aucSamples) {
 #' \dontrun{
 #' data(sim)
 #' cells <- toSF(pos = sim[,c("x", "y")], celltypes = sim$celltypes)
-#' shuffle.list <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000), ncores = 2)
-#' results <- findTrends(cells, dist = 100, shuffle.list = shuffle.list, ncores = 2)
+#' shuffleList <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000), ncores = 2)
+#' results <- findTrends(cells, dist = 100, shuffleList = shuffleList, ncores = 2)
 #' dat <- meltResultsList(results)
 #' vizColocDotplot(dat)
 #' }

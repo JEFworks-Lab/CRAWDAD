@@ -1,12 +1,12 @@
 
 #' get neighbor cells defined as being a distance away from a set of reference cells
 #' @description get neighbor cells defined as being a distance away from a set of reference cells.
-#'      `reference.ids` can be selected by subsetting rownames from `cells`:
+#'      `referenceIds` can be selected by subsetting rownames from `cells`:
 #'       ex: `rownames(cells)[which(cells$celltypes == "A")]`
 #'       or can be an entry in a subset list from `selectSubsets()`
 #' 
 #' @param cells sf object, with celltypes features and point geometries
-#' @param reference.ids vector of cell ids (rownames) in `cells` to be used as the reference cell set
+#' @param referenceIds vector of cell ids (rownames) in `cells` to be used as the reference cell set
 #' @param dist distance to define neighbors (default = 100)
 #' @param returnSF boolean to return either an sf object of just the neighbors
 #' otherwise returns factor where non neighbor cells are NAs. (default: FALSE)
@@ -17,21 +17,21 @@
 #' \dontrun{
 #' data(sim)
 #' cells <- toSF(pos = sim[,c("x", "y")], celltypes = sim$celltypes)
-#' shuffle.list <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000), ncores = 2)
-#' binomMat <- binomialTestMatrix(cells, neigh.dist = 100, ncores = 2)
-#' subset.list <- selectSubsets(binomMat, cells$celltypes, sub.type = "near", sub.thresh = 0.05)
-#' neighCells <- getNeighbors(cells = cells, reference.ids = subset.list[["C_near_B"]],  dist = 100)
+#' shuffleList <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000), ncores = 2)
+#' binomMat <- binomialTestMatrix(cells, neighDist = 100, ncores = 2)
+#' subsetList <- selectSubsets(binomMat, cells$celltypes, subType = "near", subThresh = 0.05)
+#' neighCells <- getNeighbors(cells = cells, referenceIds = subsetList[["C_near_B"]],  dist = 100)
 #' }
 #' 
 #' @export
 getNeighbors <- function(cells,
-                         reference.ids,
+                         referenceIds,
                          removeRef = TRUE,
                          dist = 100,
                          returnSF = FALSE){
   
   ## get the reference cells
-  ref.cells <- cells[reference.ids,]
+  ref.cells <- cells[referenceIds,]
   
   ## define the buffer around the reference cells with distance of
   refs.buffer <- sf::st_buffer(ref.cells, dist)
@@ -43,7 +43,7 @@ getNeighbors <- function(cells,
   
   ## remove the reference cells from the set of neighbor cells
   if(removeRef){
-    neigh.cells <- neigh.cells[setdiff(rownames(neigh.cells), reference.ids),]
+    neigh.cells <- neigh.cells[setdiff(rownames(neigh.cells), referenceIds),]
   }
   
   ## get the new com factor of neighbor cells only
@@ -85,8 +85,8 @@ getNeighbors <- function(cells,
 #' \dontrun{
 #' data(sim)
 #' cells <- toSF(pos = sim[,c("x", "y")], celltypes = sim$celltypes)
-#' shuffle.list <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000), ncores = 2)
-#' results <- findTrends(cells, dist = 100, shuffle.list = shuffle.list, ncores = 2)
+#' shuffleList <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000), ncores = 2)
+#' results <- findTrends(cells, dist = 100, shuffleList = shuffleList, ncores = 2)
 #' meltResultsList(results)
 #' }
 #' 
@@ -124,8 +124,8 @@ meltResultsList <- function(resultsList, id = NA, withPerms = FALSE){
 #' \dontrun{
 #' data(sim)
 #' cells <- toSF(pos = sim[,c("x", "y")], celltypes = sim$celltypes)
-#' shuffle.list <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000), ncores = 2)
-#' results <- findTrends(cells, dist = 100, shuffle.list = shuffle.list, ncores = 2)
+#' shuffleList <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000), ncores = 2)
+#' results <- findTrends(cells, dist = 100, shuffleList = shuffleList, ncores = 2)
 #' filterCoTrends(results = results, alpha = 0.05)
 #' }
 #' 
@@ -152,8 +152,8 @@ filterCoTrends <- function(results, alpha = 0.05) {
 #' \dontrun{
 #' data(sim)
 #' cells <- toSF(pos = sim[,c("x", "y")], celltypes = sim$celltypes)
-#' shuffle.list <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000), ncores = 2)
-#' results <- findTrends(cells, dist = 100, shuffle.list = shuffle.list, ncores = 2)
+#' shuffleList <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000), ncores = 2)
+#' results <- findTrends(cells, dist = 100, shuffleList = shuffleList, ncores = 2)
 #' filterSepTrends(results = results, alpha = 0.05)
 #' }
 #' 
@@ -180,8 +180,8 @@ filterSepTrends <- function(results, alpha = 0.05) {
 #' \dontrun{
 #' data(sim)
 #' cells <- toSF(pos = sim[,c("x", "y")], celltypes = sim$celltypes)
-#' shuffle.list <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000), ncores = 2)
-#' results <- findTrends(cells, dist = 100, shuffle.list = shuffle.list, ncores = 2)
+#' shuffleList <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000), ncores = 2)
+#' results <- findTrends(cells, dist = 100, shuffleList = shuffleList, ncores = 2)
 #' filterChangeTrends(results = results, alpha = 0.05)
 #' }
 #' 

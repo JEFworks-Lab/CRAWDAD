@@ -11,7 +11,7 @@
 #' @param samples list of sample set names for each patient ex: list(c("PKHL", "XXCD"),c("KSFB", "NGPL"),c("PBVN", "FSLD"))
 #' @param refID name of reference cell type for trend of interest
 #' @param neighID name of neighbor cell type for trend of interest
-#' @param zscores table of zscores for each cell type combo for each sample (rows) vs each scale tested (columns)
+#' @param zScores table of zScores for each cell type combo for each sample (rows) vs each scale tested (columns)
 #' @param heatmap return heatmap of distances between sample trends (boolean, default: TRUE)
 #' @param distplot return plot of distirbutions of intra and inter trend distances (boolean, default: TRUE)
 #'
@@ -22,11 +22,11 @@
 #' diffTrendTesting(list(c("PKHL", "XXCD"),c("KSFB", "NGPL"),c("PBVN", "FSLD")),
 #'                  refID = "Ki67 proliferating",
 #'                  neighID = "CD4 Memory T cells",
-#'                  zscores = combined_zscores)
+#'                  zScores = combined_zscores)
 #' }
 #'
 #' @export
-diffTrendTesting <- function(samples, refID, neighID, zscores, heatmap = TRUE, distplot = TRUE){
+diffTrendTesting <- function(samples, refID, neighID, zScores, heatmap = TRUE, distplot = TRUE){
   
   r <- refID
   n <- neighID
@@ -37,8 +37,8 @@ diffTrendTesting <- function(samples, refID, neighID, zscores, heatmap = TRUE, d
   distances <- unlist(lapply(1:nrow(m), function(i){
     t1 <- paste0(id, "_", as.vector(m[i,1]))
     t2 <- paste0(id, "_", as.vector(m[i,2]))
-    t1_zscores <- zscores[t1,]
-    t2_zscores <- zscores[t2,]
+    t1_zscores <- zScores[t1,]
+    t2_zscores <- zScores[t2,]
     sum(abs(t1_zscores - t2_zscores))
   }))
   m$dist <- distances

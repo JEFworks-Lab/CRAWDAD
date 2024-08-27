@@ -161,8 +161,8 @@ makeShuffledCells <- function(cells,
 #'
 #' @param cells sf object of all the cells
 #' @param randomcellslist list of lists of randomly shuffled cell type labels produced from `makeShuffledCells`
-#' @param trueNeighCells Simple feature collection of real cells for a given reference cell type, with geometries of a given dist (from sf::st_buffer)
-#' @param cellBuffer Simple feature collection of the neighbor cells that are within "dist" of the ref cells (from sf::intersection)
+#' @param trueNeighCells Simple feature collection of real cells for a given reference cell type, with geometries of a given neighDist (from sf::st_buffer)
+#' @param cellBuffer Simple feature collection of the neighbor cells that are within "neighDist" of the ref cells (from sf::intersection)
 #' @param ncores number of cores for parallelization (default 1)
 #' @param removeDups remove duplicate neighbor cells to prevent them from being counted multiple times and inflate the Z scores (default: TRUE)
 #' @param returnMeans if multiple permutations, return the mean Z score across the permutations in each scale with respect to each neighbor cell type (default: TRUE) 
@@ -300,7 +300,7 @@ evaluateSignificance <- function(cells,
 #' Generate matrix of pvalues indicating if a cell is enriched in neighbors of a given cell type
 #' @description pvalues are based on a binomial test and neighbors are defined within a given distance from a cell
 #' @param cells sf object, with celltypes features and point geometries
-#' @param neigh.dist distance to define neighbors (default = 50)
+#' @param neighDist distance to define neighbors (default = 50)
 #' @param ncores number of cores for parallelization (default 1)
 #' @param verbose Boolean for verbosity (default TRUE)
 #' 
@@ -310,13 +310,13 @@ evaluateSignificance <- function(cells,
 #' \dontrun{
 #' data(sim)
 #' cells <- toSF(pos = sim[,c("x", "y")], celltypes = sim$celltypes)
-#' shuffle.list <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000), ncores = 2)
-#' binomMat <- binomialTestMatrix(cells, neigh.dist = 50, ncores = 2)
+#' shuffleList <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000), ncores = 2)
+#' binomMat <- binomialTestMatrix(cells, neighDist = 50, ncores = 2)
 #' }
 #' 
 #' @export
 binomialTestMatrix <- function(cells,
-                               neigh.dist = 50,
+                               neighDist = 50,
                                ncores = 1,
                                verbose = TRUE) {
   
@@ -332,7 +332,7 @@ binomialTestMatrix <- function(cells,
   
   if(verbose){
     message("Binomial test for each cell testing if it is enriched in neighbors of a given cell type based on distance of ",
-            neigh.dist)
+            neighDist)
   }
   
   cell.types <- cells$celltypes
@@ -347,8 +347,8 @@ binomialTestMatrix <- function(cells,
   ## get global fractions of each cell type (hypothesized probability of success)
   p <- table(cell.types)/sum(table(cell.types))
   
-  ## get buffer around each cell with diameter of neigh.dist
-  refs.buffer <- sf::st_buffer(cells, neigh.dist)
+  ## get buffer around each cell with diameter of neighDist
+  refs.buffer <- sf::st_buffer(cells, neighDist)
   
   ## define the binomial test to be performed and used in the mapply below
   binom <- function(x, n, p){stats::binom.test(x, n, p, alternative="greater")$p.value}
@@ -388,8 +388,8 @@ binomialTestMatrix <- function(cells,
 #'
 #' @param binomMatrix matrix where rows are cells, columns are cell types and values are p-values whether or not a cell is enriched in neighbors of a given cell type based on a binomial test. Output from `binomialTestMatrix()`
 #' @param celltypes named vector or factor of cell type labels of each cell in `binomMatrix` and in the same order.
-#' @param sub.type subset type, either ref cells "near" (ie localized) a neighbor cell type, or "away" (ie separated) from a neighbor cell type.
-#' @param sub.thresh significance threshold for the binomial test (default = 0.05)
+#' @param subType subset type, either ref cells "near" (ie localized) a neighbor cell type, or "away" (ie separated) from a neighbor cell type.
+#' @param subThresh significance threshold for the binomial test (default = 0.05)
 #' @param ncores number of cores for parallelization (default 1)
 #' @param verbose Boolean for verbosity (default TRUE)
 #' 
@@ -399,24 +399,24 @@ binomialTestMatrix <- function(cells,
 #' \dontrun{
 #' data(sim)
 #' cells <- toSF(pos = sim[,c("x", "y")], celltypes = sim$celltypes)
-#' shuffle.list <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000), ncores = 2)
-#' binomMat <- binomialTestMatrix(cells, neigh.dist = 100, ncores = 2)
-#' subset.list <- selectSubsets(binomMat, cells$celltypes, sub.type = "near", sub.thresh = 0.05) 
+#' shuffleList <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000), ncores = 2)
+#' binomMat <- binomialTestMatrix(cells, neighDist = 100, ncores = 2)
+#' subsetList <- selectSubsets(binomMat, cells$celltypes, subType = "near", subThresh = 0.05) 
 #' }
 #' 
 #' @export
 selectSubsets <- function(binomMatrix,
                           celltypes,
-                          sub.type = c("near", "away"),
-                          sub.thresh = 0.05,
+                          subType = c("near", "away"),
+                          subThresh = 0.05,
                           ncores = 1,
                           verbose = TRUE){
   
   start_time <- Sys.time()
-  sub.type <- match.arg(sub.type)
+  subType <- match.arg(subType)
   
-  if(!sub.type %in% c("near", "away")){
-    stop("`sub.type` must be either 'near' or 'away'")
+  if(!subType %in% c("near", "away")){
+    stop("`subType` must be either 'near' or 'away'")
   }
   
   ## make sure cell types is a factor
@@ -428,7 +428,7 @@ selectSubsets <- function(binomMatrix,
   combo_ids <- unlist(lapply(rownames(combos), function(i){
     cells.ref.ix <- levels(cell.types)[as.numeric(combos[i,1])]
     cells.neighbors.ix <- levels(cell.types)[as.numeric(combos[i,2])]
-    id <- paste0(cells.ref.ix, "_", sub.type, "_", cells.neighbors.ix)
+    id <- paste0(cells.ref.ix, "_", subType, "_", cells.neighbors.ix)
     id
   }))
   
@@ -438,7 +438,7 @@ selectSubsets <- function(binomMatrix,
     
     cells.ref.ix <- levels(cell.types)[as.numeric(combos[i,1])]
     cells.neighbors.ix <- levels(cell.types)[as.numeric(combos[i,2])]
-    id <- paste0(cells.ref.ix, "_", sub.type, "_", cells.neighbors.ix)
+    id <- paste0(cells.ref.ix, "_", subType, "_", cells.neighbors.ix)
     message("computing subsets for ", id)
     
     ## get reference cell rows
@@ -446,16 +446,16 @@ selectSubsets <- function(binomMatrix,
     
     ## subset reference cells whose pval is below thresh for given neighbor cell type
     ## return cells that were significant
-    if(sub.type == "near"){
-      sub.cells <- rownames(ref.cells)[which(ref.cells[,cells.neighbors.ix] < sub.thresh)]
+    if(subType == "near"){
+      sub.cells <- rownames(ref.cells)[which(ref.cells[,cells.neighbors.ix] < subThresh)]
     }
     
     ## return the cells that were not significant
-    if (sub.type == "away"){
+    if (subType == "away"){
       ## recommend setting threshold very liberal, like 0.5,
       ## that way, only the cells that couldn't even pass a p-val cutoff of 0.5 would be selected for,
       ## and these would be expected to be very much depleted or separated from the neighbor cell type
-      sub.cells <- rownames(ref.cells)[which(ref.cells[,cells.neighbors.ix] < sub.thresh)]
+      sub.cells <- rownames(ref.cells)[which(ref.cells[,cells.neighbors.ix] < subThresh)]
       sub.cells <- rownames(ref.cells)[which(!rownames(ref.cells) %in% sub.cells)]
     }
     
@@ -482,10 +482,10 @@ selectSubsets <- function(binomMatrix,
 #' Trends are essentially built from significance values. The significance test basically asks if two cell types are localized or separated by assessing if the proportion of the neighboring cell type is significantly greater, or less than, random chance.
 #'
 #' @param cells sf object, with celltypes features and point geometries
-#' @param dist numeric distance to define neighbor cells with respect to each reference cell (default: 50)
+#' @param neighDist numeric distance to define neighbor cells with respect to each reference cell (default: 50)
 #' @param ncores number of cores for parallelization (default 1)
-#' @param shuffle.list a list of cell type labels shuffled at different scales (output from `makeShuffledCells()`)
-#' @param subset.list a subset list (output from `selectSubsets()`). Required if computing trends for subsets (default NULL)
+#' @param shuffleList a list of cell type labels shuffled at different scales (output from `makeShuffledCells()`)
+#' @param subsetList a subset list (output from `selectSubsets()`). Required if computing trends for subsets (default NULL)
 #' @param verbose Boolean for verbosity (default TRUE)
 #' @param removeDups remove duplicate neighbor cells to prevent them from being counted multiple times and inflate the Z scores (default: TRUE)
 #' @param returnMeans if multiple permutations, return the mean Z score across the permutations in each scale with respect to each neighbor cell type (default: TRUE)
@@ -495,22 +495,22 @@ selectSubsets <- function(binomMatrix,
 #' @examples
 #' \dontrun{
 #' data(sim)
-#' shuffle.list <- makeShuffledCells(sim, scales = c(50, 100, 200, 300, 400, 500))
-#' findTrends(sim, dist = 50, shuffle.list = shuffle.list, ncores = 2)
+#' shuffleList <- makeShuffledCells(sim, scales = c(50, 100, 200, 300, 400, 500))
+#' findTrends(sim, neighDist = 50, shuffleList = shuffleList, ncores = 2)
 #' }
 #' 
 #' @export
 findTrends <- function(cells,
-                       dist = 50,
+                       neighDist = 50,
                        ncores = 1,
-                       shuffle.list,
-                       subset.list = NULL,
+                       shuffleList,
+                       subsetList = NULL,
                        verbose = TRUE,
                        removeDups = TRUE,
                        returnMeans = TRUE){
   
-  if(!is.list(shuffle.list)){
-    stop("`shuffle.list` is not a list. You can make this using `makeShuffledCells()`")
+  if(!is.list(shuffleList)){
+    stop("`shuffleList` is not a list. You can make this using `makeShuffledCells()`")
   }
   
   if( !any(class(cells) == "sf") ){
@@ -529,11 +529,11 @@ findTrends <- function(cells,
   
   if(verbose){
     message("Evaluating significance for each cell type")
-    message("using neighbor distance of ", dist)
+    message("using neighbor distance of ", neighDist)
   }
   
   ## Evaluate significance (pairwise)
-  if(is.null(subset.list)){
+  if(is.null(subsetList)){
     
     if(verbose){
       message("Calculating for pairwise combinations")
@@ -541,14 +541,14 @@ findTrends <- function(cells,
     
     celltypes <- factor(cells$celltypes)
     
-    d <- dist
+    d <- neighDist
     results.all <- lapply(levels(celltypes), function(ct) {
       
       if(verbose){
         message(ct)
       }
       
-      # get polygon geometries of reference cells of "celltype" up to defined distance "dist"
+      # get polygon geometries of reference cells of "celltype" up to defined distance "neighDist"
       # use this to assess neighbors within "d" um of each cell
       ref.buffer <- sf::st_buffer(cells[cells$celltypes == ct,], d) 
       ## union polygons to avoid memory overflow, too slow
@@ -577,7 +577,7 @@ findTrends <- function(cells,
       ## I could also split up the permutations, but then each cell type for each scale is done one by one
       ## I could do cell types in parallel, but then for each cell type need to go through each res and each perm one by one
       results <- evaluateSignificance(cells = cells,
-                                      randomcellslist = shuffle.list,
+                                      randomcellslist = shuffleList,
                                       trueNeighCells = neigh.cells,
                                       cellBuffer = ref.buffer,
                                       ncores = ncores,
@@ -590,19 +590,19 @@ findTrends <- function(cells,
     ## Evaluate significance (cell type subsets)
   }
   
-  if(!is.null(subset.list)){
+  if(!is.null(subsetList)){
     
     ## load in the subset file if it exists, or make it and probably be a good
     ## idea to save it, too
-    if(!is.list(subset.list)){
-      stop(paste0("`subset.list` is not a list. You can build this using: `binomialTestMatrix()` then `selectSubsets()`"))
+    if(!is.list(subsetList)){
+      stop(paste0("`subsetList` is not a list. You can build this using: `binomialTestMatrix()` then `selectSubsets()`"))
     }
     
-    combo_ids <- names(subset.list)
-    d <- dist
+    combo_ids <- names(subsetList)
+    d <- neighDist
     
     if(verbose){
-      message("Calculating trends for each subset in `subset.list` with respect to the cell types in `cells$celltypes`")
+      message("Calculating trends for each subset in `subsetList` with respect to the cell types in `cells$celltypes`")
     }
     
     ## initialize list
@@ -616,7 +616,7 @@ findTrends <- function(cells,
       }
       
       ## get area around the subset cells to identify neighbors
-      ref.buffer <- sf::st_buffer(cells[subset.list[[i]], ], d)
+      ref.buffer <- sf::st_buffer(cells[subsetList[[i]], ], d)
       ## union polygons to avoid memory overflow, too slow
       # ref.buffer_union <- sf::st_union(ref.buffer)
       # get the different types of neighbor cells that are within "d" of the ref cells
@@ -643,7 +643,7 @@ findTrends <- function(cells,
       ## I could also split up the permutations, but then each cell type for each scale is done one by one
       ## I could do cell types in parallel, but then for each cell type need to go through each res and each perm one by one
       results <- evaluateSignificance(cells = cells,
-                                      randomcellslist = shuffle.list,
+                                      randomcellslist = shuffleList,
                                       trueNeighCells = neigh.cells,
                                       cellBuffer = ref.buffer,
                                       ncores = ncores,

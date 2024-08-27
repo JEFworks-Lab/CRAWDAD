@@ -8,13 +8,13 @@
 #' cell types annotated in the celltypes column and point positions in the 
 #' geometry column
 #' @param ref character; reference cell type to define neighborhood around
-#' @param dist numeric vector; distances used to define the neighborhoods
+#' @param neighDist numeric vector; distances used to define the neighborhoods
 #' 
 #' @return named vector; the proportions
 #' 
-calculateCelltypeProportions <- function(cells, ref, dist) {
+calculateCelltypeProportions <- function(cells, ref, neighDist) {
   ## create a circle around each reference cell 
-  neighborhood <- sf::st_buffer(cells[cells$celltypes == ref,], dist) 
+  neighborhood <- sf::st_buffer(cells[cells$celltypes == ref,], neighDist) 
   ## merge the circles into a neighborhood (can take some time to compute)
   # neighborhood <- sf::st_union(buffer)
   ## calculate cells inside the neighborhood
@@ -46,15 +46,15 @@ calculateCelltypeProportions <- function(cells, ref, dist) {
 #' tests. Finally, convert the new pvalue to a zscore.
 #' 
 #' @param dat data.frame; the melted findTrends result.
-#' @param pval numeric; the pvalue to be converted. Defaults to 0.05.
+#' @param pSigThresh numeric; the pvalue to be converted. Defaults to 0.05.
 #' 
 #' @return numeric; the Bonferroni corrected zscore.
 #' 
 #' @export
 #' 
-correctZBonferroni <- function(dat, pval = 0.05) {
+correctZBonferroni <- function(dat, pSigThresh = 0.05) {
   ntests <- length(unique(dat$reference)) * length(unique(dat$reference))
-  psig <- pval/ntests
+  psig <- pSigThresh/ntests
   zsig <- round(qnorm(psig/2, lower.tail = F), 2)
   
   return(zsig)
