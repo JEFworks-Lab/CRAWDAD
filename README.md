@@ -27,7 +27,7 @@ library(tidyverse)
 ## load the spleen data of the pkhl sample 
 data('pkhl')
 ## convert dataframe to spatial points (SP)
-cells <- crawdad::toSF(pos = pkhl[,c("x", "y")], celltypes = pkhl$celltypes)
+cells <- crawdad::toSF(pos = pkhl[,c("x", "y")], cellTypes = pkhl$celltypes)
 ## define the scales to analyze the data
 scales <- c(100, 200, 300, 400, 500, 600, 700, 800, 900, 1000)
 ## shuffle cells to create null background
@@ -39,7 +39,7 @@ shuffle_list <- crawdad:::makeShuffledCells(cells,
                                             verbose = TRUE)
 ## calculate the zscore for the cell-type pairs at different scales
 results <- crawdad::findTrends(cells,
-                               dist = 50,
+                               neighDist = 50,
                                shuffleList = shuffle_list,
                                ncores = 7,
                                verbose = TRUE,
@@ -48,21 +48,23 @@ dat <- crawdad::meltResultsList(results, withPerms = TRUE)
 ## calculate the zscore for the multiple-test correction
 zsig <- correctZBonferroni(dat)
 ## summary visualization
-vizColocDotplot(dat, zSigThresh = zsig, zScoreLimit = 2*zsig) +
+vizColocDotplot(dat, zSigThresh = zsig, zScoreLimit = 2*zsig, 
+                dotSizes = c(3,15)) +
   theme(axis.text.x = element_text(angle = 35, h = 0))
 ```
 
-<img src="https://github.com/JEFworks/CRAWDAD/blob/main/docs/img/coloc.png?raw=true" height="600"/>
+<img src="https://github.com/JEFworks/CRAWDAD/blob/main/docs/img/coloc.png?raw=true" height="510"/>
 
 ``` r
 ## visualize trend for one cell-type pair
 dat %>% 
+  mutate(id = 'pkhl') %>% 
   filter(reference == 'Podoplanin') %>% 
   filter(neighbor == 'CD4 Memory T cells') %>% 
   vizTrends(lines = TRUE, withPerms = TRUE, zSigThresh = zsig)
 ```
 
-<img src="https://github.com/JEFworks/CRAWDAD/blob/main/docs/img/trend.png?raw=true" height="350"/>
+<img src="https://github.com/JEFworks/CRAWDAD/blob/main/docs/img/trend.png?raw=true" height="325"/>
 
 More details can be found in the tutorials.
 
