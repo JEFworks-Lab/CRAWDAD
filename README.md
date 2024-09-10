@@ -6,7 +6,7 @@
 
 `CRAWDAD` is a statistical framework that uses cell-type labeled spatial omics data to identify the colocalization or separation of cell types at different length scales. CRAWDAD identifies the spatial relationship of cell types in the tissue and the length scale in which they reach significance. It identifies groups of cells with similar spatial relationships patterns. Also, CRAWDAD subsets the cell types based on their proximity to others. Lastly, CRAWDAD compares multiple tissue samples using their cell-type spatial relationship patterns. Therefore, CRAWDAD is a powerful tool for tissue characterization and comparison.
 
-<img src="https://github.com/JEFworks/CRAWDAD/blob/main/docs/img/CRAWDAD_workflow.png?raw=true"/>
+<img src="https://github.com/JEFworks/CRAWDAD/blob/main/docs/img/overview_github.png?raw=true"/>
 
 ## Installation
 
