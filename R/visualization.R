@@ -352,17 +352,17 @@ vizShuffledGrids <- function(cells, shuffledList, scale,
 #' @param cells sf data.frame; as produced by crawdad::toSF function: cells with 
 #' cell types annotated in the celltypes column and point positions in the 
 #' geometry column
-#' @param dist numeric; distance used to define the neighborhood
+#' @param neighDist numeric; distance used to define the neighborhood
 #' 
 #' @return ggplot2 plot; the a histogram of the proportions
 #' 
 #' @export
-vizCelltypeProportions <- function(cells, dist) {
+vizCelltypeProportions <- function(cells, neighDist) {
   
   ## for each cell type
   celltypes <- unique(cells$celltypes)
   props <- lapply(celltypes, calculateCelltypeProportions, 
-                  cells = cells, dist = dist)
+                  cells = cells, neighDist = neighDist)
   df <- data.frame(proportions = unlist(props))
   
   df %>% ggplot2::ggplot(ggplot2::aes(x = proportions)) + 
