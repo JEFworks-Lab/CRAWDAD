@@ -25,6 +25,8 @@ vizTrends(
 
 \item{yaxis}{column that has significance value across scales (default: "Z")}
 
+\item{zSigThresh}{threshold for significance, ie Z score significance threshold (default: 1.96).}
+
 \item{nc}{number of colors to use for labeling features in id column}
 
 \item{colors}{color assignment for each of the features in id column}
@@ -38,8 +40,6 @@ vizTrends(
 \item{points}{boolean to plot points (default: TRUE)}
 
 \item{withPerms}{if the results list is a list of lists using \code{returnMeans = FALSE} in \code{findTrends()}, then column order is different and this flag is needed (default: FALSE)}
-
-\item{sig.thresh}{threshold for significance, ie Z score significance threshold (default: 1.96).}
 }
 \description{
 The input data.frame should be the results list from \code{findTrends()} that has been melted into a data.frame using \code{meltResultsList()}.
@@ -48,8 +48,8 @@ The input data.frame should be the results list from \code{findTrends()} that ha
 \dontrun{
 data(sim)
 cells <- toSF(pos = sim[,c("x", "y")], celltypes = sim$celltypes)
-shuffle.list <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000), ncores = 2)
-results <- findTrends(cells, dist = 100, shuffle.list = shuffle.list, ncores = 2)
+shuffleList <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000), ncores = 2)
+results <- findTrends(cells, dist = 100, shuffleList = shuffleList, ncores = 2)
 vizTrends(dat = results)
 }
 

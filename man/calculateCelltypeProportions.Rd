@@ -4,7 +4,7 @@
 \alias{calculateCelltypeProportions}
 \title{Calculate proportions of cell types inside the neighborhood}
 \usage{
-calculateCelltypeProportions(cells, ref, dist)
+calculateCelltypeProportions(cells, ref, neighDist)
 }
 \arguments{
 \item{cells}{sf data.frame; as produced by crawdad::toSF function: cells with
@@ -13,7 +13,7 @@ geometry column}
 
 \item{ref}{character; reference cell type to define neighborhood around}
 
-\item{dist}{numeric vector; distances used to define the neighborhoods}
+\item{neighDist}{numeric vector; distances used to define the neighborhoods}
 }
 \value{
 named vector; the proportions

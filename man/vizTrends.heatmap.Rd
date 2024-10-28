@@ -6,8 +6,8 @@
 \usage{
 vizTrends.heatmap(
   dat,
-  sig.thresh = 1.96,
-  z_limit = 20,
+  zSigThresh = 1.96,
+  zScoreLimit = 20,
   palette_ = (grDevices::colorRampPalette(c("blue", "white", "red")))(n = 209),
   title = NULL,
   withPerms = FALSE,
@@ -18,9 +18,9 @@ vizTrends.heatmap(
 \arguments{
 \item{dat}{\code{findTrends()} results list, or data.frame; the information about the scale, Z-score, reference and the neighbor cell.}
 
-\item{sig.thresh}{threshold for significance, ie Z score significance threshold (default: 1.96).}
+\item{zSigThresh}{threshold for significance, ie Z score significance threshold (default: 1.96).}
 
-\item{z_limit}{Z score limits (default +/- 20)}
+\item{zScoreLimit}{Z score limits (default +/- 20)}
 
 \item{palette_}{color gradient for heatmap (default: grDevices::colorRampPalette(c("blue", "white", "red"))(n = 209))}
 
@@ -39,8 +39,8 @@ The input data.frame should be the results list from \code{findTrends()} that ha
 \dontrun{
 data(sim)
 cells <- toSF(pos = sim[,c("x", "y")], celltypes = sim$celltypes)
-shuffle.list <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000), ncores = 2)
-results <- findTrends(cells, dist = 100, shuffle.list = shuffle.list, ncores = 2)
+shuffleList <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000), ncores = 2)
+results <- findTrends(cells, dist = 100, shuffleList = shuffleList, ncores = 2)
 vizTrends.heatmap(dat = results)
 }
 

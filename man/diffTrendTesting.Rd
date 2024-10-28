@@ -8,7 +8,7 @@ diffTrendTesting(
   samples,
   refID,
   neighID,
-  zscores,
+  zScores,
   heatmap = TRUE,
   distplot = TRUE
 )
@@ -20,7 +20,7 @@ diffTrendTesting(
 
 \item{neighID}{name of neighbor cell type for trend of interest}
 
-\item{zscores}{table of zscores for each cell type combo for each sample (rows) vs each scale tested (columns)}
+\item{zScores}{table of zScores for each cell type combo for each sample (rows) vs each scale tested (columns)}
 
 \item{heatmap}{return heatmap of distances between sample trends (boolean, default: TRUE)}
 
@@ -43,7 +43,7 @@ Likewise, if the intra trends are highly variable, then might be expected to als
 diffTrendTesting(list(c("PKHL", "XXCD"),c("KSFB", "NGPL"),c("PBVN", "FSLD")),
                  refID = "Ki67 proliferating",
                  neighID = "CD4 Memory T cells",
-                 zscores = combined_zscores)
+                 zScores = combined_zscores)
 }
 
 }

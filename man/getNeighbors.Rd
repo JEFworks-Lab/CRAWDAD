@@ -6,7 +6,7 @@
 \usage{
 getNeighbors(
   cells,
-  reference.ids,
+  referenceIds,
   removeRef = TRUE,
   dist = 100,
   returnSF = FALSE
@@ -15,7 +15,7 @@ getNeighbors(
 \arguments{
 \item{cells}{sf object, with celltypes features and point geometries}
 
-\item{reference.ids}{vector of cell ids (rownames) in \code{cells} to be used as the reference cell set}
+\item{referenceIds}{vector of cell ids (rownames) in \code{cells} to be used as the reference cell set}
 
 \item{dist}{distance to define neighbors (default = 100)}
 
@@ -27,7 +27,7 @@ sf object of the neighbor cells or factor of neighbor cells
 }
 \description{
 get neighbor cells defined as being a distance away from a set of reference cells.
-\code{reference.ids} can be selected by subsetting rownames from \code{cells}:
+\code{referenceIds} can be selected by subsetting rownames from \code{cells}:
 ex: \code{rownames(cells)[which(cells$celltypes == "A")]}
 or can be an entry in a subset list from \code{selectSubsets()}
 }
@@ -35,10 +35,10 @@ or can be an entry in a subset list from \code{selectSubsets()}
 \dontrun{
 data(sim)
 cells <- toSF(pos = sim[,c("x", "y")], celltypes = sim$celltypes)
-shuffle.list <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000), ncores = 2)
-binomMat <- binomialTestMatrix(cells, neigh.dist = 100, ncores = 2)
-subset.list <- selectSubsets(binomMat, cells$celltypes, sub.type = "near", sub.thresh = 0.05)
-neighCells <- getNeighbors(cells = cells, reference.ids = subset.list[["C_near_B"]],  dist = 100)
+shuffleList <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000), ncores = 2)
+binomMat <- binomialTestMatrix(cells, neighDist = 100, ncores = 2)
+subsetList <- selectSubsets(binomMat, cells$celltypes, subType = "near", subThresh = 0.05)
+neighCells <- getNeighbors(cells = cells, referenceIds = subsetList[["C_near_B"]],  dist = 100)
 }
 
 }

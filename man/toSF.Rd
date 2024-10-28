@@ -4,12 +4,12 @@
 \alias{toSF}
 \title{Convert positions and cell type annotations to sf object}
 \usage{
-toSF(pos, celltypes, verbose = TRUE)
+toSF(pos, cellTypes, verbose = TRUE)
 }
 \arguments{
 \item{pos}{data frame; x and y coordinates of each cell}
 
-\item{celltypes}{character vector; the cell type of each cell provided in pos}
+\item{cellTypes}{character vector; the cell type of each cell provided in pos}
 
 \item{verbose}{Boolean; verbosity (default TRUE)}
 }

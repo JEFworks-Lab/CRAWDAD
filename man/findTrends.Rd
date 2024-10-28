@@ -6,10 +6,10 @@
 \usage{
 findTrends(
   cells,
-  dist = 50,
+  neighDist = 50,
   ncores = 1,
-  shuffle.list,
-  subset.list = NULL,
+  shuffleList,
+  subsetList = NULL,
   verbose = TRUE,
   removeDups = TRUE,
   returnMeans = TRUE
@@ -18,13 +18,13 @@ findTrends(
 \arguments{
 \item{cells}{sf object, with celltypes features and point geometries}
 
-\item{dist}{numeric distance to define neighbor cells with respect to each reference cell (default: 50)}
+\item{neighDist}{numeric distance to define neighbor cells with respect to each reference cell (default: 50)}
 
 \item{ncores}{number of cores for parallelization (default 1)}
 
-\item{shuffle.list}{a list of cell type labels shuffled at different scales (output from \code{makeShuffledCells()})}
+\item{shuffleList}{a list of cell type labels shuffled at different scales (output from \code{makeShuffledCells()})}
 
-\item{subset.list}{a subset list (output from \code{selectSubsets()}). Required if computing trends for subsets (default NULL)}
+\item{subsetList}{a subset list (output from \code{selectSubsets()}). Required if computing trends for subsets (default NULL)}
 
 \item{verbose}{Boolean for verbosity (default TRUE)}
 
@@ -44,8 +44,8 @@ Trends are essentially built from significance values. The significance test bas
 \examples{
 \dontrun{
 data(sim)
-shuffle.list <- makeShuffledCells(sim, scales = c(50, 100, 200, 300, 400, 500))
-findTrends(sim, dist = 50, shuffle.list = shuffle.list, ncores = 2)
+shuffleList <- makeShuffledCells(sim, scales = c(50, 100, 200, 300, 400, 500))
+findTrends(sim, neighDist = 50, shuffleList = shuffleList, ncores = 2)
 }
 
 }

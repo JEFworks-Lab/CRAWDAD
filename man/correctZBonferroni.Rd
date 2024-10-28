@@ -4,12 +4,12 @@
 \alias{correctZBonferroni}
 \title{Perform Bonferroni Multiple-test Correction}
 \usage{
-correctZBonferroni(dat, pval = 0.05)
+correctZBonferroni(dat, pSigThresh = 0.05)
 }
 \arguments{
 \item{dat}{data.frame; the melted findTrends result.}
 
-\item{pval}{numeric; the pvalue to be converted. Defaults to 0.05.}
+\item{pSigThresh}{numeric; the pvalue to be converted. Defaults to 0.05.}
 }
 \value{
 numeric; the Bonferroni corrected zscore.

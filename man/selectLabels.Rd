@@ -4,7 +4,7 @@
 \alias{selectLabels}
 \title{Update cell type labels to only include specific cell types or subtypes}
 \usage{
-selectLabels(df, com, cellIDs = NA, subset_list = NA, subsetIDs = NA)
+selectLabels(df, com, cellIDs = NA, subsetList = NA, subsetIDs = NA)
 }
 \arguments{
 \item{df}{dataframe or sf object of cells}
@@ -13,25 +13,25 @@ selectLabels(df, com, cellIDs = NA, subset_list = NA, subsetIDs = NA)
 
 \item{cellIDs}{vector of cell type labels to include in output (default: NA)}
 
-\item{subset_list}{list of subsets from \code{selectSubsets()} (default; NA)}
+\item{subsetList}{list of subsets from \code{selectSubsets()} (default; NA)}
 
-\item{subsetIDs}{vector of susbet cell type labels to include in output (names of vectors in \code{subset_list}) (default: NA)}
+\item{subsetIDs}{vector of susbet cell type labels to include in output (names of vectors in \code{subsetList}) (default: NA)}
 }
 \value{
 factor of specific cell type labels for visualizing with \code{vizAllClusters()} in the parameter: \code{clusters}
 }
 \description{
 make a factor of selected cell type labels for visualizing specific cells with \code{vizAllClusters()}.
-Could append new entries into the \code{subset_list} to select and label other custom subsets of cells
+Could append new entries into the \code{subsetList} to select and label other custom subsets of cells
 }
 \examples{
 \dontrun{
 data(sim)
 cells <- toSF(pos = sim[,c("x", "y")], celltypes = sim$celltypes)
-shuffle.list <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000), ncores = 2)
-binomMat <- binomialTestMatrix(cells, neigh.dist = 100, ncores = 2)
-subset.list <- selectSubsets(binomMat, cells$celltypes, sub.type = "near", sub.thresh = 0.05)
-annots_temp <- selectLabels(df = cells, com = cells$celltypes, subset_list = subset.list, cellIDs = c("A", "B", "C", "D"), subsetIDs = c("C_near_B"))
+shuffleList <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000), ncores = 2)
+binomMat <- binomialTestMatrix(cells, neighDist = 100, ncores = 2)
+subsetList <- selectSubsets(binomMat, cells$celltypes, subType = "near", subThresh = 0.05)
+annots_temp <- selectLabels(df = cells, com = cells$celltypes, subsetList = subsetList, cellIDs = c("A", "B", "C", "D"), subsetIDs = c("C_near_B"))
 }
 
 }

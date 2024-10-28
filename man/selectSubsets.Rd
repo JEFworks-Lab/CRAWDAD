@@ -7,8 +7,8 @@
 selectSubsets(
   binomMatrix,
   celltypes,
-  sub.type = c("near", "away"),
-  sub.thresh = 0.05,
+  subType = c("near", "away"),
+  subThresh = 0.05,
   ncores = 1,
   verbose = TRUE
 )
@@ -18,9 +18,9 @@ selectSubsets(
 
 \item{celltypes}{named vector or factor of cell type labels of each cell in \code{binomMatrix} and in the same order.}
 
-\item{sub.type}{subset type, either ref cells "near" (ie localized) a neighbor cell type, or "away" (ie separated) from a neighbor cell type.}
+\item{subType}{subset type, either ref cells "near" (ie localized) a neighbor cell type, or "away" (ie separated) from a neighbor cell type.}
 
-\item{sub.thresh}{significance threshold for the binomial test (default = 0.05)}
+\item{subThresh}{significance threshold for the binomial test (default = 0.05)}
 
 \item{ncores}{number of cores for parallelization (default 1)}
 
@@ -36,9 +36,9 @@ assign cells to subsets based on whether they are enriched in a given neighbor c
 \dontrun{
 data(sim)
 cells <- toSF(pos = sim[,c("x", "y")], celltypes = sim$celltypes)
-shuffle.list <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000), ncores = 2)
-binomMat <- binomialTestMatrix(cells, neigh.dist = 100, ncores = 2)
-subset.list <- selectSubsets(binomMat, cells$celltypes, sub.type = "near", sub.thresh = 0.05) 
+shuffleList <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000), ncores = 2)
+binomMat <- binomialTestMatrix(cells, neighDist = 100, ncores = 2)
+subsetList <- selectSubsets(binomMat, cells$celltypes, subType = "near", subThresh = 0.05) 
 }
 
 }

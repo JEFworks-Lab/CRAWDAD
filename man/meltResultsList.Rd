@@ -29,8 +29,8 @@ Now you have identifiers that include: scale, neighbor, reference, and "id" (ie 
 \dontrun{
 data(sim)
 cells <- toSF(pos = sim[,c("x", "y")], celltypes = sim$celltypes)
-shuffle.list <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000), ncores = 2)
-results <- findTrends(cells, dist = 100, shuffle.list = shuffle.list, ncores = 2)
+shuffleList <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000), ncores = 2)
+results <- findTrends(cells, dist = 100, shuffleList = shuffleList, ncores = 2)
 meltResultsList(results)
 }
 

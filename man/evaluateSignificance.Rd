@@ -19,9 +19,9 @@ evaluateSignificance(
 
 \item{randomcellslist}{list of lists of randomly shuffled cell type labels produced from \code{makeShuffledCells}}
 
-\item{trueNeighCells}{Simple feature collection of real cells for a given reference cell type, with geometries of a given dist (from sf::st_buffer)}
+\item{trueNeighCells}{Simple feature collection of real cells for a given reference cell type, with geometries of a given neighDist (from sf::st_buffer)}
 
-\item{cellBuffer}{Simple feature collection of the neighbor cells that are within "dist" of the ref cells (from sf::intersection)}
+\item{cellBuffer}{Simple feature collection of the neighbor cells that are within "neighDist" of the ref cells (from sf::intersection)}
 
 \item{ncores}{number of cores for parallelization (default 1)}
 

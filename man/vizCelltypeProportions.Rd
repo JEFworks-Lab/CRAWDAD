@@ -4,14 +4,14 @@
 \alias{vizCelltypeProportions}
 \title{Plot Cell-type Proportions}
 \usage{
-vizCelltypeProportions(cells, dist)
+vizCelltypeProportions(cells, neighDist)
 }
 \arguments{
 \item{cells}{sf data.frame; as produced by crawdad::toSF function: cells with
 cell types annotated in the celltypes column and point positions in the
 geometry column}
 
-\item{dist}{numeric; distance used to define the neighborhood}
+\item{neighDist}{numeric; distance used to define the neighborhood}
 }
 \value{
 ggplot2 plot; the a histogram of the proportions
