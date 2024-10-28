@@ -37,7 +37,7 @@ data(slide)
 
 ## convert to sf
 slide <- crawdad:::toSF(pos = slide[,c("x", "y")],
-                        celltypes = slide$celltypes)
+                        cellTypes = slide$celltypes)
 
 ```
 
@@ -79,8 +79,8 @@ shuffle.list <- crawdad:::makeShuffledCells(slide,
 
 ## find trends, passing background as parameter
 results <- crawdad::findTrends(slide,
-                        dist = 100,
-                        shuffle.list = shuffle.list,
+                        neighDist = 50,
+                        shuffleList = shuffle.list,
                         ncores = ncores,
                         verbose = FALSE,
                         returnMeans = FALSE)
@@ -109,7 +109,9 @@ Summary visualization of CRAWDAD’s multi-scale cell-type spatial relationship 
 
 ```{r colocalization, fig.height=9, fig.width=11}
 
-vizColocDotplot(dat, reorder = TRUE, zsig.thresh = zsig, zscore.limit = zsig*2) +
+vizColocDotplot(dat, reorder = TRUE, 
+                zSigThresh = zsig, zScoreLimit = zsig*2,
+                dotSizes = c(1,13)) +
   theme(legend.position='right',
         axis.text.x = element_text(angle = 45, h = 0))
 
@@ -122,7 +124,7 @@ Visualize specific trends.
 dat_filter <- dat %>% 
   filter(reference == 'Purkinje') %>% 
   filter(neighbor == 'Bergmann')
-vizTrends(dat_filter, lines = T, withPerms = T, sig.thresh = zsig)
+vizTrends(dat_filter, lines = T, withPerms = T, zSigThresh = zsig)
 
 ```
 
@@ -131,6 +133,6 @@ vizTrends(dat_filter, lines = T, withPerms = T, sig.thresh = zsig)
 dat_filter <- dat %>% 
   filter(reference == 'Purkinje') %>% 
   filter(neighbor == 'Oligodendrocytes')
-vizTrends(dat_filter, lines = T, withPerms = T, sig.thresh = zsig)
+vizTrends(dat_filter, lines = T, withPerms = T, zSigThresh = zsig)
 
 ```

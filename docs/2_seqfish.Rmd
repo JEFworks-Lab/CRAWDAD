@@ -40,7 +40,7 @@ seq$y <- -seq$y
 
 ## convert to sf
 seq <- crawdad:::toSF(pos = seq[,c("x", "y")],
-                      celltypes = seq$celltypes)
+                      cellTypes = seq$celltypes)
 
 ```
 
@@ -82,8 +82,8 @@ shuffle.list <- crawdad:::makeShuffledCells(seq,
 
 ## find trends, passing background as parameter
 results <- crawdad::findTrends(seq,
-                        dist = 100,
-                        shuffle.list = shuffle.list,
+                        neighDist = 50,
+                        shuffleList = shuffle.list,
                         ncores = ncores,
                         verbose = TRUE,
                         returnMeans = FALSE)
@@ -113,7 +113,9 @@ Summary visualization of CRAWDAD’s multi-scale cell-type spatial relationship 
 
 ```{r colocalization, fig.height=9, fig.width=11}
 
-vizColocDotplot(dat, reorder = TRUE, zsig.thresh = zsig, zscore.limit = zsig*2) +
+vizColocDotplot(dat, reorder = TRUE, 
+                zSigThresh = zsig, zScoreLimit = zsig*2, 
+                dotSizes = c(1,11)) +
   theme(legend.position='right',
         axis.text.x = element_text(angle = 45, h = 0))
 
@@ -126,7 +128,7 @@ Visualize specific trends.
 dat_filter <- dat %>% 
   filter(reference == 'Endothelium') %>% 
   filter(neighbor == 'Haematoendothelial progenitors')
-vizTrends(dat_filter, lines = T, withPerms = T, sig.thresh = zsig)
+vizTrends(dat_filter, lines = T, withPerms = T, zSigThresh = zsig)
 
 ```
 
@@ -135,6 +137,6 @@ vizTrends(dat_filter, lines = T, withPerms = T, sig.thresh = zsig)
 dat_filter <- dat %>% 
   filter(reference == 'Intermediate mesoderm') %>% 
   filter(neighbor == 'Lateral plate mesoderm')
-vizTrends(dat_filter, lines = T, withPerms = T, sig.thresh = zsig)
+vizTrends(dat_filter, lines = T, withPerms = T, zSigThresh = zsig)
 
 ```

@@ -19,7 +19,7 @@ data(pkhl)
 
 ## convert to sf
 pkhl <- crawdad:::toSF(pos = pkhl[,c("x", "y")],
-                       celltypes = pkhl$celltypes)
+                       cellTypes = pkhl$celltypes)
 ```
 
 ## Visualize celltypes
@@ -53,8 +53,8 @@ shuffle.list <- crawdad:::makeShuffledCells(pkhl,
 ``` r
 ## find trends, passing background as parameter
 results <- crawdad::findTrends(pkhl,
-                        dist = 100,
-                        shuffle.list = shuffle.list,
+                        neighDist = 100,
+                        shuffleList = shuffle.list,
                         ncores = ncores,
                         verbose = FALSE,
                         returnMeans = FALSE)
@@ -78,7 +78,9 @@ Summary visualization of CRAWDAD’s multi-scale cell-type spatial
 relationship analysis.
 
 ``` r
-vizColocDotplot(dat, reorder = TRUE, zsig.thresh = zsig, zscore.limit = zsig*2) +
+vizColocDotplot(dat, reorder = TRUE, 
+                zSigThresh = zsig, zScoreLimit = zsig*2,
+                dotSizes = c(1,13)) +
   theme(legend.position='right',
         axis.text.x = element_text(angle = 45, h = 0))
 ```
@@ -89,11 +91,11 @@ vizColocDotplot(dat, reorder = TRUE, zsig.thresh = zsig, zscore.limit = zsig*2) 
 
 ``` r
 binomMat <- crawdad::binomialTestMatrix(pkhl,
-                                        neigh.dist = 100,
+                                        neighDist = 50,
                                         ncores = ncores,
                                         verbose = TRUE)
 
-## note: 55.29 minutes with 7 M2 cores
+## note: 47.39 minutes with 7 M2 cores
 ```
 
 ## Select subsets
@@ -101,8 +103,8 @@ binomMat <- crawdad::binomialTestMatrix(pkhl,
 ``` r
 subset.list <- crawdad::selectSubsets(binomMat,
                                       pkhl$celltypes,
-                                      sub.type = "near",
-                                      sub.thresh = 0.05,
+                                      subType = "near",
+                                      subThresh = 0.05,
                                       ncores = ncores,
                                       verbose = TRUE)
 ```
@@ -111,15 +113,15 @@ subset.list <- crawdad::selectSubsets(binomMat,
 
 ``` r
 results.subsets <- crawdad::findTrends(pkhl,
-                                       dist = 100,
-                                       shuffle.list = shuffle.list,
-                                       subset.list = subset.list,
+                                       dist = 50,
+                                       shuffleList = shuffle.list,
+                                       subsetList = subset.list,
                                        ncores = ncores,
                                        verbose = TRUE,
                                        returnMeans = FALSE)
 
 ## this part may take tome time depending on the number of subsets
-## note: was 1213.44 mins with 7 M2 cores
+## note: was 35.81 mins with 7 M2 cores
 ```
 
 ``` r
@@ -144,7 +146,7 @@ Visualize specific subset trends.
 dats %>% 
   filter(neighbor == 'Fol B cells') %>% 
   filter(reference == 'CD4 Memory T cells_near_Fol B cells') %>% 
-  vizTrends(lines = T, withPerms = T, sig.thresh = zsigs)
+  vizTrends(lines = T, withPerms = T, zSigThresh = zsigs)
 ```
 
 <img src="https://github.com/JEFworks/CRAWDAD/blob/main/docs/3_spleen_files/subset_trend.png?raw=true" height="250"/>
@@ -175,7 +177,7 @@ df_freq %>%
   geom_bar(stat = "identity", position = "dodge")
 ```
 
-<img src="https://github.com/JEFworks/CRAWDAD/blob/main/docs/3_spleen_files/counts.png?raw=true" height="250"/>
+<img src="https://github.com/JEFworks/CRAWDAD/blob/main/docs/3_spleen_files/proportions.png?raw=true" height="250"/>
 
 # KSFB Sample
 
@@ -189,7 +191,7 @@ ksfb <- ksfb %>%
 
 ## convert to SF
 ksfb <- crawdad::toSF(pos = ksfb[,c("x", "y")],
-                      celltypes = ksfb$celltypes)
+                      cellTypes = ksfb$celltypes)
 ksfb
 ```
 
@@ -205,7 +207,7 @@ xxcd <- xxcd %>%
 
 ## convert to SF
 xxcd <- crawdad::toSF(pos = xxcd[,c("x", "y")],
-                      celltypes = xxcd$celltypes)
+                      cellTypes = xxcd$celltypes)
 xxcd
 ```
 
@@ -221,7 +223,7 @@ pbvn <- pbvn %>%
 
 ## convert to SF
 pbvn <- crawdad::toSF(pos = pbvn[,c("x", "y")],
-                      celltypes = pbvn$celltypes)
+                      cellTypes = pbvn$celltypes)
 pbvn
 ```
 
@@ -237,7 +239,7 @@ fsld <- fsld %>%
 
 ## convert to SF
 fsld <- crawdad::toSF(pos = fsld[,c("x", "y")],
-                      celltypes = fsld$celltypes)
+                      cellTypes = fsld$celltypes)
 fsld
 ```
 
@@ -253,6 +255,6 @@ ngpl <- ngpl %>%
 
 ## convert to SF
 ngpl <- crawdad::toSF(pos = ngpl[,c("x", "y")],
-                      celltypes = ngpl$celltypes)
+                      cellTypes = ngpl$celltypes)
 ngpl
 ```

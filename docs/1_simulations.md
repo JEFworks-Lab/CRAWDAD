@@ -3,10 +3,16 @@ library(crawdad)
 library(tidyverse)
 ```
 
+    ## Warning: package 'ggplot2' was built under R version 4.3.1
+
+    ## Warning: package 'dplyr' was built under R version 4.3.1
+
+    ## Warning: package 'stringr' was built under R version 4.3.1
+
     ## ── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
-    ## ✔ dplyr     1.1.2     ✔ readr     2.1.4
-    ## ✔ forcats   1.0.0     ✔ stringr   1.5.0
-    ## ✔ ggplot2   3.4.2     ✔ tibble    3.2.1
+    ## ✔ dplyr     1.1.4     ✔ readr     2.1.4
+    ## ✔ forcats   1.0.0     ✔ stringr   1.5.1
+    ## ✔ ggplot2   3.5.1     ✔ tibble    3.2.1
     ## ✔ lubridate 1.9.2     ✔ tidyr     1.3.0
     ## ✔ purrr     1.0.1     
     ## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
@@ -20,19 +26,20 @@ ncores = 7
 
 # Load data
 
-Load data.frame of cell positions and labels and convert it to an `sf` object. This is because CRAWDAD builds upon the `sf` library in R.
+Load data.frame of cell positions and labels and convert it to an `sf`
+object. This is because CRAWDAD builds upon the `sf` library in R.
 
 ``` r
 data(sim)
 
-## convert to sp::SpatialPointsDataFrame
+## convert to sf
 cells <- crawdad:::toSF(pos = sim[,c("x", "y")],
-                        celltypes = sim$celltypes)
+                        cellTypes = sim$celltypes)
 ```
 
     ## Warning: 'celltypes' does not have levels. Creating levels from values
 
-    ## creating `sp::SpatialPointsDataFrame`
+    ## creating `sf` object
 
 # Make shuffled background
 
@@ -45,7 +52,7 @@ of shuffled datasets with the following code:
 ``` r
 ## generate background
 shuffle.list <- crawdad::makeShuffledCells(cells,
-                          scales = seq(100, 1000, by=50),
+                          scales = seq(100, 1000, by=100),
                           perms = 3,
                           ncores = ncores,
                           seed = 1,
@@ -72,24 +79,6 @@ shuffle.list <- crawdad::makeShuffledCells(cells,
 
     ## shuffling permutation 1 using seed 1
 
-    ## 150 unit scale
-
-    ## 196 tiles to shuffle...
-
-    ## shuffling permutation 2 using seed 2
-
-    ## 150 unit scale
-
-    ## 196 tiles to shuffle...
-
-    ## shuffling permutation 3 using seed 3
-
-    ## 150 unit scale
-
-    ## 196 tiles to shuffle...
-
-    ## shuffling permutation 1 using seed 1
-
     ## 200 unit scale
 
     ## 100 tiles to shuffle...
@@ -108,24 +97,6 @@ shuffle.list <- crawdad::makeShuffledCells(cells,
 
     ## shuffling permutation 1 using seed 1
 
-    ## 250 unit scale
-
-    ## 64 tiles to shuffle...
-
-    ## shuffling permutation 2 using seed 2
-
-    ## 250 unit scale
-
-    ## 81 tiles to shuffle...
-
-    ## shuffling permutation 3 using seed 3
-
-    ## 250 unit scale
-
-    ## 81 tiles to shuffle...
-
-    ## shuffling permutation 1 using seed 1
-
     ## 300 unit scale
 
     ## 49 tiles to shuffle...
@@ -144,24 +115,6 @@ shuffle.list <- crawdad::makeShuffledCells(cells,
 
     ## shuffling permutation 1 using seed 1
 
-    ## 350 unit scale
-
-    ## 36 tiles to shuffle...
-
-    ## shuffling permutation 2 using seed 2
-
-    ## 350 unit scale
-
-    ## 49 tiles to shuffle...
-
-    ## shuffling permutation 3 using seed 3
-
-    ## 350 unit scale
-
-    ## 49 tiles to shuffle...
-
-    ## shuffling permutation 1 using seed 1
-
     ## 400 unit scale
 
     ## 25 tiles to shuffle...
@@ -175,24 +128,6 @@ shuffle.list <- crawdad::makeShuffledCells(cells,
     ## shuffling permutation 3 using seed 3
 
     ## 400 unit scale
-
-    ## 36 tiles to shuffle...
-
-    ## shuffling permutation 1 using seed 1
-
-    ## 450 unit scale
-
-    ## 25 tiles to shuffle...
-
-    ## shuffling permutation 2 using seed 2
-
-    ## 450 unit scale
-
-    ## 25 tiles to shuffle...
-
-    ## shuffling permutation 3 using seed 3
-
-    ## 450 unit scale
 
     ## 36 tiles to shuffle...
 
@@ -216,24 +151,6 @@ shuffle.list <- crawdad::makeShuffledCells(cells,
 
     ## shuffling permutation 1 using seed 1
 
-    ## 550 unit scale
-
-    ## 16 tiles to shuffle...
-
-    ## shuffling permutation 2 using seed 2
-
-    ## 550 unit scale
-
-    ## 16 tiles to shuffle...
-
-    ## shuffling permutation 3 using seed 3
-
-    ## 550 unit scale
-
-    ## 25 tiles to shuffle...
-
-    ## shuffling permutation 1 using seed 1
-
     ## 600 unit scale
 
     ## 16 tiles to shuffle...
@@ -247,24 +164,6 @@ shuffle.list <- crawdad::makeShuffledCells(cells,
     ## shuffling permutation 3 using seed 3
 
     ## 600 unit scale
-
-    ## 16 tiles to shuffle...
-
-    ## shuffling permutation 1 using seed 1
-
-    ## 650 unit scale
-
-    ## 16 tiles to shuffle...
-
-    ## shuffling permutation 2 using seed 2
-
-    ## 650 unit scale
-
-    ## 16 tiles to shuffle...
-
-    ## shuffling permutation 3 using seed 3
-
-    ## 650 unit scale
 
     ## 16 tiles to shuffle...
 
@@ -288,24 +187,6 @@ shuffle.list <- crawdad::makeShuffledCells(cells,
 
     ## shuffling permutation 1 using seed 1
 
-    ## 750 unit scale
-
-    ## 9 tiles to shuffle...
-
-    ## shuffling permutation 2 using seed 2
-
-    ## 750 unit scale
-
-    ## 9 tiles to shuffle...
-
-    ## shuffling permutation 3 using seed 3
-
-    ## 750 unit scale
-
-    ## 16 tiles to shuffle...
-
-    ## shuffling permutation 1 using seed 1
-
     ## 800 unit scale
 
     ## 9 tiles to shuffle...
@@ -324,24 +205,6 @@ shuffle.list <- crawdad::makeShuffledCells(cells,
 
     ## shuffling permutation 1 using seed 1
 
-    ## 850 unit scale
-
-    ## 9 tiles to shuffle...
-
-    ## shuffling permutation 2 using seed 2
-
-    ## 850 unit scale
-
-    ## 9 tiles to shuffle...
-
-    ## shuffling permutation 3 using seed 3
-
-    ## 850 unit scale
-
-    ## 16 tiles to shuffle...
-
-    ## shuffling permutation 1 using seed 1
-
     ## 900 unit scale
 
     ## 9 tiles to shuffle...
@@ -355,24 +218,6 @@ shuffle.list <- crawdad::makeShuffledCells(cells,
     ## shuffling permutation 3 using seed 3
 
     ## 900 unit scale
-
-    ## 9 tiles to shuffle...
-
-    ## shuffling permutation 1 using seed 1
-
-    ## 950 unit scale
-
-    ## 9 tiles to shuffle...
-
-    ## shuffling permutation 2 using seed 2
-
-    ## 950 unit scale
-
-    ## 9 tiles to shuffle...
-
-    ## shuffling permutation 3 using seed 3
-
-    ## 950 unit scale
 
     ## 9 tiles to shuffle...
 
@@ -394,7 +239,7 @@ shuffle.list <- crawdad::makeShuffledCells(cells,
 
     ## 9 tiles to shuffle...
 
-    ## Time was 11.1 mins
+    ## Time was 0.66 mins
 
 # Run pairwise analysis
 
@@ -407,8 +252,8 @@ another given cell type compared to each shuffled scale of the data.
 ``` r
 ## find trends, passing background as parameter
 results <- crawdad::findTrends(cells,
-                        dist = 100,
-                        shuffle.list = shuffle.list,
+                        neighDist = 50,
+                        shuffleList = shuffle.list,
                         ncores = ncores,
                         verbose = TRUE, 
                         returnMeans = FALSE)
@@ -416,7 +261,7 @@ results <- crawdad::findTrends(cells,
 
     ## Evaluating significance for each cell type
 
-    ## using neighbor distance of 100
+    ## using neighbor distance of 50
 
     ## Calculating for pairwise combinations
 
@@ -428,7 +273,7 @@ results <- crawdad::findTrends(cells,
 
     ## D
 
-    ## Time was 1.23 mins
+    ## Time was 0.21 mins
 
 ``` r
 ## convert results to data.frame
@@ -438,20 +283,20 @@ dat <- crawdad::meltResultsList(results, withPerms = T)
 # Visualize results
 
 ``` r
-## multiple-test correction
-ntests <- length(unique(dat$reference)) * length(unique(dat$reference))
-psig <- 0.05/ntests
-zsig <- round(qnorm(psig/2, lower.tail = F), 2)
+## calculate the zscore for the multiple-test correction
+zsig <- correctZBonferroni(dat)
 ```
 
 Summary visualization of CRAWDAD’s multi-scale cell-type spatial
 relationship analysis.
 
 ``` r
-vizColocDotplot(dat, reorder = TRUE, zsig.thresh = zsig, zscore.limit = zsig*2) +
+vizColocDotplot(dat, reorder = TRUE, zSigThresh = zsig, zScoreLimit = zsig*2) +
   theme(legend.position='right',
         axis.text.x = element_text(angle = 45, h = 0))
 ```
+
+    ## this function will be deprecated, use vizRelationships instead
 
     ## Scale for x is already present.
     ## Adding another scale for x, which will replace the existing scale.
@@ -464,7 +309,7 @@ Visualize specific trends.
 dat_filter <- dat %>% 
   filter(reference == 'C') %>% 
   filter(neighbor == 'B')
-vizTrends(dat_filter, lines = T, withPerms = T, sig.thresh = zsig)
+vizTrends(dat_filter, lines = T, withPerms = T, zSigThresh = zsig)
 ```
 
 ![](1_simulations_files/figure-markdown_github/c_b-1.png)
@@ -473,7 +318,7 @@ vizTrends(dat_filter, lines = T, withPerms = T, sig.thresh = zsig)
 dat_filter <- dat %>% 
   filter(reference == 'A') %>% 
   filter(neighbor == 'B')
-vizTrends(dat_filter, lines = T, withPerms = T, sig.thresh = zsig)
+vizTrends(dat_filter, lines = T, withPerms = T, zSigThresh = zsig)
 ```
 
 ![](1_simulations_files/figure-markdown_github/a_b-1.png)

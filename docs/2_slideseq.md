@@ -6,10 +6,16 @@ library(crawdad)
 library(tidyverse)
 ```
 
+    ## Warning: package 'ggplot2' was built under R version 4.3.1
+
+    ## Warning: package 'dplyr' was built under R version 4.3.1
+
+    ## Warning: package 'stringr' was built under R version 4.3.1
+
     ## ── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
-    ## ✔ dplyr     1.1.2     ✔ readr     2.1.4
-    ## ✔ forcats   1.0.0     ✔ stringr   1.5.0
-    ## ✔ ggplot2   3.4.2     ✔ tibble    3.2.1
+    ## ✔ dplyr     1.1.4     ✔ readr     2.1.4
+    ## ✔ forcats   1.0.0     ✔ stringr   1.5.1
+    ## ✔ ggplot2   3.5.1     ✔ tibble    3.2.1
     ## ✔ lubridate 1.9.2     ✔ tidyr     1.3.0
     ## ✔ purrr     1.0.1     
     ## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
@@ -28,12 +34,12 @@ data(slide)
 
 ## convert to sf
 slide <- crawdad:::toSF(pos = slide[,c("x", "y")],
-                        celltypes = slide$celltypes)
+                        cellTypes = slide$celltypes)
 ```
 
     ## Warning: 'celltypes' does not have levels. Creating levels from values
 
-    ## creating `sp::SpatialPointsDataFrame`
+    ## creating `sf` object
 
 # Visualize celltypes
 
@@ -88,8 +94,8 @@ shuffle.list <- crawdad:::makeShuffledCells(slide,
 ``` r
 ## find trends, passing background as parameter
 results <- crawdad::findTrends(slide,
-                        dist = 100,
-                        shuffle.list = shuffle.list,
+                        neighDist = 50,
+                        shuffleList = shuffle.list,
                         ncores = ncores,
                         verbose = FALSE,
                         returnMeans = FALSE)
@@ -113,10 +119,14 @@ Summary visualization of CRAWDAD’s multi-scale cell-type spatial
 relationship analysis.
 
 ``` r
-vizColocDotplot(dat, reorder = TRUE, zsig.thresh = zsig, zscore.limit = zsig*2) +
+vizColocDotplot(dat, reorder = TRUE, 
+                zSigThresh = zsig, zScoreLimit = zsig*2,
+                dotSizes = c(1,13)) +
   theme(legend.position='right',
         axis.text.x = element_text(angle = 45, h = 0))
 ```
+
+    ## this function will be deprecated, use vizRelationships instead
 
     ## Scale for x is already present.
     ## Adding another scale for x, which will replace the existing scale.
@@ -129,7 +139,7 @@ Visualize specific trends.
 dat_filter <- dat %>% 
   filter(reference == 'Purkinje') %>% 
   filter(neighbor == 'Bergmann')
-vizTrends(dat_filter, lines = T, withPerms = T, sig.thresh = zsig)
+vizTrends(dat_filter, lines = T, withPerms = T, zSigThresh = zsig)
 ```
 
 ![](2_slideseq_files/figure-markdown_github/purk_berg-1.png)
@@ -138,7 +148,7 @@ vizTrends(dat_filter, lines = T, withPerms = T, sig.thresh = zsig)
 dat_filter <- dat %>% 
   filter(reference == 'Purkinje') %>% 
   filter(neighbor == 'Oligodendrocytes')
-vizTrends(dat_filter, lines = T, withPerms = T, sig.thresh = zsig)
+vizTrends(dat_filter, lines = T, withPerms = T, zSigThresh = zsig)
 ```
 
 ![](2_slideseq_files/figure-markdown_github/purk_olig-1.png)

@@ -38,7 +38,7 @@ data(sim)
 
 ## convert to sf
 cells <- crawdad:::toSF(pos = sim[,c("x", "y")],
-                        celltypes = sim$celltypes)
+                        cellTypes = sim$celltypes)
 
 ```
 
@@ -66,8 +66,8 @@ We can identify trends that describe spatial relationships between pairwise comb
 
 ## find trends, passing background as parameter
 results <- crawdad::findTrends(cells,
-                        dist = 100,
-                        shuffle.list = shuffle.list,
+                        neighDist = 50,
+                        shuffleList = shuffle.list,
                         ncores = ncores,
                         verbose = TRUE, 
                         returnMeans = FALSE)
@@ -94,7 +94,7 @@ Summary visualization of CRAWDAD’s multi-scale cell-type spatial relationship 
 
 ```{r colocalization, warning=FALSE}
 
-vizColocDotplot(dat, reorder = TRUE, zsig.thresh = zsig, zscore.limit = zsig*2) +
+vizColocDotplot(dat, reorder = TRUE, zSigThresh = zsig, zScoreLimit = zsig*2) +
   theme(legend.position='right',
         axis.text.x = element_text(angle = 45, h = 0))
 
@@ -107,7 +107,7 @@ Visualize specific trends.
 dat_filter <- dat %>% 
   filter(reference == 'C') %>% 
   filter(neighbor == 'B')
-vizTrends(dat_filter, lines = T, withPerms = T, sig.thresh = zsig)
+vizTrends(dat_filter, lines = T, withPerms = T, zSigThresh = zsig)
 
 ```
 
@@ -116,6 +116,6 @@ vizTrends(dat_filter, lines = T, withPerms = T, sig.thresh = zsig)
 dat_filter <- dat %>% 
   filter(reference == 'A') %>% 
   filter(neighbor == 'B')
-vizTrends(dat_filter, lines = T, withPerms = T, sig.thresh = zsig)
+vizTrends(dat_filter, lines = T, withPerms = T, zSigThresh = zsig)
 
 ```

@@ -6,10 +6,16 @@ library(crawdad)
 library(tidyverse)
 ```
 
+    ## Warning: package 'ggplot2' was built under R version 4.3.1
+
+    ## Warning: package 'dplyr' was built under R version 4.3.1
+
+    ## Warning: package 'stringr' was built under R version 4.3.1
+
     ## ── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
-    ## ✔ dplyr     1.1.2     ✔ readr     2.1.4
-    ## ✔ forcats   1.0.0     ✔ stringr   1.5.0
-    ## ✔ ggplot2   3.4.2     ✔ tibble    3.2.1
+    ## ✔ dplyr     1.1.4     ✔ readr     2.1.4
+    ## ✔ forcats   1.0.0     ✔ stringr   1.5.1
+    ## ✔ ggplot2   3.5.1     ✔ tibble    3.2.1
     ## ✔ lubridate 1.9.2     ✔ tidyr     1.3.0
     ## ✔ purrr     1.0.1     
     ## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
@@ -31,12 +37,12 @@ seq$y <- -seq$y
 
 ## convert to sf
 seq <- crawdad:::toSF(pos = seq[,c("x", "y")],
-                      celltypes = seq$celltypes)
+                      cellTypes = seq$celltypes)
 ```
 
     ## Warning: 'celltypes' does not have levels. Creating levels from values
 
-    ## creating `sp::SpatialPointsDataFrame`
+    ## creating `sf` object
 
 # Visualize celltypes
 
@@ -93,183 +99,183 @@ shuffle.list <- crawdad:::makeShuffledCells(seq,
 
     ## 100 unit scale
 
-    ## 3570 tiles to shuffle...
+    ## 176 tiles to shuffle...
 
     ## shuffling permutation 2 using seed 2
 
     ## 100 unit scale
 
-    ## 3692 tiles to shuffle...
+    ## 204 tiles to shuffle...
 
     ## shuffling permutation 3 using seed 3
 
     ## 100 unit scale
 
-    ## 3692 tiles to shuffle...
+    ## 204 tiles to shuffle...
 
     ## shuffling permutation 1 using seed 1
 
     ## 200 unit scale
-
-    ## 910 tiles to shuffle...
-
-    ## shuffling permutation 2 using seed 2
-
-    ## 200 unit scale
-
-    ## 936 tiles to shuffle...
-
-    ## shuffling permutation 3 using seed 3
-
-    ## 200 unit scale
-
-    ## 972 tiles to shuffle...
-
-    ## shuffling permutation 1 using seed 1
-
-    ## 300 unit scale
-
-    ## 408 tiles to shuffle...
-
-    ## shuffling permutation 2 using seed 2
-
-    ## 300 unit scale
-
-    ## 432 tiles to shuffle...
-
-    ## shuffling permutation 3 using seed 3
-
-    ## 300 unit scale
-
-    ## 432 tiles to shuffle...
-
-    ## shuffling permutation 1 using seed 1
-
-    ## 400 unit scale
-
-    ## 234 tiles to shuffle...
-
-    ## shuffling permutation 2 using seed 2
-
-    ## 400 unit scale
-
-    ## 252 tiles to shuffle...
-
-    ## shuffling permutation 3 using seed 3
-
-    ## 400 unit scale
-
-    ## 266 tiles to shuffle...
-
-    ## shuffling permutation 1 using seed 1
-
-    ## 500 unit scale
-
-    ## 154 tiles to shuffle...
-
-    ## shuffling permutation 2 using seed 2
-
-    ## 500 unit scale
-
-    ## 165 tiles to shuffle...
-
-    ## shuffling permutation 3 using seed 3
-
-    ## 500 unit scale
-
-    ## 165 tiles to shuffle...
-
-    ## shuffling permutation 1 using seed 1
-
-    ## 600 unit scale
-
-    ## 108 tiles to shuffle...
-
-    ## shuffling permutation 2 using seed 2
-
-    ## 600 unit scale
-
-    ## 108 tiles to shuffle...
-
-    ## shuffling permutation 3 using seed 3
-
-    ## 600 unit scale
-
-    ## 130 tiles to shuffle...
-
-    ## shuffling permutation 1 using seed 1
-
-    ## 700 unit scale
-
-    ## 80 tiles to shuffle...
-
-    ## shuffling permutation 2 using seed 2
-
-    ## 700 unit scale
-
-    ## 88 tiles to shuffle...
-
-    ## shuffling permutation 3 using seed 3
-
-    ## 700 unit scale
-
-    ## 88 tiles to shuffle...
-
-    ## shuffling permutation 1 using seed 1
-
-    ## 800 unit scale
-
-    ## 63 tiles to shuffle...
-
-    ## shuffling permutation 2 using seed 2
-
-    ## 800 unit scale
-
-    ## 70 tiles to shuffle...
-
-    ## shuffling permutation 3 using seed 3
-
-    ## 800 unit scale
-
-    ## 80 tiles to shuffle...
-
-    ## shuffling permutation 1 using seed 1
-
-    ## 900 unit scale
 
     ## 48 tiles to shuffle...
 
     ## shuffling permutation 2 using seed 2
 
-    ## 900 unit scale
+    ## 200 unit scale
 
     ## 54 tiles to shuffle...
 
     ## shuffling permutation 3 using seed 3
 
-    ## 900 unit scale
+    ## 200 unit scale
 
     ## 63 tiles to shuffle...
 
     ## shuffling permutation 1 using seed 1
 
+    ## 300 unit scale
+
+    ## 24 tiles to shuffle...
+
+    ## shuffling permutation 2 using seed 2
+
+    ## 300 unit scale
+
+    ## 24 tiles to shuffle...
+
+    ## shuffling permutation 3 using seed 3
+
+    ## 300 unit scale
+
+    ## 30 tiles to shuffle...
+
+    ## shuffling permutation 1 using seed 1
+
+    ## 400 unit scale
+
+    ## 12 tiles to shuffle...
+
+    ## shuffling permutation 2 using seed 2
+
+    ## 400 unit scale
+
+    ## 20 tiles to shuffle...
+
+    ## shuffling permutation 3 using seed 3
+
+    ## 400 unit scale
+
+    ## 20 tiles to shuffle...
+
+    ## shuffling permutation 1 using seed 1
+
+    ## 500 unit scale
+
+    ## 12 tiles to shuffle...
+
+    ## shuffling permutation 2 using seed 2
+
+    ## 500 unit scale
+
+    ## 12 tiles to shuffle...
+
+    ## shuffling permutation 3 using seed 3
+
+    ## 500 unit scale
+
+    ## 12 tiles to shuffle...
+
+    ## shuffling permutation 1 using seed 1
+
+    ## 600 unit scale
+
+    ## 6 tiles to shuffle...
+
+    ## shuffling permutation 2 using seed 2
+
+    ## 600 unit scale
+
+    ## 9 tiles to shuffle...
+
+    ## shuffling permutation 3 using seed 3
+
+    ## 600 unit scale
+
+    ## 12 tiles to shuffle...
+
+    ## shuffling permutation 1 using seed 1
+
+    ## 700 unit scale
+
+    ## 6 tiles to shuffle...
+
+    ## shuffling permutation 2 using seed 2
+
+    ## 700 unit scale
+
+    ## 6 tiles to shuffle...
+
+    ## shuffling permutation 3 using seed 3
+
+    ## 700 unit scale
+
+    ## 9 tiles to shuffle...
+
+    ## shuffling permutation 1 using seed 1
+
+    ## 800 unit scale
+
+    ## 4 tiles to shuffle...
+
+    ## shuffling permutation 2 using seed 2
+
+    ## 800 unit scale
+
+    ## 6 tiles to shuffle...
+
+    ## shuffling permutation 3 using seed 3
+
+    ## 800 unit scale
+
+    ## 9 tiles to shuffle...
+
+    ## shuffling permutation 1 using seed 1
+
+    ## 900 unit scale
+
+    ## 4 tiles to shuffle...
+
+    ## shuffling permutation 2 using seed 2
+
+    ## 900 unit scale
+
+    ## 6 tiles to shuffle...
+
+    ## shuffling permutation 3 using seed 3
+
+    ## 900 unit scale
+
+    ## 6 tiles to shuffle...
+
+    ## shuffling permutation 1 using seed 1
+
     ## 1000 unit scale
 
-    ## 42 tiles to shuffle...
+    ## 4 tiles to shuffle...
 
     ## shuffling permutation 2 using seed 2
 
     ## 1000 unit scale
 
-    ## 48 tiles to shuffle...
+    ## 4 tiles to shuffle...
 
     ## shuffling permutation 3 using seed 3
 
     ## 1000 unit scale
 
-    ## 48 tiles to shuffle...
+    ## 6 tiles to shuffle...
 
-    ## Time was 6.45 mins
+    ## Time was 0.72 mins
 
 ``` r
 ## note: 1.94 minutes with 7 M2 cores
@@ -280,8 +286,8 @@ shuffle.list <- crawdad:::makeShuffledCells(seq,
 ``` r
 ## find trends, passing background as parameter
 results <- crawdad::findTrends(seq,
-                        dist = 100,
-                        shuffle.list = shuffle.list,
+                        neighDist = 50,
+                        shuffleList = shuffle.list,
                         ncores = ncores,
                         verbose = TRUE,
                         returnMeans = FALSE)
@@ -289,7 +295,7 @@ results <- crawdad::findTrends(seq,
 
     ## Evaluating significance for each cell type
 
-    ## using neighbor distance of 100
+    ## using neighbor distance of 50
 
     ## Calculating for pairwise combinations
 
@@ -337,7 +343,7 @@ results <- crawdad::findTrends(seq,
 
     ## Surface ectoderm
 
-    ## Time was 1.42 mins
+    ## Time was 2.86 mins
 
 ``` r
 ## note: 1.73 minutes with 7 M2 cores
@@ -351,20 +357,25 @@ dat <- crawdad::meltResultsList(results, withPerms = T)
 # Visualize results
 
 ``` r
-## multiple-test correction
-ntests <- length(unique(dat$reference)) * length(unique(dat$reference))
-psig <- 0.05/ntests
-zsig <- round(qnorm(psig/2, lower.tail = F), 2)
+## calculate the zscore for the multiple-test correction
+zsig <- correctZBonferroni(dat)
 ```
 
 Summary visualization of CRAWDAD’s multi-scale cell-type spatial
 relationship analysis.
 
 ``` r
-vizColocDotplot(dat, reorder = TRUE, zsig.thresh = zsig, zscore.limit = zsig*2) +
+vizColocDotplot(dat, reorder = TRUE, 
+                zSigThresh = zsig, zScoreLimit = zsig*2, 
+                dotSizes = c(1,11)) +
   theme(legend.position='right',
         axis.text.x = element_text(angle = 45, h = 0))
 ```
+
+    ## this function will be deprecated, use vizRelationships instead
+
+    ## Scale for x is already present.
+    ## Adding another scale for x, which will replace the existing scale.
 
 ![](2_seqfish_files/figure-markdown_github/colocalization-1.png)
 
@@ -374,7 +385,7 @@ Visualize specific trends.
 dat_filter <- dat %>% 
   filter(reference == 'Endothelium') %>% 
   filter(neighbor == 'Haematoendothelial progenitors')
-vizTrends(dat_filter, lines = T, withPerms = T, sig.thresh = zsig)
+vizTrends(dat_filter, lines = T, withPerms = T, zSigThresh = zsig)
 ```
 
 ![](2_seqfish_files/figure-markdown_github/endo_haematoprog-1.png)
@@ -383,7 +394,7 @@ vizTrends(dat_filter, lines = T, withPerms = T, sig.thresh = zsig)
 dat_filter <- dat %>% 
   filter(reference == 'Intermediate mesoderm') %>% 
   filter(neighbor == 'Lateral plate mesoderm')
-vizTrends(dat_filter, lines = T, withPerms = T, sig.thresh = zsig)
+vizTrends(dat_filter, lines = T, withPerms = T, zSigThresh = zsig)
 ```
 
 ![](2_seqfish_files/figure-markdown_github/intermeso_latmeso-1.png)
