@@ -36,7 +36,7 @@ library(tidyverse)
 
 ```{r}
 
-ncores <- 7
+ncores <- 2
 
 ```
 
