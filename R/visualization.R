@@ -95,130 +95,6 @@ vizClusters <- function(cells, ofInterest = NULL,
 
 
 
-
-
-#' Visualize each cluster separately
-#' 
-#' @description Returns a gridExtra of grobs.
-#'     A single plot where each panel is a different cluster highlighted on the tissue
-#' 
-#' @param cells either a data.frame or sf object with cell spatial coordinates
-#' @param coms a factor of cell type labels for the cells
-#' @param axisAdj how much to increase axis ranges. If tissue, 100 okay, if embedding, 1 ok (default: 100)
-#' @param size size of points (default: 0.01)
-#' @param a alpha of points (default: 1; no transparency)
-#' @param nacol color of the NA values for cells of "other" cluster (default: (transparentCol(color = "gray", percent = 50)))
-#' @param clustcol color of the cells of the given cluster (default: red)
-#' 
-#' @return plot where each panel is a different celltype
-#' 
-#' @examples 
-#' \dontrun{
-#' data(slide)
-#' vizEachCluster(slide, coms = slide$celltypes)
-#' }
-#' 
-#' @export
-vizEachCluster <- function(cells, coms, axisAdj = 1, s = 0.5, a = 1,
-                           nacol = transparentCol(color = "gray", percent = 50),
-                           clustcol = "red"){
-  
-  ## if cells are a data.frame or matrix  with "x" and "y" cell coordinate columns
-  if( class(cells)[1] %in% c("data.frame", "matrix") ){
-    pos <- cells[,c("x", "y")]
-    ctemp <- factor(coms)
-    names(ctemp) <- rownames(cells)
-  }
-  
-  ## if cells are the sf object
-  if( any(class(cells) == "sf") ){
-    p <- sfToDF(cells)
-    pos <- p[,c("x", "y")]
-    ctemp <- factor(coms)
-    names(ctemp) <- rownames(cells)
-  }
-  
-  ps <- lapply(levels(ctemp), function(c) {
-    
-    tempCom <- ctemp
-    tempCom[which(!tempCom %in% c(c))] <- NA
-    tempCom <- droplevels(tempCom)
-    
-    cluster_cell_id <- which(tempCom == c)
-    other_cells_id <- as.vector(which(is.na(tempCom)))
-    
-    dat <- data.frame("x" = pos[,"x"],
-                      "y" = pos[,"y"])
-    
-    dat_cluster <- data.frame("x" = pos[cluster_cell_id,"x"],
-                              "y" = pos[cluster_cell_id,"y"],
-                              "Clusters" = c)
-    
-    dat_other <- data.frame("x" = pos[other_cells_id,"x"],
-                            "y" = pos[other_cells_id,"y"],
-                            "Clusters" = NA)
-    
-    plt <- ggplot2::ggplot() +
-      
-      ## plot other cells
-      scattermore::geom_scattermore(data = dat_other, ggplot2::aes(x = x, y = y,
-                                                                   color = Clusters), pointsize = s, alpha = a,
-                                    pixels=c(1000,1000)) +
-      ## cluster cells on top
-      scattermore::geom_scattermore(data = dat_cluster, ggplot2::aes(x = x, y = y,
-                                                                     color = Clusters), pointsize = s, alpha = a,
-                                    pixels=c(1000,1000)) +
-      
-      ggplot2::scale_color_manual(values = c("red"), na.value = nacol) +
-      
-      ggplot2::scale_y_continuous(expand = c(0, 0), limits = c( min(dat$y)-axisAdj, max(dat$y)+axisAdj)) +
-      ggplot2::scale_x_continuous(expand = c(0, 0), limits = c( min(dat$x)-axisAdj, max(dat$x)+axisAdj) ) +
-      
-      ggplot2::labs(title = c, #paste0("c", c, ", volume normalized"),
-                    x = "x",
-                    y = "y") +
-      
-      ggplot2::theme_classic() +
-      ggplot2::theme(axis.text.x = ggplot2::element_text(size=10, color = "black"),
-                     axis.text.y = ggplot2::element_text(size=10, color = "black"),
-                     axis.title.y = ggplot2::element_text(size=10),
-                     axis.title.x = ggplot2::element_text(size=10),
-                     axis.ticks.x = ggplot2::element_blank(),
-                     plot.title = ggplot2::element_text(size=10),
-                     legend.text = ggplot2::element_blank(),
-                     legend.title = ggplot2::element_blank(),
-                     legend.background = ggplot2::element_blank(),
-                     panel.background = ggplot2::element_blank(),
-                     plot.background = ggplot2::element_blank(),
-                     panel.grid.major.y =  ggplot2::element_blank(),
-                     axis.line = ggplot2::element_line(linewidth = 1, colour = "black"),
-                     plot.margin = ggplot2::unit(c(1,1,1,1), "pt"), # change default margins around each plot
-                     legend.position="none"
-      ) +
-      
-      ggplot2::coord_equal()
-    
-    plt
-    
-  })
-  
-  numplots <- length(levels(ctemp))
-  numcols <- 4
-  numrows <- ceiling(numplots/numcols)
-  numpanels <- numcols * numrows
-  
-  panel_layout <- t(matrix(data = 1:numpanels, nrow = numrows, ncol = numcols))
-  
-  p <- gridExtra::grid.arrange(
-    grobs = ps,
-    layout_matrix = panel_layout
-  )
-  
-  p
-}
-
-
-
 #' Visualize grids and clusters
 #' 
 #' @description Uses the cells sf object and size of grid to visualize the grids 
@@ -1125,7 +1001,7 @@ vizColocDotplot <- function(dat, zSigThresh = 1.96, pSigThresh = NULL,
 #' @param ofInterest a vector of specific clusters to visualize (default; NULL)
 #' @param title title of plot (default: NULL)
 #' @param axisAdj how much to increase axis ranges. If tissue, 100 okay, if embedding, 1 ok (default: 100)
-#' @param size size of points (default: 0.01)
+#' @param s size of points (default: 0.01)
 #' @param a alpha of points (default: 1; no transparency)
 #' @param nacol color of the NA values for cells of "other" cluster (default: (transparentCol(color = "gray", percent = 50)))
 #' 
@@ -1245,6 +1121,130 @@ vizAllClusters <- function(cells, coms, ofInterest = NULL,
   
   plt
   
+}
+
+
+
+#' Visualize each cluster separately
+#' 
+#' @description Returns a gridExtra of grobs.
+#'     A single plot where each panel is a different cluster highlighted on the tissue
+#' 
+#' @param cells either a data.frame or sf object with cell spatial coordinates
+#' @param coms a factor of cell type labels for the cells
+#' @param axisAdj how much to increase axis ranges. If tissue, 100 okay, if embedding, 1 ok (default: 100)
+#' @param s size of points (default: 0.01)
+#' @param a alpha of points (default: 1; no transparency)
+#' @param nacol color of the NA values for cells of "other" cluster (default: (transparentCol(color = "gray", percent = 50)))
+#' @param clustcol color of the cells of the given cluster (default: red)
+#' 
+#' @return plot where each panel is a different celltype
+#' 
+#' @examples 
+#' \dontrun{
+#' data(slide)
+#' vizEachCluster(slide, coms = slide$celltypes)
+#' }
+#' 
+#' @export
+vizEachCluster <- function(cells, coms, axisAdj = 1, s = 0.5, a = 1,
+                           nacol = transparentCol(color = "gray", percent = 50),
+                           clustcol = "red"){
+  
+  .Deprecated("vizEachCluster")
+  
+  ## if cells are a data.frame or matrix  with "x" and "y" cell coordinate columns
+  if( class(cells)[1] %in% c("data.frame", "matrix") ){
+    pos <- cells[,c("x", "y")]
+    ctemp <- factor(coms)
+    names(ctemp) <- rownames(cells)
+  }
+  
+  ## if cells are the sf object
+  if( any(class(cells) == "sf") ){
+    p <- sfToDF(cells)
+    pos <- p[,c("x", "y")]
+    ctemp <- factor(coms)
+    names(ctemp) <- rownames(cells)
+  }
+  
+  ps <- lapply(levels(ctemp), function(c) {
+    
+    tempCom <- ctemp
+    tempCom[which(!tempCom %in% c(c))] <- NA
+    tempCom <- droplevels(tempCom)
+    
+    cluster_cell_id <- which(tempCom == c)
+    other_cells_id <- as.vector(which(is.na(tempCom)))
+    
+    dat <- data.frame("x" = pos[,"x"],
+                      "y" = pos[,"y"])
+    
+    dat_cluster <- data.frame("x" = pos[cluster_cell_id,"x"],
+                              "y" = pos[cluster_cell_id,"y"],
+                              "Clusters" = c)
+    
+    dat_other <- data.frame("x" = pos[other_cells_id,"x"],
+                            "y" = pos[other_cells_id,"y"],
+                            "Clusters" = NA)
+    
+    plt <- ggplot2::ggplot() +
+      
+      ## plot other cells
+      scattermore::geom_scattermore(data = dat_other, ggplot2::aes(x = x, y = y,
+                                                                   color = Clusters), pointsize = s, alpha = a,
+                                    pixels=c(1000,1000)) +
+      ## cluster cells on top
+      scattermore::geom_scattermore(data = dat_cluster, ggplot2::aes(x = x, y = y,
+                                                                     color = Clusters), pointsize = s, alpha = a,
+                                    pixels=c(1000,1000)) +
+      
+      ggplot2::scale_color_manual(values = c("red"), na.value = nacol) +
+      
+      ggplot2::scale_y_continuous(expand = c(0, 0), limits = c( min(dat$y)-axisAdj, max(dat$y)+axisAdj)) +
+      ggplot2::scale_x_continuous(expand = c(0, 0), limits = c( min(dat$x)-axisAdj, max(dat$x)+axisAdj) ) +
+      
+      ggplot2::labs(title = c, #paste0("c", c, ", volume normalized"),
+                    x = "x",
+                    y = "y") +
+      
+      ggplot2::theme_classic() +
+      ggplot2::theme(axis.text.x = ggplot2::element_text(size=10, color = "black"),
+                     axis.text.y = ggplot2::element_text(size=10, color = "black"),
+                     axis.title.y = ggplot2::element_text(size=10),
+                     axis.title.x = ggplot2::element_text(size=10),
+                     axis.ticks.x = ggplot2::element_blank(),
+                     plot.title = ggplot2::element_text(size=10),
+                     legend.text = ggplot2::element_blank(),
+                     legend.title = ggplot2::element_blank(),
+                     legend.background = ggplot2::element_blank(),
+                     panel.background = ggplot2::element_blank(),
+                     plot.background = ggplot2::element_blank(),
+                     panel.grid.major.y =  ggplot2::element_blank(),
+                     axis.line = ggplot2::element_line(linewidth = 1, colour = "black"),
+                     plot.margin = ggplot2::unit(c(1,1,1,1), "pt"), # change default margins around each plot
+                     legend.position="none"
+      ) +
+      
+      ggplot2::coord_equal()
+    
+    plt
+    
+  })
+  
+  numplots <- length(levels(ctemp))
+  numcols <- 4
+  numrows <- ceiling(numplots/numcols)
+  numpanels <- numcols * numrows
+  
+  panel_layout <- t(matrix(data = 1:numpanels, nrow = numrows, ncol = numcols))
+  
+  p <- gridExtra::grid.arrange(
+    grobs = ps,
+    layout_matrix = panel_layout
+  )
+  
+  p
 }
 
 

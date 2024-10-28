@@ -7,7 +7,8 @@
 #' 
 #' @param cells sf object, with celltypes features and point geometries
 #' @param referenceIds vector of cell ids (rownames) in `cells` to be used as the reference cell set
-#' @param dist distance to define neighbors (default = 100)
+#' @param removeRef boolean; remove reference (default: TRUE)
+#' @param dist distance to define neighbors (default = 50)
 #' @param returnSF boolean to return either an sf object of just the neighbors
 #' otherwise returns factor where non neighbor cells are NAs. (default: FALSE)
 #'
@@ -27,7 +28,7 @@
 getNeighbors <- function(cells,
                          referenceIds,
                          removeRef = TRUE,
-                         dist = 100,
+                         dist = 50,
                          returnSF = FALSE){
   
   ## get the reference cells

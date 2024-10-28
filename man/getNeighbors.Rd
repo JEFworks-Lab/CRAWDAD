@@ -8,7 +8,7 @@ getNeighbors(
   cells,
   referenceIds,
   removeRef = TRUE,
-  dist = 100,
+  dist = 50,
   returnSF = FALSE
 )
 }
@@ -17,7 +17,9 @@ getNeighbors(
 
 \item{referenceIds}{vector of cell ids (rownames) in \code{cells} to be used as the reference cell set}
 
-\item{dist}{distance to define neighbors (default = 100)}
+\item{removeRef}{boolean; remove reference (default: TRUE)}
+
+\item{dist}{distance to define neighbors (default = 50)}
 
 \item{returnSF}{boolean to return either an sf object of just the neighbors
 otherwise returns factor where non neighbor cells are NAs. (default: FALSE)}

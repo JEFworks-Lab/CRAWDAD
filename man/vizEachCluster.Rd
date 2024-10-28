@@ -21,13 +21,13 @@ vizEachCluster(
 
 \item{axisAdj}{how much to increase axis ranges. If tissue, 100 okay, if embedding, 1 ok (default: 100)}
 
+\item{s}{size of points (default: 0.01)}
+
 \item{a}{alpha of points (default: 1; no transparency)}
 
 \item{nacol}{color of the NA values for cells of "other" cluster (default: (transparentCol(color = "gray", percent = 50)))}
 
 \item{clustcol}{color of the cells of the given cluster (default: red)}
-
-\item{size}{size of points (default: 0.01)}
 }
 \value{
 plot where each panel is a different celltype
