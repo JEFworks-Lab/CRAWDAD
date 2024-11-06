@@ -19,7 +19,6 @@ Authors@R:
            email = "jeanfan@jhu.edu",
            comment = c(ORCID = "0000-0002-0212-5451"))
   )
-Maintainer: Rafael dos Santos Peixoto
 URL: https://github.com/JEFworks-Lab/crawdad
 BugReports: https://github.com/JEFworks-Lab/crawdad/issues
 Description: Here we present CRAWDAD, a workflow for statistically evaluating the spatial colocalization or separation of neighboring cell types and distinguishes between different cell-type colocalization patterns that vary across spatial scales. The workflow is demonstrated on simulated and real tissue data and is shown to be capable of detecting known cell type colocalizations as well as identifying novel spatial relationships. CRAWDAD is expected to facilitate the identification and characterization of cell colocalization relationships in complex tissues to advance our understanding of the relationship between cell-type organization and tissue function.
