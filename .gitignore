@@ -10,3 +10,4 @@ rockfish_hpc/
 squidpy/
 docs
 !docs/img/overview_github.png
+!docs/img/*.md
