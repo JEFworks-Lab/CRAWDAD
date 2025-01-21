@@ -10,7 +10,7 @@ vizClusters(
   pointSize = 1,
   alpha = 0.5,
   ref = NULL,
-  dist = NULL,
+  neighDist = NULL,
   lineWidth = 0.1
 )
 }
@@ -26,7 +26,7 @@ vizClusters(
 \item{ref}{character; reference cell type to draw the neighborhood
 around. If NULL, it will not create the neighborhood (default: NULL)}
 
-\item{dist}{numeric; distance to define neighbor cells with respect to each
+\item{neighDist}{numeric; distance to define neighbor cells with respect to each
 reference cell. If NULL, it will not create the neighborhood (default: NULL)}
 
 \item{lineWidth}{numeric; width of neighborhood line}
