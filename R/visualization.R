@@ -16,7 +16,7 @@
 #' @param alpha numeric; transparency of points
 #' @param ref character; reference cell type to draw the neighborhood 
 #' around. If NULL, it will not create the neighborhood (default: NULL) 
-#' @param dist numeric; distance to define neighbor cells with respect to each 
+#' @param neighDist numeric; distance to define neighbor cells with respect to each 
 #' reference cell. If NULL, it will not create the neighborhood (default: NULL)
 #' @param lineWidth numeric; width of neighborhood line
 #' 
@@ -69,9 +69,9 @@ vizClusters <- function(cells, ofInterest = NULL,
     ggplot2::scale_color_manual(values = cluster_cols, na.value = "#E6E6E6")
   plt
   
-  if( (!is.null(ref)) & (!is.null(dist)) ) {
+  if( (!is.null(ref)) & (!is.null(neighDist)) ) {
     ## create a circle around each reference cell 
-    buffer <- sf::st_buffer(cells[cells$celltypes == ref,], dist) 
+    buffer <- sf::st_buffer(cells[cells$celltypes == ref,], neighDist) 
     ## merge the circles into a neighborhood (can take some time to compute)
     neighborhood <- sf::st_union(buffer)
     ## add to plot
@@ -592,7 +592,7 @@ transparentCol <- function(color, percent = 50, name = NULL) {
 #' data(sim)
 #' cells <- toSF(pos = sim[,c("x", "y")], celltypes = sim$celltypes)
 #' shuffleList <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000), ncores = 2)
-#' results <- findTrends(cells, dist = 100, shuffleList = shuffleList, ncores = 2)
+#' results <- findTrends(cells, neighDist = 100, shuffleList = shuffleList, ncores = 2)
 #' dat <- meltResultsList(results)
 #' vizRelationships(dat)
 #' }
@@ -850,7 +850,7 @@ vizVarianceSamples <- function(aucSamples) {
 #' data(sim)
 #' cells <- toSF(pos = sim[,c("x", "y")], celltypes = sim$celltypes)
 #' shuffleList <- makeShuffledCells(cells, scales = c(150, 250, 500, 750, 1000), ncores = 2)
-#' results <- findTrends(cells, dist = 100, shuffleList = shuffleList, ncores = 2)
+#' results <- findTrends(cells, neighDist = 100, shuffleList = shuffleList, ncores = 2)
 #' dat <- meltResultsList(results)
 #' vizColocDotplot(dat)
 #' }
