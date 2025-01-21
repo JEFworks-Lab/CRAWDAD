@@ -1,0 +1,7 @@
+url: https://jef.works/CRAWDAD
+
+destination: "."
+
+template:
+  bootstrap: 5
+
