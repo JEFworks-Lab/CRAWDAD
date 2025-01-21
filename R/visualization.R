@@ -32,7 +32,7 @@
 #' @export
 vizClusters <- function(cells, ofInterest = NULL,
                         pointSize = 1, alpha = 0.5,
-                        ref = NULL, dist = NULL, lineWidth = 0.1){
+                        ref = NULL, neighDist = NULL, lineWidth = 0.1){
   
   ## if cells are a data.frame with "x" and "y" cell coordinate columns
   if( class(cells)[1] %in% c("data.frame", "matrix") ){
