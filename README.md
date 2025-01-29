@@ -134,7 +134,7 @@ auc_samples <- calculateAUC(list(dat_pkhl, dat_ksfb))
 options(repr.plot.width = 10, repr.plot.height = 9)
 vizVarianceSamples(auc_samples)
 ```
-<img src="https://github.com/adinajailova/CRAWDAD/blob/main/docs/img/variance.png?raw=true"/>
+<img src="https://github.com/adinajailova/CRAWDAD/blob/main/docs/img/variance.png?raw=true" height="510"/>
 
 ## Visualize trends for one cell-type pair
 ```r
@@ -148,7 +148,7 @@ d %>%
   vizTrends(lines = TRUE, withPerms = TRUE, zSigThresh = zsig1)
 
 ```
-<img src="https://github.com/adinajailova/CRAWDAD/blob/main/docs/img/Ki67 proliferating-Fol B cells_relationships_plot.png?raw=true"/>
+<img src="https://github.com/adinajailova/CRAWDAD/blob/main/docs/img/Ki67 proliferating-Fol B cells_relationships_plot.png?raw=true" height="510"/>
 
   
 ```r
@@ -164,7 +164,7 @@ d %>%
 
 ```
 
-<img src="https://github.com/adinajailova/CRAWDAD/blob/main/docs/img/B cells, red pulp-Fol B cells_relationships_plot.png?raw=true"/>
+<img src="https://github.com/adinajailova/CRAWDAD/blob/main/docs/img/B cells, red pulp-Fol B cells_relationships_plot.png?raw=true" height="510"/>
 
   
 ## Visualize cell-type relationships
