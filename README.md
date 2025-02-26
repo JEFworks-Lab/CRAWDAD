@@ -231,3 +231,15 @@ plot_celltypes(c(reference_cell, neighbor_cell))
 <img src="https://github.com/rafaeldossantospeixoto/sdk_analysis/blob/main/spleen/celltype_relationship_visualizations/B cells, red pulp_Fol B cells_plot.png?raw=true" height="510"/>
   
 
+More details can be found in the tutorials.
+
+## Tutorials
+- [`CRAWDAD` applied to simulated data](https://github.com/JEFworks/CRAWDAD/blob/main/docs/1_simulations.md)
+- [`CRAWDAD` applied to a mouse embryo seqfish data](https://github.com/JEFworks/CRAWDAD/blob/main/docs/2_seqfish.md)
+- [`CRAWDAD` applied to a mouse cerebellum slideseq data](https://github.com/JEFworks/CRAWDAD/blob/main/docs/2_slideseq.md)
+- [`CRAWDAD` applied to a human spleen codex data](https://github.com/JEFworks/CRAWDAD/blob/main/docs/3_spleen.md)
+
+## Instalation
+
+CRAWDAD was tested on R version 4.3.0 (2023-04-21) -- "Already Tomorrow".
+Installation time is 1 minute in a Mac Pro Computer.
