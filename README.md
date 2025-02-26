@@ -23,13 +23,12 @@ remotes::install_github('JEFworks-Lab/CRAWDAD')
 
 library(crawdad)
 library(tidyverse)
-library(dplyr)
-library(ggplot2)
+library(gridExtra)
+
 ## Load the spleen data of the pkhl sample 
 data('pkhl')
 ## Load the spleen data of the ksfb sample 
 data('ksfb')
-
 
 all_celltypes <- unique(c(pkhl$celltype, ksfb$celltype))
 colors <- rainbow(length(all_celltypes))
@@ -37,7 +36,7 @@ names(colors) <- all_celltypes
 
 ## Plot 1: pkhl dataset
 p1 <- pkhl %>% 
-  ggplot(aes(pkhl$x, pkhl$y, color = pkhl$celltype)) +
+  ggplot(aes(x,y,color = celltype)) +
   geom_point(size = .01) +
   scale_color_manual(values = colors) +
   guides(colour = guide_legend(override.aes = list(size = 1))) + 
@@ -46,7 +45,7 @@ p1 <- pkhl %>%
 
 ## Plot 2: ksfb dataset
 p2 <- ksfb %>% 
-  ggplot(aes(ksfb$x, ksfb$y, color = ksfb$celltype)) +
+  ggplot(aes(x,y,color = celltype)) +
   geom_point(size = .01) +
   scale_color_manual(values = colors) +
   guides(colour = guide_legend(override.aes = list(size = 1))) + 
@@ -56,7 +55,7 @@ p2 <- ksfb %>%
 options(repr.plot.width = 20, repr.plot.height = 9)
 grid.arrange(p1, p2, nrow = 1)
 ```
-<img src="https://github.com/adinajailova/CRAWDAD/blob/main/docs/img/visualization.png?raw=true"/>
+<img src="https://github.com/rafaeldossantospeixoto/sdk_analysis/blob/main/spleen/visualization.png?raw=true" height="510"/>
 
 ## Determine neighboring distance
 
@@ -67,6 +66,8 @@ For choosing neighboring distance for CRAWDAD analysis, please refer to the [CRA
 ```r
 ## pkhl sample
 
+## Convert dataframe to spatial points (SP)
+cells1 <- crawdad::toSF(pos = pkhl[,c("x", "y")], cellTypes = pkhl$celltypes)
 ## Define the scales to analyze the data
 scales1 <- c(100, 200, 300, 400, 500, 600, 700, 800, 900, 1000)
 ## Shuffle cells to create null background
@@ -94,6 +95,8 @@ vizColocDotplot(dat_pkhl, zSigThresh = zsig1, zScoreLimit = 2*zsig1,
 
 ## ksfb sample
 
+## Convert dataframe to spatial points (SP)
+cells2 <- crawdad::toSF(pos = ksfb[,c("x", "y")], cellTypes = ksfb$celltypes)
 ## Define the scales to analyze the data
 scales2 <- c(100, 200, 300, 400, 500, 600, 700, 800, 900, 1000)
 ## Shuffle cells to create null background
@@ -121,7 +124,7 @@ vizColocDotplot(dat_ksfb, zSigThresh = zsig2, zScoreLimit = 2*zsig2,
   theme(axis.text.x = element_text(angle = 35, h = 0))
 ```
 
-<img src="https://github.com/adinajailova/CRAWDAD/blob/main/docs/img/CRAWDAD.png?raw=true"/>
+<img src="https://github.com/rafaeldossantospeixoto/sdk_analysis/blob/main/spleen/CRAWDAD.png?raw=true" height="510"/>
 
 ## Multiple sample analysis
 ```r
@@ -134,7 +137,7 @@ auc_samples <- calculateAUC(list(dat_pkhl, dat_ksfb))
 options(repr.plot.width = 10, repr.plot.height = 9)
 vizVarianceSamples(auc_samples)
 ```
-<img src="https://github.com/adinajailova/CRAWDAD/blob/main/docs/img/variance.png?raw=true" height="510"/>
+<img src="https://github.com/rafaeldossantospeixoto/sdk_analysis/blob/main/spleen/variance.png?raw=true" height="510"/>
 
 ## Visualize trends for one cell-type pair
 ```r
@@ -148,8 +151,7 @@ d %>%
   vizTrends(lines = TRUE, withPerms = TRUE, zSigThresh = zsig1)
 
 ```
-<img src="https://github.com/adinajailova/CRAWDAD/blob/main/docs/img/Ki67 proliferating-Fol B cells_relationships_plot.png?raw=true" height="510"/>
-
+<img src="https://github.com/rafaeldossantospeixoto/sdk_analysis/blob/main/spleen/Ki67 proliferating-Fol B cells_relationships_plot.png?raw=true" height="510"/>
   
 ```r
 
@@ -163,9 +165,7 @@ d %>%
   vizTrends(lines = TRUE, withPerms = TRUE, zSigThresh = zsig1)
 
 ```
-
-<img src="https://github.com/adinajailova/CRAWDAD/blob/main/docs/img/B cells, red pulp-Fol B cells_relationships_plot.png?raw=true" height="510"/>
-
+<img src="https://github.com/rafaeldossantospeixoto/sdk_analysis/blob/main/spleen/B cells, red pulp-Fol B cells_relationships_plot.png?raw=true" height="510"/>
   
 ## Visualize cell-type relationships
 ```r
@@ -219,8 +219,7 @@ neighbor_cell <- 'Fol B cells'
 
 plot_celltypes(c(reference_cell, neighbor_cell))
 ```
-<img src="https://github.com/adinajailova/CRAWDAD/blob/main/docs/img/Ki67 proliferating_Fol B cells_plot.png?raw=true"/>
-
+<img src="https://github.com/rafaeldossantospeixoto/sdk_analysis/blob/main/spleen/celltype_relationship_visualizations/Ki67 proliferating_Fol B cells_plot.png?raw=true" height="510"/>
 
 
 ```r
@@ -229,20 +228,6 @@ neighbor_cell <- 'Fol B cells'
 
 plot_celltypes(c(reference_cell, neighbor_cell))
 ```
-
-<img src="https://github.com/adinajailova//CRAWDAD/blob/main/docs/img/B cells, red pulp_Fol B cells_plot.png?raw=true"/>
-
+<img src="https://github.com/rafaeldossantospeixoto/sdk_analysis/blob/main/spleen/celltype_relationship_visualizations/B cells, red pulp_Fol B cells_plot.png?raw=true" height="510"/>
   
-More details can be found in the tutorials.
-
-## Tutorials
-- [`CRAWDAD` applied to simulated data](https://github.com/JEFworks/CRAWDAD/blob/main/docs/1_simulations.md)
-- [`CRAWDAD` applied to a mouse embryo seqfish data](https://github.com/JEFworks/CRAWDAD/blob/main/docs/2_seqfish.md)
-- [`CRAWDAD` applied to a mouse cerebellum slideseq data](https://github.com/JEFworks/CRAWDAD/blob/main/docs/2_slideseq.md)
-- [`CRAWDAD` applied to a human spleen codex data](https://github.com/JEFworks/CRAWDAD/blob/main/docs/3_spleen.md)
-
-## Instalation
-
-CRAWDAD was tested on R version 4.3.0 (2023-04-21) -- "Already Tomorrow".
-Installation time is 1 minute in a Mac Pro Computer.
 
