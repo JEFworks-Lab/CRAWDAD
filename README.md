@@ -55,7 +55,7 @@ p2 <- ksfb %>%
 options(repr.plot.width = 20, repr.plot.height = 9)
 grid.arrange(p1, p2, nrow = 1)
 ```
-<img src="https://github.com/rafaeldossantospeixoto/sdk_analysis/blob/main/spleen/visualization.png?raw=true" height="510"/>
+<img src="https://github.com/JEFworks/CRAWDAD/blob/main/docs/img/visualization.png?raw=true"/>
 
 ## Determine neighboring distance
 
@@ -124,7 +124,7 @@ vizColocDotplot(dat_ksfb, zSigThresh = zsig2, zScoreLimit = 2*zsig2,
   theme(axis.text.x = element_text(angle = 35, h = 0))
 ```
 
-<img src="https://github.com/rafaeldossantospeixoto/sdk_analysis/blob/main/spleen/CRAWDAD.png?raw=true" height="510"/>
+<img src="https://github.com/JEFworks/CRAWDAD/blob/main/docs/img/CRAWDAD.png?raw=true"/>
 
 ## Multiple sample analysis
 ```r
@@ -137,7 +137,7 @@ auc_samples <- calculateAUC(list(dat_pkhl, dat_ksfb))
 options(repr.plot.width = 10, repr.plot.height = 9)
 vizVarianceSamples(auc_samples)
 ```
-<img src="https://github.com/rafaeldossantospeixoto/sdk_analysis/blob/main/spleen/variance.png?raw=true" height="510"/>
+<img src="https://github.com/JEFworks/CRAWDAD/blob/main/docs/img/variance.png?raw=true"/>
 
 ## Visualize trends for one cell-type pair
 ```r
@@ -151,7 +151,7 @@ d %>%
   vizTrends(lines = TRUE, withPerms = TRUE, zSigThresh = zsig1)
 
 ```
-<img src="https://github.com/rafaeldossantospeixoto/sdk_analysis/blob/main/spleen/Ki67 proliferating-Fol B cells_relationships_plot.png?raw=true" height="510"/>
+<img src="https://github.com/JEFworks/CRAWDAD/blob/main/docs/img/Ki67 proliferating-Fol B cells_relationships_plot.png?raw=true"/>
   
 ```r
 
@@ -165,7 +165,7 @@ d %>%
   vizTrends(lines = TRUE, withPerms = TRUE, zSigThresh = zsig1)
 
 ```
-<img src="https://github.com/rafaeldossantospeixoto/sdk_analysis/blob/main/spleen/B cells, red pulp-Fol B cells_relationships_plot.png?raw=true" height="510"/>
+<img src="https://github.com/JEFworks/CRAWDAD/blob/main/docs/img/B cells, red pulp-Fol B cells_relationships_plot.png?raw=true"/>
   
 ## Visualize cell-type relationships
 ```r
@@ -219,7 +219,7 @@ neighbor_cell <- 'Fol B cells'
 
 plot_celltypes(c(reference_cell, neighbor_cell))
 ```
-<img src="https://github.com/rafaeldossantospeixoto/sdk_analysis/blob/main/spleen/celltype_relationship_visualizations/Ki67 proliferating_Fol B cells_plot.png?raw=true" height="510"/>
+<img src="https://github.com/JEFworks/CRAWDAD/blob/main/docs/img/Ki67 proliferating_Fol B cells_plot.png?raw=true"/>
 
 
 ```r
@@ -228,7 +228,7 @@ neighbor_cell <- 'Fol B cells'
 
 plot_celltypes(c(reference_cell, neighbor_cell))
 ```
-<img src="https://github.com/rafaeldossantospeixoto/sdk_analysis/blob/main/spleen/celltype_relationship_visualizations/B cells, red pulp_Fol B cells_plot.png?raw=true" height="510"/>
+<img src="https://github.com/JEFworks/CRAWDAD/blob/main/docs/img/B cells, red pulp_Fol B cells_plot.png?raw=true" />
   
 
 More details can be found in the tutorials.
