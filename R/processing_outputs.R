@@ -235,8 +235,8 @@ calculateAUC <- function(datList, sharedPairs = TRUE) {
         dplyr::filter(reference == pairs$reference[i]) %>%
         dplyr::filter(neighbor == pairs$neighbor[i]) %>%
         dplyr::group_by(neighbor, scale, reference) %>%
-        dplyr::summarise(mean = mean(Z),
-                         sd = sd(Z))
+        dplyr::summarise(mean = mean(Z, na.rm = TRUE),
+                         sd = sd(Z, na.rm = TRUE))
       
       ## calculate auc
       return(data.frame(id = sample_id,
