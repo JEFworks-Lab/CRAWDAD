@@ -239,6 +239,11 @@ More details can be found in the tutorials.
 - [`CRAWDAD` applied to a mouse cerebellum slideseq data](https://github.com/JEFworks/CRAWDAD/blob/main/docs/2_slideseq.md)
 - [`CRAWDAD` applied to a human spleen codex data](https://github.com/JEFworks/CRAWDAD/blob/main/docs/3_spleen.md)
 
+## Considerations
+- [`CRAWDAD` with simulated data: same spatial pattern, same total cell count, varying cell-type proportions](https://github.com/JEFworks/CRAWDAD/blob/main/docs/consideration_tutorial1.md)
+- [`CRAWDAD` with simulated data: same spatial pattern and proportions, different total cell count (N)](https://github.com/JEFworks/CRAWDAD/blob/main/docs/consideration_tutorial2.md)
+- [`CRAWDAD` with simulated data: same total cell count and proportions, different spatial patterns](https://github.com/JEFworks/CRAWDAD/blob/main/docs/consideration_tutorial3.md)
+
 ## Instalation
 
 CRAWDAD was tested on R version 4.3.0 (2023-04-21) -- "Already Tomorrow".
